@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"unified-commerce/services/identity/graphql"
 	"unified-commerce/services/identity/handlers"
 	"unified-commerce/services/identity/models"
 	"unified-commerce/services/identity/repository"
@@ -15,18 +16,21 @@ import (
 
 func main() {
 	// Create base service with PostgreSQL and Redis
-	baseService, err := service.NewBaseService(service.ServiceOptions{
+	var baseService *service.BaseService
+	var err error
+
+	baseService, err = service.NewBaseService(service.ServiceOptions{
 		Name:        "identity",
 		UsePostgres: true,
 		UseRedis:    true,
 		UseMongoDB:  false,
-		CustomRoutes: func(router *gin.Engine) {
-			setupRoutes(router, baseService)
-		},
 	})
 	if err != nil {
 		log.Fatalf("Failed to create base service: %v", err)
 	}
+
+	// Setup routes after base service is initialized
+	setupRoutes(baseService.Router, baseService)
 
 	// Run database migrations
 	repo := repository.NewRepository(baseService.PostgresDB)
@@ -60,6 +64,18 @@ func setupRoutes(router *gin.Engine, baseService *service.BaseService) {
 
 	// Register routes
 	handler.RegisterRoutes(router)
+
+	// Initialize GraphQL handlers
+	graphqlHandler := graphql.NewGraphQLHandler(identityService, baseService.Logger)
+	playgroundHandler := graphql.NewPlaygroundHandler()
+
+	// Register GraphQL endpoints
+	router.POST("/graphql", gin.WrapH(graphqlHandler))
+	
+	// Only expose playground in non-production environments
+	if baseService.Config.Environment != "production" {
+		router.GET("/graphql", gin.WrapH(playgroundHandler))
+	}
 }
 
 // seedInitialData seeds the database with initial roles and permissions

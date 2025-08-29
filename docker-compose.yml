@@ -48,7 +48,7 @@ services:
 
   # Elasticsearch for search functionality
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.0
+    image: elasticsearch:8.11.0
     container_name: unified-commerce-elasticsearch
     environment:
       - discovery.type=single-node
@@ -64,12 +64,31 @@ services:
 
   # Kibana for Elasticsearch visualization (optional for development)
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.10.0
+    image: kibana:8.11.0
     container_name: unified-commerce-kibana
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     ports:
       - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - unified-commerce
+
+  # Logstash for log processing
+  logstash:
+    image: logstash:8.11.0
+    container_name: unified-commerce-logstash
+    environment:
+      - "LS_JAVA_OPTS=-Xmx256m -Xms256m"
+    ports:
+      - "5000:5000/tcp"
+      - "5000:5000/udp"
+      - "5044:5044"
+      - "9600:9600"
+    volumes:
+      - ./infrastructure/logstash/pipeline:/usr/share/logstash/pipeline
+      - ./infrastructure/logstash/templates:/usr/share/logstash/templates
     depends_on:
       - elasticsearch
     networks:
@@ -129,10 +148,14 @@ services:
     container_name: unified-commerce-grafana
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
     ports:
       - "3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning
+      - ./infrastructure/grafana/dashboards:/etc/grafana/provisioning/dashboards
     networks:
       - unified-commerce
 

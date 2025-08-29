@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -12,6 +13,7 @@ import (
 	"unified-commerce/services/order/models"
 	"unified-commerce/services/order/repository"
 	"unified-commerce/services/shared/logger"
+	"unified-commerce/shared/messaging"
 )
 
 // Service errors
@@ -30,15 +32,17 @@ var (
 
 // OrderService handles business logic for order management
 type OrderService struct {
-	repo   *repository.OrderRepository
-	logger *logger.Logger
+	repo     *repository.OrderRepository
+	logger   *logger.Logger
+	producer messaging.EventProducer
 }
 
 // NewOrderService creates a new order service
-func NewOrderService(repo *repository.OrderRepository, logger *logger.Logger) *OrderService {
+func NewOrderService(repo *repository.OrderRepository, logger *logger.Logger, producer messaging.EventProducer) *OrderService {
 	return &OrderService{
-		repo:   repo,
-		logger: logger,
+		repo:     repo,
+		logger:   logger,
+		producer: producer,
 	}
 }
 
@@ -149,8 +153,38 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *CreateOrderRequest)
 		return nil, err
 	}
 
+	// Publish OrderPlaced event
+	if err := s.publishOrderPlacedEvent(ctx, order); err != nil {
+		// Log the error but don't fail the transaction.
+		// This is a common pattern in event-driven systems to ensure the core operation (creating the order) succeeds
+		// even if the event notification fails. The system should have a separate mechanism to handle failed events.
+		s.logger.WithError(err).WithField("order_id", order.ID).Error("Failed to publish OrderPlaced event")
+	}
+
 	s.logger.WithField("order_id", order.ID).WithField("order_number", order.OrderNumber).Info("Order created successfully")
 	return order, nil
+}
+
+// publishOrderPlacedEvent serializes the order and publishes it to Kafka.
+func (s *OrderService) publishOrderPlacedEvent(ctx context.Context, order *models.Order) error {
+	s.logger.WithField("order_id", order.ID).Info("Publishing OrderPlaced event")
+
+	// For simplicity, we'll just use a basic JSON serialization.
+	// In a real-world scenario, you might use a more robust serialization format like Avro or Protobuf
+	// with a schema registry.
+	eventPayload, err := json.Marshal(order)
+	if err != nil {
+		return fmt.Errorf("failed to marshal order for event: %w", err)
+	}
+
+	topic := "orders.placed"
+	err = s.producer.Publish(topic, order.ID.String(), eventPayload)
+	if err != nil {
+		return fmt.Errorf("failed to publish OrderPlaced event to kafka: %w", err)
+	}
+
+	s.logger.WithField("topic", topic).WithField("order_id", order.ID).Info("Successfully published OrderPlaced event")
+	return nil
 }
 
 // GetOrder retrieves an order by ID

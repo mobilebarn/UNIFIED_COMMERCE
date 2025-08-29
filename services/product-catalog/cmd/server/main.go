@@ -9,41 +9,46 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"unified-commerce/services/product-catalog/handlers"
 	"unified-commerce/services/product-catalog/repository"
 	"unified-commerce/services/product-catalog/service"
 	"unified-commerce/services/shared/config"
+	"unified-commerce/services/shared/database"
 	"unified-commerce/services/shared/logger"
 	"unified-commerce/services/shared/middleware"
 )
 
 func main() {
 	// Load configuration
-	cfg := config.Load()
+	cfg, err := config.LoadConfig("product-catalog")
+	if err != nil {
+		panic("Failed to load configuration: " + err.Error())
+	}
 
 	// Initialize logger
-	log := logger.New(cfg.Environment)
+	loggerConfig := logger.DefaultConfig("product-catalog")
+	loggerConfig.Level = cfg.LogLevel
+	log := logger.NewLogger(loggerConfig)
 
 	// Connect to MongoDB
-	mongoClient, err := connectMongoDB(cfg.MongoDB.URI)
+	mongoConfig := database.NewMongoConfigFromEnv(
+		cfg.MongoURL,
+		cfg.MongoDatabase,
+		cfg.MongoUser,
+		cfg.MongoPassword,
+	)
+	mongoDB, err := database.NewMongoConnection(mongoConfig)
 	if err != nil {
 		log.WithError(err).Fatal("Failed to connect to MongoDB")
 	}
-	defer mongoClient.Disconnect(context.Background())
-
-	// Initialize database
-	db := mongoClient.Database(cfg.MongoDB.Database)
+	defer mongoDB.Close(context.Background())
 
 	// Initialize repositories
-	productRepo := repository.NewProductRepository(db, log)
-	categoryRepo := repository.NewCategoryRepository(db, log)
-	collectionRepo := repository.NewCollectionRepository(db, log)
+	repo := repository.NewRepository(mongoDB)
 
 	// Initialize services
-	productService := service.NewProductService(productRepo, categoryRepo, collectionRepo, log)
+	productService := service.NewProductService(repo, log)
 
 	// Initialize handlers
 	productHandler := handlers.NewProductHandler(productService, log)
@@ -59,16 +64,20 @@ func main() {
 	router.Use(gin.Recovery())
 	router.Use(middleware.CORS())
 	router.Use(middleware.RequestID())
-	router.Use(middleware.RateLimit())
 
 	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {
+		mongoStatus := "healthy"
+		if err := mongoDB.Health(context.Background()); err != nil {
+			mongoStatus = "unhealthy"
+		}
+
 		health := map[string]interface{}{
 			"service": "product-catalog",
 			"status":  "healthy",
 			"time":    time.Now(),
 			"checks": map[string]string{
-				"mongodb": checkMongoDB(db),
+				"mongodb": mongoStatus,
 			},
 		}
 		c.JSON(http.StatusOK, health)
@@ -79,16 +88,16 @@ func main() {
 
 	// Start server
 	srv := &http.Server{
-		Addr:         ":" + cfg.Server.Port,
+		Addr:         ":" + cfg.ServicePort,
 		Handler:      router,
-		ReadTimeout:  time.Duration(cfg.Server.ReadTimeout) * time.Second,
-		WriteTimeout: time.Duration(cfg.Server.WriteTimeout) * time.Second,
-		IdleTimeout:  time.Duration(cfg.Server.IdleTimeout) * time.Second,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  60 * time.Second,
 	}
 
 	// Start server in a goroutine
 	go func() {
-		log.WithField("port", cfg.Server.Port).Info("Starting Product Catalog Service")
+		log.WithFields(map[string]interface{}{"port": cfg.ServicePort}).Info("Starting Product Catalog Service")
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.WithError(err).Fatal("Failed to start server")
 		}
@@ -110,36 +119,4 @@ func main() {
 	}
 
 	log.Info("Product Catalog Service stopped")
-}
-
-// connectMongoDB establishes connection to MongoDB
-func connectMongoDB(uri string) (*mongo.Client, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	clientOptions := options.Client().ApplyURI(uri)
-	client, err := mongo.Connect(ctx, clientOptions)
-	if err != nil {
-		return nil, err
-	}
-
-	// Test the connection
-	err = client.Ping(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return client, nil
-}
-
-// checkMongoDB checks MongoDB connection health
-func checkMongoDB(db *mongo.Database) string {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	err := db.Client().Ping(ctx, nil)
-	if err != nil {
-		return "unhealthy"
-	}
-	return "healthy"
 }

@@ -138,7 +138,7 @@ func (r *RedisClient) SRem(ctx context.Context, key string, members ...interface
 }
 
 // ZAdd adds members to a sorted set
-func (r *RedisClient) ZAdd(ctx context.Context, key string, members ...*redis.Z) error {
+func (r *RedisClient) ZAdd(ctx context.Context, key string, members ...redis.Z) error {
 	return r.Client.ZAdd(ctx, key, members...).Err()
 }
 

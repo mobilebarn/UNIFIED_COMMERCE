@@ -20,13 +20,13 @@ func main() {
 		UsePostgres: true,
 		UseRedis:    true,
 		UseMongoDB:  false,
-		CustomRoutes: func(router *gin.Engine) {
-			setupRoutes(router, baseService)
-		},
 	})
 	if err != nil {
 		log.Fatalf("Failed to create base service: %v", err)
 	}
+
+	// Setup custom routes
+	setupRoutes(baseService.Router, baseService)
 
 	// Run database migrations
 	repo := repository.NewRepository(baseService.PostgresDB)

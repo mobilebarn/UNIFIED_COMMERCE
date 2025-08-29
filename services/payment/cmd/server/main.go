@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
 	"unified-commerce/services/payment/handlers"
@@ -24,24 +23,36 @@ import (
 
 func main() {
 	// Load configuration
-	cfg := config.Load()
+	cfg, err := config.LoadConfig("payment")
+	if err != nil {
+		panic("Failed to load configuration: " + err.Error())
+	}
 
 	// Initialize logger
-	log := logger.New(cfg.Environment)
+	loggerConfig := logger.DefaultConfig(cfg.ServiceName)
+	loggerConfig.Level = cfg.LogLevel
+	log := logger.NewLogger(loggerConfig)
 
 	// Connect to PostgreSQL
-	db, err := connectPostgreSQL(cfg.Database.PostgreSQL.URL)
+	postgresConfig := database.NewPostgresConfigFromEnv(
+		cfg.DatabaseHost,
+		cfg.DatabasePort,
+		cfg.DatabaseUser,
+		cfg.DatabasePassword,
+		cfg.DatabaseName,
+	)
+	db, err := database.NewPostgresConnection(postgresConfig)
 	if err != nil {
 		log.WithError(err).Fatal("Failed to connect to PostgreSQL")
 	}
 
 	// Run database migrations
-	if err := runMigrations(db); err != nil {
+	if err := runMigrations(db.DB); err != nil {
 		log.WithError(err).Fatal("Failed to run database migrations")
 	}
 
 	// Initialize repositories
-	paymentRepo := repository.NewPaymentRepository(db, log)
+	paymentRepo := repository.NewPaymentRepository(db.DB, log)
 
 	// Initialize services
 	paymentService := service.NewPaymentService(paymentRepo, log)
@@ -60,16 +71,20 @@ func main() {
 	router.Use(gin.Recovery())
 	router.Use(middleware.CORS())
 	router.Use(middleware.RequestID())
-	router.Use(middleware.RateLimit())
 
 	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {
+		postgresStatus := "healthy"
+		if err := db.Health(context.Background()); err != nil {
+			postgresStatus = "unhealthy"
+		}
+
 		health := map[string]interface{}{
 			"service": "payment",
 			"status":  "healthy",
 			"time":    time.Now(),
 			"checks": map[string]string{
-				"postgres": checkPostgreSQL(db),
+				"postgres": postgresStatus,
 			},
 		}
 		c.JSON(http.StatusOK, health)
@@ -80,16 +95,16 @@ func main() {
 
 	// Start server
 	srv := &http.Server{
-		Addr:         ":" + cfg.Server.Port,
+		Addr:         ":" + cfg.ServicePort,
 		Handler:      router,
-		ReadTimeout:  time.Duration(cfg.Server.ReadTimeout) * time.Second,
-		WriteTimeout: time.Duration(cfg.Server.WriteTimeout) * time.Second,
-		IdleTimeout:  time.Duration(cfg.Server.IdleTimeout) * time.Second,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  60 * time.Second,
 	}
 
 	// Start server in a goroutine
 	go func() {
-		log.WithField("port", cfg.Server.Port).Info("Starting Payment Service")
+		log.WithField("port", cfg.ServicePort).Info("Starting Payment Service")
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.WithError(err).Fatal("Failed to start server")
 		}
@@ -113,29 +128,6 @@ func main() {
 	log.Info("Payment Service stopped")
 }
 
-// connectPostgreSQL establishes connection to PostgreSQL
-func connectPostgreSQL(databaseURL string) (*gorm.DB, error) {
-	db, err := gorm.Open(postgres.Open(databaseURL), &gorm.Config{
-		Logger: database.NewGormLogger(),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	// Get underlying sql.DB to configure connection pool
-	sqlDB, err := db.DB()
-	if err != nil {
-		return nil, err
-	}
-
-	// Configure connection pool
-	sqlDB.SetMaxIdleConns(10)
-	sqlDB.SetMaxOpenConns(100)
-	sqlDB.SetConnMaxLifetime(time.Hour)
-
-	return db, nil
-}
-
 // runMigrations runs database migrations
 func runMigrations(db *gorm.DB) error {
 	return db.AutoMigrate(
@@ -146,17 +138,4 @@ func runMigrations(db *gorm.DB) error {
 		&models.PaymentEvent{},
 		&models.Settlement{},
 	)
-}
-
-// checkPostgreSQL checks PostgreSQL connection health
-func checkPostgreSQL(db *gorm.DB) string {
-	sqlDB, err := db.DB()
-	if err != nil {
-		return "unhealthy"
-	}
-
-	if err := sqlDB.Ping(); err != nil {
-		return "unhealthy"
-	}
-	return "healthy"
 }

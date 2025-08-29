@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
 	"unified-commerce/services/inventory/handlers"
@@ -20,31 +19,65 @@ import (
 	"unified-commerce/services/shared/database"
 	"unified-commerce/services/shared/logger"
 	"unified-commerce/services/shared/middleware"
+	"unified-commerce/shared/messaging"
+	"unified-commerce/services/inventory/eventhandlers"
 )
 
 func main() {
 	// Load configuration
-	cfg := config.Load()
+	cfg, err := config.LoadConfig("inventory")
+	if err != nil {
+		panic("Failed to load configuration: " + err.Error())
+	}
 
 	// Initialize logger
-	log := logger.New(cfg.Environment)
+	loggerConfig := logger.DefaultConfig("inventory")
+	loggerConfig.Level = cfg.LogLevel
+	log := logger.NewLogger(loggerConfig)
 
-	// Connect to PostgreSQL
-	db, err := connectPostgreSQL(cfg.Database.PostgreSQL.URL)
+	// Connect to PostgreSQL using shared database utility
+	postgresConfig := database.NewPostgresConfigFromEnv(
+		cfg.DatabaseHost,
+		cfg.DatabasePort,
+		cfg.DatabaseUser,
+		cfg.DatabasePassword,
+		cfg.DatabaseName,
+	)
+	postgresDB, err := database.NewPostgresConnection(postgresConfig)
 	if err != nil {
 		log.WithError(err).Fatal("Failed to connect to PostgreSQL")
 	}
+	defer postgresDB.Close()
 
 	// Run database migrations
-	if err := runMigrations(db); err != nil {
+	if err := runMigrations(postgresDB.DB); err != nil {
 		log.WithError(err).Fatal("Failed to run database migrations")
 	}
 
 	// Initialize repositories
-	inventoryRepo := repository.NewInventoryRepository(db, log)
+	inventoryRepo := repository.NewInventoryRepository(postgresDB.DB, log)
 
 	// Initialize services
 	inventoryService := service.NewInventoryService(inventoryRepo, log)
+
+	// Initialize event handlers
+	orderEventHandler := eventhandlers.NewOrderEventHandler(inventoryService, log)
+
+	// Initialize Event Consumer
+	consumerConfig := messaging.ConsumerConfig{
+		Brokers:   cfg.KafkaBrokers,
+		GroupID:   "inventory-service",
+		Topics:    []string{"orders.placed"},
+		UseDocker: messaging.DetectEnvironment(),
+	}
+	consumer, err := messaging.NewEventConsumer(consumerConfig)
+	if err != nil {
+		log.WithError(err).Fatal("Failed to create event consumer")
+	}
+	defer consumer.Close()
+
+	// Start consuming messages in a separate goroutine
+	go startEventConsumption(consumer, orderEventHandler, log)
 
 	// Initialize handlers
 	inventoryHandler := handlers.NewInventoryHandler(inventoryService, log)
@@ -69,7 +102,7 @@ func main() {
 			"status":  "healthy",
 			"time":    time.Now(),
 			"checks": map[string]string{
-				"postgres": checkPostgreSQL(db),
+				"postgres": checkPostgreSQL(postgresDB),
 			},
 		}
 		c.JSON(http.StatusOK, health)
@@ -80,11 +113,11 @@ func main() {
 
 	// Start server
 	srv := &http.Server{
-		Addr:         ":" + cfg.Server.Port,
+		Addr:         ":" + cfg.ServicePort,
 		Handler:      router,
-		ReadTimeout:  time.Duration(cfg.Server.ReadTimeout) * time.Second,
-		WriteTimeout: time.Duration(cfg.Server.WriteTimeout) * time.Second,
-		IdleTimeout:  time.Duration(cfg.Server.IdleTimeout) * time.Second,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  60 * time.Second,
 	}
 
 	// Start background tasks
@@ -92,7 +125,7 @@ func main() {
 
 	// Start server in a goroutine
 	go func() {
-		log.WithField("port", cfg.Server.Port).Info("Starting Inventory Service")
+		log.WithFields(map[string]interface{}{"port": cfg.ServicePort}).Info("Starting Inventory Service")
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.WithError(err).Fatal("Failed to start server")
 		}
@@ -116,29 +149,6 @@ func main() {
 	log.Info("Inventory Service stopped")
 }
 
-// connectPostgreSQL establishes connection to PostgreSQL
-func connectPostgreSQL(databaseURL string) (*gorm.DB, error) {
-	db, err := gorm.Open(postgres.Open(databaseURL), &gorm.Config{
-		Logger: database.NewGormLogger(),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	// Get underlying sql.DB to configure connection pool
-	sqlDB, err := db.DB()
-	if err != nil {
-		return nil, err
-	}
-
-	// Configure connection pool
-	sqlDB.SetMaxIdleConns(10)
-	sqlDB.SetMaxOpenConns(100)
-	sqlDB.SetConnMaxLifetime(time.Hour)
-
-	return db, nil
-}
-
 // runMigrations runs database migrations
 func runMigrations(db *gorm.DB) error {
 	return db.AutoMigrate(
@@ -153,8 +163,8 @@ func runMigrations(db *gorm.DB) error {
 }
 
 // checkPostgreSQL checks PostgreSQL connection health
-func checkPostgreSQL(db *gorm.DB) string {
-	sqlDB, err := db.DB()
+func checkPostgreSQL(db *database.PostgresDB) string {
+	sqlDB, err := db.DB.DB()
 	if err != nil {
 		return "unhealthy"
 	}
@@ -163,6 +173,31 @@ func checkPostgreSQL(db *gorm.DB) string {
 		return "unhealthy"
 	}
 	return "healthy"
+}
+
+// startEventConsumption handles event consumption from the messaging system
+func startEventConsumption(consumer messaging.EventConsumer, handler *eventhandlers.OrderEventHandler, log *logger.Logger) {
+	if err := consumer.Subscribe([]string{"orders.placed"}); err != nil {
+		log.WithError(err).Fatal("Failed to subscribe to topics")
+	}
+
+	for {
+		msg, err := consumer.ReadMessage()
+		if err != nil {
+			log.WithError(err).Error("Failed to read message")
+			time.Sleep(1 * time.Second)
+			continue
+		}
+
+		// Convert to the format expected by the handler
+		if err := handler.HandleOrderPlacedEvent(msg.Value); err != nil {
+			log.WithError(err).Error("Failed to handle order placed event")
+		} else {
+			if err := consumer.CommitMessage(msg); err != nil {
+				log.WithError(err).Error("Failed to commit message")
+			}
+		}
+	}
 }
 
 // startBackgroundTasks starts background tasks for inventory management

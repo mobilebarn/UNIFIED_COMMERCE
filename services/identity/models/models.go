@@ -31,6 +31,9 @@ type User struct {
 	MerchantMembers []MerchantMember `json:"merchant_members" gorm:"foreignKey:UserID"`
 }
 
+// IsEntity marks User as a federation entity
+func (u User) IsEntity() {}
+
 // Role represents a role in the system
 type Role struct {
 	ID          string    `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`

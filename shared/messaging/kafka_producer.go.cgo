@@ -1,0 +1,58 @@
+package messaging
+
+import (
+	"fmt"
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+)
+
+// KafkaProducer wraps the confluent-kafka-go producer.
+type KafkaProducer struct {
+	producer *kafka.Producer
+}
+
+// NewKafkaProducer creates a new Kafka producer instance.
+func NewKafkaProducer(bootstrapServers string) (*KafkaProducer, error) {
+	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": bootstrapServers})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create kafka producer: %w", err)
+	}
+
+	// Go-routine to handle delivery reports
+	go func() {
+		for e := range p.Events() {
+			switch ev := e.(type) {
+			case *kafka.Message:
+				if ev.TopicPartition.Error != nil {
+					// Handle failed message delivery
+					fmt.Printf("Delivery failed: %v\n", ev.TopicPartition)
+				} else {
+					// Handle successful message delivery
+					fmt.Printf("Delivered message to %v\n", ev.TopicPartition)
+				}
+			}
+		}
+	}()
+
+	return &KafkaProducer{producer: p}, nil
+}
+
+// Publish sends a message to a Kafka topic.
+func (p *KafkaProducer) Publish(topic, key string, payload []byte) error {
+	err := p.producer.Produce(&kafka.Message{
+		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
+		Key:            []byte(key),
+		Value:          payload,
+	}, nil)
+
+	if err != nil {
+		return fmt.Errorf("failed to produce message: %w", err)
+	}
+
+	return nil
+}
+
+// Close closes the Kafka producer.
+func (p *KafkaProducer) Close() {
+	p.producer.Flush(15 * 1000)
+	p.producer.Close()
+}

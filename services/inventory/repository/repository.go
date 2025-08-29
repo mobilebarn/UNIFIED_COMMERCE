@@ -26,6 +26,29 @@ func NewInventoryRepository(db *gorm.DB, logger *logger.Logger) *InventoryReposi
 	}
 }
 
+// WithTx returns a new repository with the given transaction.
+func (r *InventoryRepository) WithTx(tx *gorm.DB) *InventoryRepository {
+	return &InventoryRepository{
+		db:     tx,
+		logger: r.logger,
+	}
+}
+
+// BeginTx starts a new database transaction.
+func (r *InventoryRepository) BeginTx(ctx context.Context) *gorm.DB {
+	return r.db.WithContext(ctx).Begin()
+}
+
+// CommitTx commits a database transaction.
+func (r *InventoryRepository) CommitTx(tx *gorm.DB) error {
+	return tx.Commit().Error
+}
+
+// RollbackTx rolls back a database transaction.
+func (r *InventoryRepository) RollbackTx(tx *gorm.DB) {
+	tx.Rollback()
+}
+
 // Location Operations
 
 // CreateLocation creates a new inventory location
@@ -90,6 +113,54 @@ func (r *InventoryRepository) DeleteLocation(ctx context.Context, id uuid.UUID) 
 		r.logger.WithError(err).Error("Failed to delete location")
 		return err
 	}
+	return nil
+}
+
+// AdjustInventoryLevel adjusts the inventory level for a specific item at a location.
+func (r *InventoryRepository) AdjustInventoryLevel(ctx context.Context, locationID, productVariantID uuid.UUID, quantity int, reason, reference string) error {
+	// Find the inventory level
+	var level models.InventoryLevel
+	err := r.db.WithContext(ctx).
+		Where("location_id = ? AND product_variant_id = ?", locationID, productVariantID).
+		First(&level).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// If no level exists, create one
+			level = models.InventoryLevel{
+				LocationID:       locationID,
+				ProductVariantID: productVariantID,
+				Stock:            0,
+			}
+			if err := r.db.WithContext(ctx).Create(&level).Error; err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+
+	// Check for sufficient stock if quantity is negative
+	if quantity < 0 && level.Stock < -quantity {
+		return fmt.Errorf("insufficient stock for variant %s at location %s", productVariantID, locationID)
+	}
+
+	// Update the stock
+	level.Stock += quantity
+	if err := r.db.WithContext(ctx).Save(&level).Error; err != nil {
+		return err
+	}
+
+	// Create a stock adjustment record for auditing
+	adjustment := models.StockAdjustment{
+		InventoryLevelID: level.ID,
+		Quantity:         quantity,
+		Reason:           reason,
+		Reference:        reference,
+	}
+	if err := r.db.WithContext(ctx).Create(&adjustment).Error; err != nil {
+		return err
+	}
+
 	return nil
 }
 

@@ -385,3 +385,268 @@ func (s *IdentityService) logAuditEvent(ctx context.Context, userID, action, res
 		s.logger.WithError(err).Error("Failed to create audit log")
 	}
 }
+
+// GetUserByID retrieves a user by ID
+func (s *IdentityService) GetUserByID(ctx context.Context, userID string) (*models.User, error) {
+	user, err := s.repo.User.GetByID(ctx, userID)
+	if err != nil {
+		return nil, ErrUserNotFound
+	}
+	return user, nil
+}
+
+// UpdateUser updates user information
+func (s *IdentityService) UpdateUser(ctx context.Context, user *models.User) error {
+	if err := s.repo.User.Update(ctx, user); err != nil {
+		s.logger.WithError(err).Error("Failed to update user")
+		return fmt.Errorf("failed to update user")
+	}
+
+	// Log audit event
+	s.logAuditEvent(ctx, user.ID, "user_update", "user", user.ID, true, "", nil)
+
+	return nil
+}
+
+// ListUsers retrieves paginated list of users
+func (s *IdentityService) ListUsers(ctx context.Context, offset, limit int) ([]models.User, int64, error) {
+	users, total, err := s.repo.User.List(ctx, offset, limit)
+	if err != nil {
+		s.logger.WithError(err).Error("Failed to list users")
+		return nil, 0, fmt.Errorf("failed to list users")
+	}
+
+	return users, total, nil
+}
+
+// DeleteUser soft deletes a user
+func (s *IdentityService) DeleteUser(ctx context.Context, userID string) error {
+	// Check if user exists
+	_, err := s.repo.User.GetByID(ctx, userID)
+	if err != nil {
+		return ErrUserNotFound
+	}
+
+	// Deactivate all user sessions
+	if err := s.repo.UserSession.DeactivateUserSessions(ctx, userID); err != nil {
+		s.logger.WithError(err).Error("Failed to deactivate user sessions")
+	}
+
+	// Soft delete user
+	if err := s.repo.User.Delete(ctx, userID); err != nil {
+		s.logger.WithError(err).Error("Failed to delete user")
+		return fmt.Errorf("failed to delete user")
+	}
+
+	// Log audit event
+	s.logAuditEvent(ctx, userID, "user_delete", "user", userID, true, "", nil)
+
+	return nil
+}
+
+// RefreshToken validates a refresh token and returns new access/refresh tokens
+func (s *IdentityService) RefreshToken(ctx context.Context, refreshTokenString string) (*AuthResponse, error) {
+	claims := &middleware.JWTClaims{}
+
+	token, err := jwt.ParseWithClaims(refreshTokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(s.jwtSecret), nil
+	})
+
+	if err != nil {
+		return nil, ErrInvalidToken
+	}
+
+	if !token.Valid {
+		return nil, ErrInvalidToken
+	}
+
+	// Check if token is expired
+	if time.Now().After(claims.ExpiresAt.Time) {
+		return nil, ErrTokenExpired
+	}
+
+	// Get user from database
+	user, err := s.repo.User.GetByID(ctx, claims.UserID)
+	if err != nil {
+		return nil, ErrUserNotFound
+	}
+
+	// Check if user is still active
+	if !user.IsActive {
+		return nil, ErrUserInactive
+	}
+
+	// Generate new tokens
+	accessToken, newRefreshToken, err := s.generateTokens(user)
+	if err != nil {
+		s.logger.WithError(err).Error("Failed to generate tokens")
+		return nil, fmt.Errorf("failed to refresh tokens")
+	}
+
+	// Create new session
+	sessionToken := s.hashToken(accessToken)
+	session := &models.UserSession{
+		UserID:    user.ID,
+		Token:     sessionToken,
+		Type:      "access",
+		IsActive:  true,
+		ExpiresAt: time.Now().Add(24 * time.Hour),
+	}
+
+	if err := s.repo.UserSession.Create(ctx, session); err != nil {
+		s.logger.WithError(err).Error("Failed to create session")
+	}
+
+	// Log token refresh
+	s.logAuditEvent(ctx, user.ID, "token_refresh", "user", user.ID, true, "", nil)
+
+	return &AuthResponse{
+		User:         user,
+		AccessToken:  accessToken,
+		RefreshToken: newRefreshToken,
+		ExpiresIn:    3600, // 1 hour
+	}, nil
+}
+
+// ForgotPassword initiates password reset process
+func (s *IdentityService) ForgotPassword(ctx context.Context, email string) error {
+	// Get user by email
+	user, err := s.repo.User.GetByEmail(ctx, email)
+	if err != nil {
+		// Don't reveal if user exists for security reasons
+		s.logger.Debug("Forgot password request for non-existent email")
+		return nil // Always return success to prevent email enumeration
+	}
+
+	// Generate reset token
+	resetToken, err := utils.GenerateRandomString(32)
+	if err != nil {
+		s.logger.WithError(err).Error("Failed to generate reset token")
+		return fmt.Errorf("failed to initiate password reset")
+	}
+
+	// Create password reset record
+	passwordReset := &models.PasswordReset{
+		UserID:    user.ID,
+		Token:     resetToken,
+		ExpiresAt: time.Now().Add(1 * time.Hour), // 1 hour expiry
+	}
+
+	if err := s.repo.PasswordReset.Create(ctx, passwordReset); err != nil {
+		s.logger.WithError(err).Error("Failed to create password reset")
+		return fmt.Errorf("failed to initiate password reset")
+	}
+
+	// TODO: Send password reset email
+	// In a real implementation, you would send an email with the reset token
+	s.logger.Info("Password reset token generated", "user_id", user.ID, "token", resetToken)
+
+	// Log audit event
+	s.logAuditEvent(ctx, user.ID, "password_reset_request", "user", user.ID, true, "", nil)
+
+	return nil
+}
+
+// ResetPassword resets password using reset token
+func (s *IdentityService) ResetPassword(ctx context.Context, token, newPassword string) error {
+	// Validate new password
+	if err := utils.ValidatePassword(newPassword); err != nil {
+		return err
+	}
+
+	// Get password reset record
+	passwordReset, err := s.repo.PasswordReset.GetByToken(ctx, token)
+	if err != nil {
+		return ErrInvalidToken
+	}
+
+	// Hash new password
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("failed to hash password")
+	}
+
+	// Update user password
+	if err := s.repo.User.UpdatePassword(ctx, passwordReset.UserID, string(passwordHash)); err != nil {
+		return fmt.Errorf("failed to update password")
+	}
+
+	// Mark reset token as used
+	if err := s.repo.PasswordReset.MarkAsUsed(ctx, passwordReset.ID); err != nil {
+		s.logger.WithError(err).Error("Failed to mark password reset as used")
+	}
+
+	// Deactivate all user sessions (force re-login)
+	if err := s.repo.UserSession.DeactivateUserSessions(ctx, passwordReset.UserID); err != nil {
+		s.logger.WithError(err).Error("Failed to deactivate user sessions")
+	}
+
+	// Log audit event
+	s.logAuditEvent(ctx, passwordReset.UserID, "password_reset", "user", passwordReset.UserID, true, "", nil)
+
+	return nil
+}
+
+// VerifyEmail verifies email using verification token
+func (s *IdentityService) VerifyEmail(ctx context.Context, token string) error {
+	// TODO: Implement email verification logic
+	// In a real implementation, you would:
+	// 1. Look up email verification record by token
+	// 2. Check if token is not expired
+	// 3. Mark user's email as verified
+	// 4. Mark verification token as used
+
+	// For now, we'll implement a basic version
+	// This is a placeholder - you'd need to add EmailVerification repository methods
+	s.logger.Info("Email verification requested", "token", token)
+
+	// TODO: Add proper implementation once EmailVerificationRepository methods are added
+	return fmt.Errorf("email verification not fully implemented")
+}
+
+// ActivateUser activates a user account (admin only)
+func (s *IdentityService) ActivateUser(ctx context.Context, userID string) error {
+	// Get user
+	user, err := s.repo.User.GetByID(ctx, userID)
+	if err != nil {
+		return ErrUserNotFound
+	}
+
+	// Update user status
+	user.IsActive = true
+	if err := s.repo.User.Update(ctx, user); err != nil {
+		s.logger.WithError(err).Error("Failed to activate user")
+		return fmt.Errorf("failed to activate user")
+	}
+
+	// Log audit event
+	s.logAuditEvent(ctx, userID, "user_activate", "user", userID, true, "", nil)
+
+	return nil
+}
+
+// DeactivateUser deactivates a user account (admin only)
+func (s *IdentityService) DeactivateUser(ctx context.Context, userID string) error {
+	// Get user
+	user, err := s.repo.User.GetByID(ctx, userID)
+	if err != nil {
+		return ErrUserNotFound
+	}
+
+	// Update user status
+	user.IsActive = false
+	if err := s.repo.User.Update(ctx, user); err != nil {
+		s.logger.WithError(err).Error("Failed to deactivate user")
+		return fmt.Errorf("failed to deactivate user")
+	}
+
+	// Deactivate all user sessions
+	if err := s.repo.UserSession.DeactivateUserSessions(ctx, userID); err != nil {
+		s.logger.WithError(err).Error("Failed to deactivate user sessions")
+	}
+
+	// Log audit event
+	s.logAuditEvent(ctx, userID, "user_deactivate", "user", userID, true, "", nil)
+
+	return nil
+}

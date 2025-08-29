@@ -1,0 +1,89 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Unified Commerce Microservices
+  - job_name: "identity-service"
+    static_configs:
+      - targets: ["host.docker.internal:8080"]
+    metrics_path: "/metrics"
+    scrape_interval: 5s
+
+  - job_name: "merchant-account-service"
+    static_configs:
+      - targets: ["host.docker.internal:8002"]
+    metrics_path: "/metrics"
+    scrape_interval: 5s
+
+  - job_name: "product-catalog-service"
+    static_configs:
+      - targets: ["host.docker.internal:8003"]
+    metrics_path: "/metrics"
+    scrape_interval: 5s
+
+  - job_name: "inventory-service"
+    static_configs:
+      - targets: ["host.docker.internal:8004"]
+    metrics_path: "/metrics"
+    scrape_interval: 5s
+
+  - job_name: "order-service"
+    static_configs:
+      - targets: ["host.docker.internal:8005"]
+    metrics_path: "/metrics"
+    scrape_interval: 5s
+
+  - job_name: "cart-service"
+    static_configs:
+      - targets: ["host.docker.internal:8006"]
+    metrics_path: "/metrics"
+    scrape_interval: 5s
+
+  - job_name: "payment-service"
+    static_configs:
+      - targets: ["host.docker.internal:8007"]
+    metrics_path: "/metrics"
+    scrape_interval: 5s
+
+  - job_name: "promotions-service"
+    static_configs:
+      - targets: ["host.docker.internal:8008"]
+    metrics_path: "/metrics"
+    scrape_interval: 5s
+
+  # Infrastructure Services
+  - job_name: "postgres"
+    static_configs:
+      - targets: ["postgres:5432"]
+    scrape_interval: 30s
+
+  - job_name: "mongodb"
+    static_configs:
+      - targets: ["mongodb:27017"]
+    scrape_interval: 30s
+
+  - job_name: "redis"
+    static_configs:
+      - targets: ["redis:6379"]
+    scrape_interval: 30s
+
+  - job_name: "elasticsearch"
+    static_configs:
+      - targets: ["elasticsearch:9200"]
+    metrics_path: "/_prometheus/metrics"
+    scrape_interval: 30s
+
+  - job_name: "kafka"
+    static_configs:
+      - targets: ["kafka:9092"]
+    scrape_interval: 30s

@@ -206,7 +206,7 @@ type CreateDiscountCodeRequest struct {
 // CreateDiscountCode creates a new discount code
 func (s *PromotionsService) CreateDiscountCode(ctx context.Context, req *CreateDiscountCodeRequest) (*models.DiscountCode, error) {
 	// Validate promotion exists
-	promotion, err := s.GetPromotion(ctx, req.PromotionID)
+	_, err := s.GetPromotion(ctx, req.PromotionID)
 	if err != nil {
 		return nil, err
 	}

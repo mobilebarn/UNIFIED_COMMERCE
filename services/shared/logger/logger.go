@@ -38,9 +38,11 @@ func NewLogger(config Config) *Logger {
 		logger.SetFormatter(&logrus.JSONFormatter{
 			TimestampFormat: "2006-01-02T15:04:05.000Z07:00",
 			FieldMap: logrus.FieldMap{
-				logrus.FieldKeyTime:  "timestamp",
+				logrus.FieldKeyTime:  "@timestamp",
 				logrus.FieldKeyLevel: "level",
 				logrus.FieldKeyMsg:   "message",
+				logrus.FieldKeyFunc:  "function",
+				logrus.FieldKeyFile:  "file",
 			},
 		})
 	default:

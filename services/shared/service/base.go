@@ -28,6 +28,7 @@ type BaseService struct {
 	Router       *gin.Engine
 	Server       *http.Server
 	HealthChecks []HealthCheck
+	Metrics      *MetricsCollector
 }
 
 // HealthCheck represents a health check function
@@ -60,9 +61,10 @@ func NewBaseService(opts ServiceOptions) (*BaseService, error) {
 	serviceLogger := logger.NewLogger(loggerConfig)
 
 	service := &BaseService{
-		Name:   opts.Name,
-		Config: cfg,
-		Logger: serviceLogger,
+		Name:    opts.Name,
+		Config:  cfg,
+		Logger:  serviceLogger,
+		Metrics: NewMetricsCollector(opts.Name),
 	}
 
 	// Set up database connections based on service requirements
@@ -144,6 +146,7 @@ func NewBaseService(opts ServiceOptions) (*BaseService, error) {
 	service.Router.Use(middleware.Logger())
 	service.Router.Use(middleware.Recovery())
 	service.Router.Use(middleware.CORS())
+	service.Router.Use(service.Metrics.PrometheusMiddleware())
 
 	// Add common routes
 	service.setupCommonRoutes()
@@ -215,13 +218,9 @@ func (s *BaseService) readinessHandler(c *gin.Context) {
 	s.healthHandler(c)
 }
 
-// metricsHandler handles metrics requests (placeholder)
+// metricsHandler handles metrics requests for Prometheus
 func (s *BaseService) metricsHandler(c *gin.Context) {
-	// TODO: Implement Prometheus metrics
-	c.JSON(http.StatusOK, gin.H{
-		"service": s.Name,
-		"metrics": "TODO: Implement Prometheus metrics",
-	})
+	PrometheusHandler()(c)
 }
 
 // Start starts the service with graceful shutdown

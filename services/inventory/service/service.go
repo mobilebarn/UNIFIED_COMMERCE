@@ -25,6 +25,12 @@ var (
 	ErrDuplicateLocation     = errors.New("location code already exists")
 )
 
+// StockAdjustment represents a single adjustment to stock levels.
+type StockAdjustment struct {
+	ProductVariantID uuid.UUID
+	Quantity         int
+}
+
 // InventoryService handles business logic for inventory management
 type InventoryService struct {
 	repo   *repository.InventoryRepository
@@ -72,6 +78,29 @@ func (s *InventoryService) CreateLocation(ctx context.Context, req *CreateLocati
 
 	s.logger.WithField("location_id", location.ID).Info("Location created successfully")
 	return location, nil
+}
+
+// AdjustStock adjusts the stock levels for multiple inventory items at a specific location.
+func (s *InventoryService) AdjustStock(ctx context.Context, locationID uuid.UUID, reason, reference string, adjustments []StockAdjustment) error {
+	// In a real application, this should be a single database transaction.
+	tx := s.repo.BeginTx(ctx)
+	if tx == nil {
+		return fmt.Errorf("failed to begin transaction")
+	}
+	defer s.repo.RollbackTx(tx)
+
+	for _, adj := range adjustments {
+		err := s.repo.WithTx(tx).AdjustInventoryLevel(ctx, locationID, adj.ProductVariantID, adj.Quantity, reason, reference)
+		if err != nil {
+			s.logger.WithError(err).
+				WithField("location_id", locationID).
+				WithField("product_variant_id", adj.ProductVariantID).
+				Error("Failed to adjust inventory level")
+			return err
+		}
+	}
+
+	return s.repo.CommitTx(tx)
 }
 
 // GetLocation retrieves a location by ID

@@ -245,7 +245,7 @@ func (s *CartService) AddLineItem(ctx context.Context, cartID uuid.UUID, req *Ad
 	}
 
 	// Get updated cart
-	updatedCart, err := s.GetCart(ctx, cartID)
+	_, err = s.GetCart(ctx, cartID)
 	if err != nil {
 		return nil, err
 	}

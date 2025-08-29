@@ -3,12 +3,20 @@ package database
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
+
+// containsCredentials checks if the MongoDB URI contains username and password
+func containsCredentials(uri string) bool {
+	return strings.Contains(uri, "@")
+}
+
+// MongoConnection represents a MongoDB connection
 
 // MongoDB wraps a MongoDB client with additional utilities
 type MongoDB struct {
@@ -34,18 +42,19 @@ func NewMongoConnection(config *MongoConfig) (*MongoDB, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), config.ConnectTimeout)
 	defer cancel()
 
-	// Configure client options
+	// Configure client options - use URI directly if it contains credentials
 	clientOptions := options.Client().
 		ApplyURI(config.URI).
 		SetMaxPoolSize(config.MaxPoolSize).
 		SetMinPoolSize(config.MinPoolSize).
 		SetServerSelectionTimeout(config.ServerTimeout)
 
-	// Add authentication if provided
-	if config.Username != "" && config.Password != "" {
+	// Only add separate auth if URI doesn't contain credentials and we have username/password
+	if config.Username != "" && config.Password != "" && !containsCredentials(config.URI) {
 		credential := options.Credential{
-			Username: config.Username,
-			Password: config.Password,
+			Username:   config.Username,
+			Password:   config.Password,
+			AuthSource: config.DatabaseName, // Use the database name as auth source
 		}
 		clientOptions.SetAuth(credential)
 	}

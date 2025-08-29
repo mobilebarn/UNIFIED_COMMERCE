@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
@@ -145,7 +147,7 @@ func (h *CartHandler) GetCart(c *gin.Context) {
 		case service.ErrCartNotFound:
 			httputil.NotFound(c, "Cart not found")
 		case service.ErrCartExpired:
-			httputil.Gone(c, "Cart has expired")
+			c.JSON(http.StatusGone, gin.H{"error": "Cart has expired"})
 		default:
 			h.logger.WithError(err).Error("Failed to get cart")
 			httputil.InternalServerError(c, "Failed to get cart")
@@ -170,7 +172,7 @@ func (h *CartHandler) GetCartBySession(c *gin.Context) {
 		case service.ErrCartNotFound:
 			httputil.NotFound(c, "Cart not found")
 		case service.ErrCartExpired:
-			httputil.Gone(c, "Cart has expired")
+			c.JSON(http.StatusGone, gin.H{"error": "Cart has expired"})
 		default:
 			h.logger.WithError(err).Error("Failed to get cart by session ID")
 			httputil.InternalServerError(c, "Failed to get cart")
@@ -207,7 +209,7 @@ func (h *CartHandler) GetCartByCustomer(c *gin.Context) {
 		case service.ErrCartNotFound:
 			httputil.NotFound(c, "Cart not found")
 		case service.ErrCartExpired:
-			httputil.Gone(c, "Cart has expired")
+			c.JSON(http.StatusGone, gin.H{"error": "Cart has expired"})
 		default:
 			h.logger.WithError(err).Error("Failed to get cart by customer ID")
 			httputil.InternalServerError(c, "Failed to get cart")
@@ -220,7 +222,7 @@ func (h *CartHandler) GetCartByCustomer(c *gin.Context) {
 
 // UpdateCart handles updating cart information
 func (h *CartHandler) UpdateCart(c *gin.Context) {
-	id, err := uuid.Parse(c.Param("id"))
+	cartID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		httputil.BadRequest(c, "Invalid cart ID")
 		return
@@ -232,13 +234,13 @@ func (h *CartHandler) UpdateCart(c *gin.Context) {
 		return
 	}
 
-	cart, err := h.service.UpdateCart(c.Request.Context(), id, &req)
+	cart, err := h.service.UpdateCart(c.Request.Context(), cartID, &req)
 	if err != nil {
 		switch err {
 		case service.ErrCartNotFound:
 			httputil.NotFound(c, "Cart not found")
 		case service.ErrCartExpired:
-			httputil.Gone(c, "Cart has expired")
+			c.JSON(http.StatusGone, gin.H{"error": "Cart has expired"})
 		case service.ErrCartCompleted:
 			httputil.BadRequest(c, "Cart is already completed")
 		default:
@@ -253,7 +255,7 @@ func (h *CartHandler) UpdateCart(c *gin.Context) {
 
 // DeleteCart handles deleting a cart
 func (h *CartHandler) DeleteCart(c *gin.Context) {
-	id, err := uuid.Parse(c.Param("id"))
+	_, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		httputil.BadRequest(c, "Invalid cart ID")
 		return
@@ -291,7 +293,7 @@ func (h *CartHandler) AddLineItem(c *gin.Context) {
 		case service.ErrCartNotFound:
 			httputil.NotFound(c, "Cart not found")
 		case service.ErrCartExpired:
-			httputil.Gone(c, "Cart has expired")
+			c.JSON(http.StatusGone, gin.H{"error": "Cart has expired"})
 		case service.ErrCartCompleted:
 			httputil.BadRequest(c, "Cart is already completed")
 		default:
@@ -326,7 +328,7 @@ func (h *CartHandler) UpdateLineItem(c *gin.Context) {
 		case service.ErrCartNotFound:
 			httputil.NotFound(c, "Cart not found")
 		case service.ErrCartExpired:
-			httputil.Gone(c, "Cart has expired")
+			c.JSON(http.StatusGone, gin.H{"error": "Cart has expired"})
 		case service.ErrCartCompleted:
 			httputil.BadRequest(c, "Cart is already completed")
 		default:
@@ -354,7 +356,7 @@ func (h *CartHandler) RemoveLineItem(c *gin.Context) {
 		case service.ErrCartNotFound:
 			httputil.NotFound(c, "Cart not found")
 		case service.ErrCartExpired:
-			httputil.Gone(c, "Cart has expired")
+			c.JSON(http.StatusGone, gin.H{"error": "Cart has expired"})
 		case service.ErrCartCompleted:
 			httputil.BadRequest(c, "Cart is already completed")
 		default:
@@ -388,7 +390,7 @@ func (h *CartHandler) CreateCheckout(c *gin.Context) {
 		case service.ErrCartNotFound:
 			httputil.NotFound(c, "Cart not found")
 		case service.ErrCartExpired:
-			httputil.Gone(c, "Cart has expired")
+			c.JSON(http.StatusGone, gin.H{"error": "Cart has expired"})
 		case service.ErrCartCompleted:
 			httputil.BadRequest(c, "Cart is already completed")
 		default:

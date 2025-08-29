@@ -61,7 +61,7 @@ func (h *PaymentHandler) RegisterRoutes(router *gin.Engine) {
 			gateways := protected.Group("/gateways")
 			{
 				gateways.POST("", h.CreateGateway)
-				gatements.GET("/:id", h.GetGateway)
+				gateways.GET("/:id", h.GetGateway)
 				gateways.GET("/name/:name", h.GetGatewayByName)
 				gateways.GET("", h.GetAllGateways)
 				gateways.PUT("/:id", h.UpdateGateway)

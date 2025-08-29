@@ -344,3 +344,71 @@ func (i *InventoryItem) AfterSave(tx *gorm.DB) error {
 	i.AvailableQuantity = i.Quantity - i.ReservedQuantity
 	return nil
 }
+
+// InventoryLevel represents the current inventory level for a product variant at a location
+type InventoryLevel struct {
+	ID                uuid.UUID  `json:"id" gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	LocationID        uuid.UUID  `json:"location_id" gorm:"type:uuid;not null;index"`
+	ProductVariantID  uuid.UUID  `json:"product_variant_id" gorm:"type:uuid;not null;index"`
+	SKU               string     `json:"sku" gorm:"not null;index"`
+	Stock             int        `json:"stock" gorm:"default:0"`
+	ReservedQuantity  int        `json:"reserved_quantity" gorm:"default:0"`
+	AvailableQuantity int        `json:"available_quantity" gorm:"default:0"` // Computed: Stock - ReservedQuantity
+	LowStockThreshold int        `json:"low_stock_threshold" gorm:"default:10"`
+	LastCountedAt     *time.Time `json:"last_counted_at"`
+	CreatedAt         time.Time  `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt         time.Time  `json:"updated_at" gorm:"autoUpdateTime"`
+
+	// Relationships
+	Location       Location       `json:"location,omitempty" gorm:"foreignKey:LocationID"`
+	ProductVariant ProductVariant `json:"product_variant,omitempty" gorm:"foreignKey:ProductVariantID"`
+}
+
+// StockAdjustment represents a manual adjustment to inventory levels
+type StockAdjustment struct {
+	ID               uuid.UUID      `json:"id" gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	InventoryLevelID uuid.UUID      `json:"inventory_level_id" gorm:"type:uuid;not null;index"`
+	LocationID       uuid.UUID      `json:"location_id" gorm:"type:uuid;not null;index"`
+	ProductVariantID uuid.UUID      `json:"product_variant_id" gorm:"type:uuid;not null;index"`
+	SKU              string         `json:"sku" gorm:"not null;index"`
+	Type             AdjustmentType `json:"type" gorm:"not null"`
+	Reason           string         `json:"reason" gorm:"not null"`
+	Quantity         int            `json:"quantity" gorm:"not null"`
+	PreviousQuantity int            `json:"previous_quantity" gorm:"not null"`
+	NewQuantity      int            `json:"new_quantity" gorm:"not null"`
+	Reference        string         `json:"reference"`
+	Notes            string         `json:"notes"`
+	UserID           *uuid.UUID     `json:"user_id" gorm:"type:uuid;index"`
+	CreatedAt        time.Time      `json:"created_at" gorm:"autoCreateTime"`
+
+	// Relationships
+	InventoryLevel InventoryLevel `json:"inventory_level,omitempty" gorm:"foreignKey:InventoryLevelID"`
+	Location       Location       `json:"location,omitempty" gorm:"foreignKey:LocationID"`
+	ProductVariant ProductVariant `json:"product_variant,omitempty" gorm:"foreignKey:ProductVariantID"`
+	User           User           `json:"user,omitempty" gorm:"foreignKey:UserID"`
+}
+
+// AdjustmentType represents the type of stock adjustment
+type AdjustmentType string
+
+const (
+	AdjustmentTypeIncrease AdjustmentType = "increase"
+	AdjustmentTypeDecrease AdjustmentType = "decrease"
+	AdjustmentTypeSet      AdjustmentType = "set"
+)
+
+// ProductVariant represents a product variant (simplified for inventory purposes)
+type ProductVariant struct {
+	ID        uuid.UUID `json:"id" gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	ProductID uuid.UUID `json:"product_id" gorm:"type:uuid;not null;index"`
+	SKU       string    `json:"sku" gorm:"not null;unique"`
+	Name      string    `json:"name" gorm:"not null"`
+	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
+}
+
+// User represents a user (simplified for inventory purposes)
+type User struct {
+	ID   uuid.UUID `json:"id" gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	Name string    `json:"name" gorm:"not null"`
+}
