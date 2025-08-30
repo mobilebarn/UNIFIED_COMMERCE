@@ -1,0 +1,490 @@
+directive @goModel(model: String, models: [String!]) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
+directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+
+extend type User @key(fields: "id") {
+  id: ID! @external
+}
+
+type Query {
+  # Product queries
+  product(id: ID!): Product
+  products(filter: ProductFilter): [Product!]!
+  productByHandle(handle: String!): Product
+  productsBySku(skus: [String!]!): [Product!]!
+  
+  # Product variant queries
+  productVariant(id: ID!): ProductVariant
+  productVariants(productId: ID!): [ProductVariant!]!
+  
+  # Category queries
+  category(id: ID!): Category
+  categories(filter: CategoryFilter): [Category!]!
+  
+  # Collection queries
+  collection(id: ID!): Collection
+  collections(filter: CollectionFilter): [Collection!]!
+  
+  # Brand queries
+  brand(id: ID!): Brand
+  brands(merchantId: ID): [Brand!]!
+}
+
+type Mutation {
+  # Product mutations
+  createProduct(input: CreateProductInput!): Product!
+  updateProduct(id: ID!, input: UpdateProductInput!): Product!
+  deleteProduct(id: ID!): Boolean!
+  publishProduct(id: ID!): Product!
+  unpublishProduct(id: ID!): Product!
+  
+  # Product variant mutations
+  createProductVariant(input: CreateProductVariantInput!): ProductVariant!
+  updateProductVariant(id: ID!, input: UpdateProductVariantInput!): ProductVariant!
+  deleteProductVariant(id: ID!): Boolean!
+  
+  # Category mutations
+  createCategory(input: CreateCategoryInput!): Category!
+  updateCategory(id: ID!, input: UpdateCategoryInput!): Category!
+  deleteCategory(id: ID!): Boolean!
+  
+  # Collection mutations
+  createCollection(input: CreateCollectionInput!): Collection!
+  updateCollection(id: ID!, input: UpdateCollectionInput!): Collection!
+  deleteCollection(id: ID!): Boolean!
+  addProductToCollection(collectionId: ID!, productId: ID!): Collection!
+  removeProductFromCollection(collectionId: ID!, productId: ID!): Collection!
+  
+  # Brand mutations
+  createBrand(input: CreateBrandInput!): Brand!
+  updateBrand(id: ID!, input: UpdateBrandInput!): Brand!
+  deleteBrand(id: ID!): Boolean!
+}
+
+# Main Product type with federation key
+type Product @key(fields: "id") @goModel(model: "unified-commerce/services/product-catalog/models.Product") {
+  id: ID!
+  merchantId: ID!
+  title: String!
+  handle: String!
+  description: String
+  vendor: String
+  productType: String
+  status: ProductStatus!
+  
+  # SEO
+  seoTitle: String
+  seoDescription: String
+  
+  # Publishing
+  publishedAt: String
+  publishedScope: PublishedScope!
+  
+  # Images
+  featuredImage: String
+  images: [ProductImage!]!
+  
+  # Pricing
+  priceRange: ProductPriceRange!
+  compareAtPriceRange: ProductPriceRange
+  
+  # Inventory
+  totalInventory: Int!
+  hasOnlyDefaultVariant: Boolean!
+  requiresSellingPlan: Boolean!
+  
+  # Tags and Options
+  tags: [String!]!
+  options: [ProductOption!]!
+  
+  # Metadata
+  metafields: JSON
+  
+  # Timestamps
+  createdAt: String!
+  updatedAt: String
+  
+  # Relationships
+  variants: [ProductVariant!]!
+  collections: [Collection!]!
+  category: Category
+  brand: Brand
+}
+
+type ProductVariant @key(fields: "id") @goModel(model: "unified-commerce/services/product-catalog/models.ProductVariant") {
+  id: ID!
+  productId: ID!
+  title: String!
+  sku: String!
+  barcode: String
+  position: Int!
+  
+  # Pricing
+  price: Float!
+  compareAtPrice: Float
+  costPrice: Float
+  
+  # Inventory
+  inventoryQuantity: Int!
+  inventoryPolicy: InventoryPolicy!
+  fulfillmentService: String
+  inventoryManagement: String
+  
+  # Physical Properties
+  weight: Float
+  weightUnit: String
+  requiresShipping: Boolean!
+  taxable: Boolean!
+  taxCode: String
+  
+  # Options
+  option1: String
+  option2: String
+  option3: String
+  
+  # Images
+  image: ProductImage
+  
+  # Metadata
+  metafields: JSON
+  
+  # Timestamps
+  createdAt: String!
+  updatedAt: String
+  
+  # Relationships
+  product: Product!
+}
+
+type ProductImage @goModel(model: "unified-commerce/services/product-catalog/models.ProductImage") {
+  id: ID!
+  productId: ID
+  variantIds: [ID!]!
+  src: String!
+  altText: String
+  position: Int!
+  width: Int
+  height: Int
+  createdAt: String!
+  updatedAt: String
+}
+
+type ProductOption @goModel(model: "unified-commerce/services/product-catalog/models.ProductOption") {
+  id: ID!
+  productId: ID!
+  name: String!
+  position: Int!
+  values: [String!]!
+}
+
+type ProductPriceRange @goModel(model: "unified-commerce/services/product-catalog/models.ProductPriceRange") {
+  minVariantPrice: Float!
+  maxVariantPrice: Float!
+}
+
+type Category @key(fields: "id") @goModel(model: "unified-commerce/services/product-catalog/models.Category") {
+  id: ID!
+  merchantId: ID!
+  name: String!
+  handle: String!
+  description: String
+  parentId: ID
+  
+  # SEO
+  seoTitle: String
+  seoDescription: String
+  
+  # Display
+  sortOrder: Int!
+  isVisible: Boolean!
+  
+  # Images
+  image: String
+  
+  # Metadata
+  metafields: JSON
+  
+  # Timestamps
+  createdAt: String!
+  updatedAt: String
+  
+  # Relationships
+  parent: Category
+  children: [Category!]!
+  products: [Product!]!
+}
+
+type Collection @key(fields: "id") @goModel(model: "unified-commerce/services/product-catalog/models.Collection") {
+  id: ID!
+  merchantId: ID!
+  title: String!
+  handle: String!
+  description: String
+  
+  # SEO
+  seoTitle: String
+  seoDescription: String
+  
+  # Display
+  sortOrder: CollectionSortOrder!
+  isVisible: Boolean!
+  
+  # Images
+  image: String
+  
+  # Rules (for smart collections)
+  rulesMatch: CollectionRulesMatch
+  rules: [CollectionRule!]!
+  
+  # Metadata
+  metafields: JSON
+  
+  # Timestamps
+  publishedAt: String
+  createdAt: String!
+  updatedAt: String
+  
+  # Relationships
+  products: [Product!]!
+}
+
+type CollectionRule @goModel(model: "unified-commerce/services/product-catalog/models.CollectionRule") {
+  id: ID!
+  collectionId: ID!
+  column: String!
+  relation: String!
+  condition: String!
+}
+
+type Brand @key(fields: "id") @goModel(model: "unified-commerce/services/product-catalog/models.Brand") {
+  id: ID!
+  merchantId: ID!
+  name: String!
+  handle: String!
+  description: String
+  
+  # Images
+  logo: String
+  
+  # SEO
+  seoTitle: String
+  seoDescription: String
+  
+  # Metadata
+  metafields: JSON
+  
+  # Timestamps
+  createdAt: String!
+  updatedAt: String
+  
+  # Relationships
+  products: [Product!]!
+}
+
+# Enums
+enum ProductStatus {
+  ACTIVE
+  ARCHIVED
+  DRAFT
+}
+
+enum PublishedScope {
+  GLOBAL
+  WEB
+  POS
+}
+
+enum InventoryPolicy {
+  DENY
+  CONTINUE
+}
+
+enum CollectionSortOrder {
+  ALPHA_ASC
+  ALPHA_DESC
+  BEST_SELLING
+  CREATED
+  CREATED_DESC
+  MANUAL
+  PRICE_ASC
+  PRICE_DESC
+}
+
+enum CollectionRulesMatch {
+  ALL
+  ANY
+}
+
+# Input Types
+input ProductFilter {
+  merchantId: ID
+  status: ProductStatus
+  productType: String
+  vendor: String
+  categoryId: ID
+  brandId: ID
+  collectionId: ID
+  tags: [String!]
+  search: String
+  publishedScope: PublishedScope
+  limit: Int
+  offset: Int
+}
+
+input CategoryFilter {
+  merchantId: ID
+  parentId: ID
+  isVisible: Boolean
+  limit: Int
+  offset: Int
+}
+
+input CollectionFilter {
+  merchantId: ID
+  isVisible: Boolean
+  limit: Int
+  offset: Int
+}
+
+input CreateProductInput {
+  merchantId: ID!
+  title: String!
+  description: String
+  vendor: String
+  productType: String
+  tags: [String!]
+  status: ProductStatus
+  publishedScope: PublishedScope
+  seoTitle: String
+  seoDescription: String
+  categoryId: ID
+  brandId: ID
+  metafields: JSON
+}
+
+input UpdateProductInput {
+  title: String
+  description: String
+  vendor: String
+  productType: String
+  tags: [String!]
+  status: ProductStatus
+  publishedScope: PublishedScope
+  seoTitle: String
+  seoDescription: String
+  categoryId: ID
+  brandId: ID
+  metafields: JSON
+}
+
+input CreateProductVariantInput {
+  productId: ID!
+  title: String!
+  sku: String!
+  barcode: String
+  price: Float!
+  compareAtPrice: Float
+  costPrice: Float
+  inventoryQuantity: Int
+  inventoryPolicy: InventoryPolicy
+  weight: Float
+  weightUnit: String
+  requiresShipping: Boolean
+  taxable: Boolean
+  taxCode: String
+  option1: String
+  option2: String
+  option3: String
+  metafields: JSON
+}
+
+input UpdateProductVariantInput {
+  title: String
+  sku: String
+  barcode: String
+  price: Float
+  compareAtPrice: Float
+  costPrice: Float
+  inventoryQuantity: Int
+  inventoryPolicy: InventoryPolicy
+  weight: Float
+  weightUnit: String
+  requiresShipping: Boolean
+  taxable: Boolean
+  taxCode: String
+  option1: String
+  option2: String
+  option3: String
+  metafields: JSON
+}
+
+input CreateCategoryInput {
+  merchantId: ID!
+  name: String!
+  description: String
+  parentId: ID
+  seoTitle: String
+  seoDescription: String
+  sortOrder: Int
+  isVisible: Boolean
+  image: String
+  metafields: JSON
+}
+
+input UpdateCategoryInput {
+  name: String
+  description: String
+  parentId: ID
+  seoTitle: String
+  seoDescription: String
+  sortOrder: Int
+  isVisible: Boolean
+  image: String
+  metafields: JSON
+}
+
+input CreateCollectionInput {
+  merchantId: ID!
+  title: String!
+  description: String
+  seoTitle: String
+  seoDescription: String
+  sortOrder: CollectionSortOrder
+  isVisible: Boolean
+  image: String
+  rulesMatch: CollectionRulesMatch
+  metafields: JSON
+}
+
+input UpdateCollectionInput {
+  title: String
+  description: String
+  seoTitle: String
+  seoDescription: String
+  sortOrder: CollectionSortOrder
+  isVisible: Boolean
+  image: String
+  rulesMatch: CollectionRulesMatch
+  metafields: JSON
+}
+
+input CreateBrandInput {
+  merchantId: ID!
+  name: String!
+  description: String
+  logo: String
+  seoTitle: String
+  seoDescription: String
+  metafields: JSON
+}
+
+input UpdateBrandInput {
+  name: String
+  description: String
+  logo: String
+  seoTitle: String
+  seoDescription: String
+  metafields: JSON
+}
+
+# Scalar for JSON data
+scalar JSON

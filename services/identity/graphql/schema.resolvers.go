@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"unified-commerce/services/identity/models"
+	identservice "unified-commerce/services/identity/service"
 )
 
 // Register is the resolver for the register field.
@@ -17,7 +18,27 @@ func (r *mutationResolver) Register(ctx context.Context, input RegisterInput) (*
 
 // Login is the resolver for the login field.
 func (r *mutationResolver) Login(ctx context.Context, input LoginInput) (*AuthPayload, error) {
-	panic(fmt.Errorf("not implemented: Login - login"))
+	r.Logger.Info("GraphQL: login attempt")
+
+	// Build service login request
+	req := &identservice.LoginRequest{
+		Email:    input.Email,
+		Password: input.Password,
+	}
+
+	resp, err := r.IdentityService.Login(ctx, req)
+	if err != nil {
+		r.Logger.WithError(err).Warn("Login failed")
+		return nil, fmt.Errorf("invalid credentials")
+	}
+
+	// Directly return the user model; gqlgen will map fields
+	return &AuthPayload{
+		User:         resp.User,
+		AccessToken:  resp.AccessToken,
+		RefreshToken: resp.RefreshToken,
+		ExpiresIn:    resp.ExpiresIn,
+	}, nil
 }
 
 // Logout is the resolver for the logout field.

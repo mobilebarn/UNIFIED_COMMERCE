@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 
 	"unified-commerce/services/identity/graphql"
 	"unified-commerce/services/identity/handlers"
@@ -71,7 +73,7 @@ func setupRoutes(router *gin.Engine, baseService *service.BaseService) {
 
 	// Register GraphQL endpoints
 	router.POST("/graphql", gin.WrapH(graphqlHandler))
-	
+
 	// Only expose playground in non-production environments
 	if baseService.Config.Environment != "production" {
 		router.GET("/graphql", gin.WrapH(playgroundHandler))
@@ -123,6 +125,32 @@ func seedInitialData(repo *repository.Repository) error {
 			// Role doesn't exist, create it
 			if err := repo.Role.Create(ctx, &role); err != nil {
 				return err
+			}
+		}
+	}
+
+	// Seed default super admin user if not present
+	adminEmail := "admin@example.com"
+	if _, err := repo.User.GetByEmail(ctx, adminEmail); err != nil { // user not found
+		password := "Admin123!" // development seed password
+		hash, hErr := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if hErr == nil {
+			user := &models.User{
+				Email:        adminEmail,
+				Username:     "admin",
+				PasswordHash: string(hash),
+				FirstName:    "System",
+				LastName:     "Admin",
+				IsActive:     true,
+				CreatedAt:    time.Now(),
+				UpdatedAt:    time.Now(),
+			}
+			if cErr := repo.User.Create(ctx, user); cErr == nil {
+				// try attach super_admin role
+				if superRole, rErr := repo.Role.GetByName(ctx, "super_admin"); rErr == nil {
+					ur := &models.UserRole{UserID: user.ID, RoleID: superRole.ID, GrantedAt: time.Now()}
+					_ = repo.DB().DB.WithContext(ctx).Create(ur).Error
+				}
 			}
 		}
 	}

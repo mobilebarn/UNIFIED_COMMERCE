@@ -1,0 +1,56 @@
+# Where are all the schema files located? globs are supported eg  src/**/*.graphqls
+schema:
+  - ./*.graphql
+
+# Where should the generated server code go?
+exec:
+  filename: generated.go
+  package: graphql
+
+# Uncomment to enable federation
+federation:
+  filename: federation.go
+  package: graphql
+
+# Where should any generated models go?
+model:
+  filename: models_gen.go
+  package: graphql
+
+# Where should the resolver implementations go?
+resolver:
+  layout: follow-schema
+  dir: .
+  package: graphql
+
+# Optional: turn on use `gqlgen:"fieldName"` tags in your models
+# struct_tag: json
+
+# Optional: turn on to use []Thing instead of []*Thing
+# omit_slice_element_pointers: false
+
+# Tell gqlgen about any existing models you want to reuse for
+# GraphQL. These normally come from the database or an API.
+models:
+  ID:
+    model:
+      - github.com/99designs/gqlgen/graphql.ID
+      - github.com/99designs/gqlgen/graphql.Int
+      - github.com/99designs/gqlgen/graphql.Int64
+      - github.com/99designs/gqlgen/graphql.Int32
+  JSON:
+    model: github.com/99designs/gqlgen/graphql.Map
+  CartStatus:
+    model: unified-commerce/services/cart/models.CartStatus
+  CheckoutStep:
+    model: unified-commerce/services/cart/models.CheckoutStep
+  DiscountType:
+    model: unified-commerce/services/cart/models.DiscountType
+  DiscountValueType:
+    model: unified-commerce/services/cart/models.DiscountValueType
+  AllocationMethod:
+    model: unified-commerce/services/cart/models.AllocationMethod
+  TargetSelection:
+    model: unified-commerce/services/cart/models.TargetSelection
+  TargetType:
+    model: unified-commerce/services/cart/models.TargetType

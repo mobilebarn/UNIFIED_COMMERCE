@@ -1,0 +1,342 @@
+directive @goModel(model: String, models: [String!]) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
+directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+
+extend type User @key(fields: "id") {
+  id: ID! @external
+}
+
+type Query {
+  # Order queries
+  order(id: ID!): Order
+  orders(filter: OrderFilter): [Order!]!
+  orderByNumber(orderNumber: String!): Order
+  
+  # Order line item queries
+  lineItem(id: ID!): OrderLineItem
+}
+
+type Mutation {
+  # Order mutations
+  createOrder(input: CreateOrderInput!): Order!
+  updateOrder(id: ID!, input: UpdateOrderInput!): Order!
+  cancelOrder(id: ID!, reason: String): Order!
+  
+  # Order actions
+  fulfillOrder(id: ID!, input: FulfillOrderInput!): Order!
+  capturePayment(id: ID!, amount: Float): Order!
+  refundOrder(id: ID!, input: RefundOrderInput!): Order!
+  
+  # Line item mutations
+  addLineItem(input: AddOrderLineItemInput!): OrderLineItem!
+  updateLineItem(id: ID!, input: UpdateOrderLineItemInput!): OrderLineItem!
+  removeLineItem(id: ID!): Boolean!
+}
+
+# Main Order type with federation key
+type Order @key(fields: "id") @goModel(model: "unified-commerce/services/order/models.Order") {
+  id: ID!
+  orderNumber: String!
+  merchantId: ID!
+  customerId: ID
+  locationId: ID
+  status: OrderStatus!
+  fulfillmentStatus: FulfillmentStatus!
+  paymentStatus: PaymentStatus!
+  
+  # Customer Information
+  customer: CustomerInfo!
+  
+  # Addresses
+  billingAddress: Address!
+  shippingAddress: Address!
+  
+  # Financial Information
+  subtotalPrice: Float!
+  totalTax: Float!
+  totalShipping: Float!
+  totalDiscount: Float!
+  totalPrice: Float!
+  
+  # Shipping Information
+  shippingMethod: String
+  shippingRate: Float
+  trackingNumber: String
+  trackingUrl: String
+  carrier: String
+  
+  # Order Metadata
+  source: OrderSource!
+  channel: String
+  currency: String!
+  tags: [String!]!
+  notes: String
+  internalNotes: String
+  
+  # Timestamps
+  processedAt: String
+  cancelledAt: String
+  fulfilledAt: String
+  closedAt: String
+  createdAt: String!
+  updatedAt: String
+  
+  # Relationships
+  lineItems: [OrderLineItem!]!
+  fulfillments: [Fulfillment!]!
+  transactions: [Transaction!]!
+  refunds: [Refund!]!
+  
+  # Federation - extend User relationship
+  customerUser: User
+}
+
+type OrderLineItem @goModel(model: "unified-commerce/services/order/models.OrderLineItem") {
+  id: ID!
+  orderId: ID!
+  productId: ID!
+  productVariantId: ID
+  
+  # Product Information
+  name: String!
+  sku: String!
+  barcode: String
+  productTitle: String
+  variantTitle: String
+  vendor: String
+  productImage: String
+  
+  # Quantity and Pricing
+  quantity: Int!
+  price: Float!
+  compareAtPrice: Float
+  linePrice: Float!
+  
+  # Fulfillment
+  fulfillableQuantity: Int!
+  fulfillmentService: String
+  fulfillmentStatus: LineItemFulfillmentStatus!
+  requiresShipping: Boolean!
+  isGiftCard: Boolean!
+  
+  # Tax and Discounts
+  taxable: Boolean!
+  totalDiscount: Float!
+  
+  # Metadata
+  properties: JSON
+  createdAt: String!
+  updatedAt: String
+  
+  # Relationships
+  order: Order!
+}
+
+type CustomerInfo @goModel(model: "unified-commerce/services/order/models.CustomerInfo") {
+  email: String!
+  phone: String
+  firstName: String!
+  lastName: String!
+  acceptsMarketing: Boolean!
+}
+
+type Address @goModel(model: "unified-commerce/services/order/models.Address") {
+  firstName: String
+  lastName: String
+  company: String
+  address1: String
+  address2: String
+  city: String
+  province: String
+  country: String
+  zip: String
+  phone: String
+  latitude: Float
+  longitude: Float
+}
+
+type Fulfillment @goModel(model: "unified-commerce/services/order/models.Fulfillment") {
+  id: ID!
+  orderId: ID!
+  status: FulfillmentStatus!
+  trackingNumber: String
+  trackingUrl: String
+  carrier: String
+  service: String
+  createdAt: String!
+  updatedAt: String
+}
+
+type Transaction @goModel(model: "unified-commerce/services/order/models.Transaction") {
+  id: ID!
+  orderId: ID!
+  amount: Float!
+  currency: String!
+  kind: TransactionKind!
+  status: TransactionStatus!
+  gateway: String!
+  paymentMethodId: String
+  createdAt: String!
+  updatedAt: String
+}
+
+type Refund @goModel(model: "unified-commerce/services/order/models.Refund") {
+  id: ID!
+  orderId: ID!
+  amount: Float!
+  currency: String!
+  reason: String
+  note: String
+  createdAt: String!
+  updatedAt: String
+}
+
+# Enums
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+  RETURNED
+}
+
+enum FulfillmentStatus {
+  UNFULFILLED
+  PARTIAL
+  FULFILLED
+  RESTOCKED
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  PARTIALLY_PAID
+  PAID
+  PARTIALLY_REFUNDED
+  REFUNDED
+  VOIDED
+}
+
+enum OrderSource {
+  ONLINE
+  POS
+  PHONE
+  MAIL
+  DRAFT
+}
+
+enum LineItemFulfillmentStatus {
+  UNFULFILLED
+  FULFILLED
+  RESTOCKED
+}
+
+enum TransactionKind {
+  AUTHORIZATION
+  CAPTURE
+  SALE
+  VOID
+  REFUND
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILURE
+  ERROR
+}
+
+# Input Types
+input OrderFilter {
+  customerId: ID
+  merchantId: ID
+  status: OrderStatus
+  fulfillmentStatus: FulfillmentStatus
+  paymentStatus: PaymentStatus
+  source: OrderSource
+  limit: Int
+  offset: Int
+}
+
+input CreateOrderInput {
+  merchantId: ID!
+  customerId: ID
+  customer: CustomerInfoInput!
+  billingAddress: AddressInput!
+  shippingAddress: AddressInput!
+  currency: String
+  source: OrderSource
+  channel: String
+  notes: String
+}
+
+input UpdateOrderInput {
+  status: OrderStatus
+  notes: String
+  internalNotes: String
+  tags: [String!]
+}
+
+input FulfillOrderInput {
+  lineItems: [FulfillLineItemInput!]!
+  trackingNumber: String
+  carrier: String
+  notifyCustomer: Boolean
+}
+
+input FulfillLineItemInput {
+  lineItemId: ID!
+  quantity: Int!
+}
+
+input RefundOrderInput {
+  amount: Float!
+  reason: String
+  note: String
+  notifyCustomer: Boolean
+}
+
+input AddOrderLineItemInput {
+  orderId: ID!
+  productId: ID!
+  productVariantId: ID
+  quantity: Int!
+  price: Float!
+  name: String!
+  sku: String!
+  properties: JSON
+}
+
+input UpdateOrderLineItemInput {
+  quantity: Int
+  price: Float
+  properties: JSON
+}
+
+input CustomerInfoInput {
+  email: String!
+  phone: String
+  firstName: String!
+  lastName: String!
+  acceptsMarketing: Boolean
+}
+
+input AddressInput {
+  firstName: String
+  lastName: String
+  company: String
+  address1: String
+  address2: String
+  city: String
+  province: String
+  country: String
+  zip: String
+  phone: String
+  latitude: Float
+  longitude: Float
+}
+
+# Scalar for JSON data
+scalar JSON

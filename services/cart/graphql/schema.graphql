@@ -1,0 +1,307 @@
+directive @goModel(model: String, models: [String!]) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
+directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+
+extend type User @key(fields: "id") {
+  id: ID! @external
+}
+
+type Query {
+  # Cart queries
+  cart(id: ID!): Cart
+  carts(filter: CartFilter): [Cart!]!
+  cartBySession(sessionId: String!): Cart
+  
+  # Line item queries
+  lineItem(id: ID!): CartLineItem
+}
+
+type Mutation {
+  # Cart mutations
+  createCart(input: CreateCartInput!): Cart!
+  updateCart(id: ID!, input: UpdateCartInput!): Cart!
+  deleteCart(id: ID!): Boolean!
+  
+  # Line item mutations
+  addLineItem(input: AddLineItemInput!): CartLineItem!
+  updateLineItem(id: ID!, input: UpdateLineItemInput!): CartLineItem!
+  removeLineItem(id: ID!): Boolean!
+  
+  # Cart actions
+  clearCart(cartId: ID!): Boolean!
+  applyDiscountCode(cartId: ID!, code: String!): Cart!
+  removeDiscountCode(cartId: ID!, code: String!): Cart!
+  updateShippingAddress(cartId: ID!, address: AddressInput!): Cart!
+  updateBillingAddress(cartId: ID!, address: AddressInput!): Cart!
+}
+
+# Main Cart type with federation key
+type Cart @key(fields: "id") @goModel(model: "unified-commerce/services/cart/models.Cart") {
+  id: ID!
+  sessionId: String!
+  customerId: ID
+  merchantId: ID!
+  status: CartStatus!
+  currency: String!
+  
+  # Customer Information
+  customerEmail: String
+  customerPhone: String
+  customerFirstName: String
+  customerLastName: String
+  
+  # Addresses
+  billingAddress: Address
+  shippingAddress: Address
+  
+  # Pricing Information
+  subtotalPrice: Float!
+  totalTax: Float!
+  totalShipping: Float!
+  totalDiscount: Float!
+  totalPrice: Float!
+  
+  # Checkout Information
+  checkoutStep: CheckoutStep!
+  paymentMethodId: String
+  shippingMethodId: String
+  
+  # Marketing
+  discountCodes: [String!]!
+  abandonedAt: String
+  recoveredAt: String
+  
+  # Metadata
+  notes: String
+  attributes: JSON
+  
+  # Timestamps
+  expiresAt: String
+  completedAt: String
+  createdAt: String!
+  updatedAt: String
+  
+  # Relationships
+  lineItems: [CartLineItem!]!
+  taxLines: [CartTaxLine!]!
+  shippingLines: [CartShippingLine!]!
+  discountApplications: [CartDiscountApplication!]!
+  
+  # Federation - extend User relationship
+  customer: User
+}
+
+type CartLineItem @goModel(model: "unified-commerce/services/cart/models.CartLineItem") {
+  id: ID!
+  cartId: ID!
+  productId: ID!
+  productVariantId: ID
+  
+  # Product Information
+  name: String!
+  sku: String!
+  barcode: String
+  productTitle: String
+  variantTitle: String
+  vendor: String
+  productImage: String
+  
+  # Quantity and Pricing
+  quantity: Int!
+  price: Float!
+  compareAtPrice: Float
+  linePrice: Float!
+  
+  # Discounts and Tax
+  totalDiscount: Float!
+  taxable: Boolean!
+  
+  # Fulfillment
+  requiresShipping: Boolean!
+  isGiftCard: Boolean!
+  
+  # Metadata
+  properties: JSON
+  createdAt: String!
+  updatedAt: String
+  
+  # Relationships
+  cart: Cart!
+  discountAllocations: [CartLineItemDiscountAllocation!]!
+}
+
+type CartTaxLine @goModel(model: "unified-commerce/services/cart/models.CartTaxLine") {
+  id: ID!
+  cartId: ID!
+  title: String!
+  rate: Float!
+  price: Float!
+  createdAt: String!
+  updatedAt: String
+}
+
+type CartShippingLine @goModel(model: "unified-commerce/services/cart/models.CartShippingLine") {
+  id: ID!
+  cartId: ID!
+  title: String!
+  code: String
+  price: Float!
+  carrierIdentifier: String
+  requestedFulfillmentServiceId: String
+  createdAt: String!
+  updatedAt: String
+}
+
+type CartDiscountApplication @goModel(model: "unified-commerce/services/cart/models.CartDiscountApplication") {
+  id: ID!
+  cartId: ID!
+  type: DiscountType!
+  title: String!
+  description: String
+  value: Float!
+  valueType: DiscountValueType!
+  allocationMethod: AllocationMethod!
+  targetSelection: TargetSelection!
+  targetType: TargetType!
+  code: String
+  createdAt: String!
+  updatedAt: String
+}
+
+type CartLineItemDiscountAllocation @goModel(model: "unified-commerce/services/cart/models.CartLineItemDiscountAllocation") {
+  id: ID!
+  lineItemId: ID!
+  discountApplicationId: ID!
+  amount: Float!
+  createdAt: String!
+  updatedAt: String
+}
+
+type Address @goModel(model: "unified-commerce/services/cart/models.Address") {
+  firstName: String
+  lastName: String
+  company: String
+  address1: String
+  address2: String
+  city: String
+  province: String
+  country: String
+  zip: String
+  phone: String
+  latitude: Float
+  longitude: Float
+}
+
+# Enums
+enum CartStatus {
+  ACTIVE
+  ABANDONED
+  COMPLETED
+  EXPIRED
+}
+
+enum CheckoutStep {
+  CART
+  SHIPPING
+  PAYMENT
+  REVIEW
+  COMPLETE
+}
+
+enum DiscountType {
+  MANUAL
+  CODE
+  AUTOMATIC
+}
+
+enum DiscountValueType {
+  FIXED
+  PERCENTAGE
+}
+
+enum AllocationMethod {
+  ACROSS
+  EACH
+}
+
+enum TargetSelection {
+  ALL
+  ENTITLED
+  EXPLICIT
+}
+
+enum TargetType {
+  LINE_ITEM
+  SHIPPING_LINE
+}
+
+# Input Types
+input CartFilter {
+  customerId: ID
+  merchantId: ID
+  status: CartStatus
+  sessionId: String
+  limit: Int
+  offset: Int
+}
+
+input CreateCartInput {
+  sessionId: String!
+  customerId: ID
+  merchantId: ID!
+  currency: String
+  customerEmail: String
+  customerPhone: String
+  customerFirstName: String
+  customerLastName: String
+}
+
+input UpdateCartInput {
+  sessionId: String
+  customerId: ID
+  status: CartStatus
+  currency: String
+  customerEmail: String
+  customerPhone: String
+  customerFirstName: String
+  customerLastName: String
+  checkoutStep: CheckoutStep
+  paymentMethodId: String
+  shippingMethodId: String
+  notes: String
+  attributes: JSON
+}
+
+input AddLineItemInput {
+  cartId: ID!
+  productId: ID!
+  productVariantId: ID
+  quantity: Int!
+  price: Float!
+  name: String!
+  sku: String!
+  properties: JSON
+}
+
+input UpdateLineItemInput {
+  quantity: Int
+  price: Float
+  properties: JSON
+}
+
+input AddressInput {
+  firstName: String
+  lastName: String
+  company: String
+  address1: String
+  address2: String
+  city: String
+  province: String
+  country: String
+  zip: String
+  phone: String
+  latitude: Float
+  longitude: Float
+}
+
+# Scalar for JSON data
+scalar JSON

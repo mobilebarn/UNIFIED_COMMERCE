@@ -1,6 +1,15 @@
 import { create } from 'zustand'
 import { fetchDashboardMetrics, fetchRevenueSeries, fetchRecentOrders, DashboardMetrics, RevenuePoint, OrderSummary } from '../services/dashboard'
 
+interface User {
+  id: string
+  email: string
+  username: string
+  firstName: string
+  lastName: string
+  role: string
+}
+
 interface DashboardState {
   range: '7d'|'30d'|'90d'|'ytd'
   loading: boolean
@@ -8,8 +17,12 @@ interface DashboardState {
   revenue: RevenuePoint[]
   recent: OrderSummary[]
   error?: string
+  user?: User
+  isAuthenticated: boolean
   setRange: (r:DashboardState['range'])=>Promise<void>
   refresh: ()=>Promise<void>
+  setUser: (user: User) => void
+  logout: () => void
 }
 
 export const useDashboardStore = create<DashboardState>((set,get)=>({
@@ -17,6 +30,7 @@ export const useDashboardStore = create<DashboardState>((set,get)=>({
   loading: false,
   revenue: [],
   recent: [],
+  isAuthenticated: false,
   async setRange(r){
     set({ range: r })
     await get().refresh()
@@ -34,5 +48,13 @@ export const useDashboardStore = create<DashboardState>((set,get)=>({
     } catch(e:any){
       set({ error: e.message || 'Failed to load dashboard', loading:false })
     }
+  },
+  setUser: (user: User) => {
+    set({ user, isAuthenticated: true })
+  },
+  logout: () => {
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
+    set({ user: undefined, isAuthenticated: false })
   }
 }))

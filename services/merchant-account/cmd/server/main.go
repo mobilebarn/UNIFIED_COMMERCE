@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"unified-commerce/services/merchant-account/graphql"
 	"unified-commerce/services/merchant-account/handlers"
 	"unified-commerce/services/merchant-account/models"
 	"unified-commerce/services/merchant-account/repository"
@@ -55,11 +56,15 @@ func setupRoutes(router *gin.Engine, baseService *service.BaseService) {
 	// Create service
 	merchantService := merchantService.NewMerchantService(repo, baseService.Logger)
 
-	// Create handler
+	// Create handlers
 	handler := handlers.NewMerchantHandler(merchantService, baseService.Logger)
+	graphqlHandler := graphql.NewHandler(repo, merchantService, baseService.Logger)
 
-	// Register routes
+	// Register REST routes
 	handler.RegisterRoutes(router)
+
+	// Register GraphQL endpoint
+	router.POST("/graphql", graphqlHandler.GraphQLHandler)
 }
 
 // seedInitialData seeds the database with initial subscription plans

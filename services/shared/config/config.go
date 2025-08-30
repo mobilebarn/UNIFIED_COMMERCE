@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -58,17 +59,32 @@ func LoadConfig(serviceName string) (*Config, error) {
 	// Load .env file if it exists (for local development)
 	godotenv.Load()
 
+	// Support both DB_* and DATABASE_* prefixes; sanitize service name for default DB
+	sanitizeServiceDBName := func(name string) string {
+		// Postgres identifiers can't easily use hyphens unless quoted; replace with underscore
+		return strings.ReplaceAll(name, "-", "_")
+	}
+
+	getEnvAny := func(keys []string, def string) string {
+		for _, k := range keys {
+			if v := os.Getenv(k); v != "" {
+				return v
+			}
+		}
+		return def
+	}
+
 	config := &Config{
 		ServiceName: serviceName,
 		ServicePort: getEnv("SERVICE_PORT", "8080"),
 		Environment: getEnv("ENVIRONMENT", "development"),
 
 		// Database
-		DatabaseHost:     getEnv("DB_HOST", "localhost"),
-		DatabasePort:     getEnv("DB_PORT", "5432"),
-		DatabaseUser:     getEnv("DB_USER", "postgres"),
-		DatabasePassword: getEnv("DB_PASSWORD", "postgres"),
-		DatabaseName:     getEnv("DB_NAME", serviceName+"_service"),
+		DatabaseHost:     getEnvAny([]string{"DB_HOST", "DATABASE_HOST"}, "localhost"),
+		DatabasePort:     getEnvAny([]string{"DB_PORT", "DATABASE_PORT"}, "5432"),
+		DatabaseUser:     getEnvAny([]string{"DB_USER", "DATABASE_USER"}, "postgres"),
+		DatabasePassword: getEnvAny([]string{"DB_PASSWORD", "DATABASE_PASSWORD"}, "postgres"),
+		DatabaseName:     getEnvAny([]string{"DB_NAME", "DATABASE_NAME"}, sanitizeServiceDBName(serviceName)+"_service"),
 
 		// MongoDB
 		MongoURL:      getEnv("MONGO_URL", "mongodb://mongodb:mongodb@localhost:27017"),

@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
+	"unified-commerce/services/promotions/graphql"
 	"unified-commerce/services/promotions/handlers"
 	"unified-commerce/services/promotions/repository"
 	"unified-commerce/services/promotions/service"
@@ -92,6 +93,13 @@ func main() {
 
 	// Register routes
 	promotionsHandler.RegisterRoutes(router)
+
+	// Add GraphQL endpoints
+	graphqlHandler := graphql.NewGraphQLHandler(promotionsService, log)
+	playgroundHandler := graphql.NewGraphQLPlaygroundHandler()
+
+	router.Any("/graphql", gin.WrapH(graphqlHandler))
+	router.GET("/graphql/playground", gin.WrapH(playgroundHandler))
 
 	// Start server
 	srv := &http.Server{

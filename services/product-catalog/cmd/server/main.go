@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"unified-commerce/services/product-catalog/graphql"
 	"unified-commerce/services/product-catalog/handlers"
 	"unified-commerce/services/product-catalog/repository"
 	"unified-commerce/services/product-catalog/service"
@@ -85,6 +86,13 @@ func main() {
 
 	// Register routes
 	productHandler.RegisterRoutes(router)
+
+	// Add GraphQL endpoints
+	graphqlHandler := graphql.NewGraphQLHandler(productService, log)
+	playgroundHandler := graphql.NewGraphQLPlaygroundHandler()
+
+	router.Any("/graphql", gin.WrapH(graphqlHandler))
+	router.GET("/graphql/playground", gin.WrapH(playgroundHandler))
 
 	// Start server
 	srv := &http.Server{

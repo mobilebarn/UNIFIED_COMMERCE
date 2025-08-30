@@ -1,0 +1,313 @@
+directive @goModel(model: String, models: [String!]) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
+directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+
+extend type User @key(fields: "id") {
+  id: ID! @external
+}
+
+type Query {
+  # Inventory queries
+  inventoryItem(id: ID!): InventoryItem
+  inventoryItems(filter: InventoryFilter): [InventoryItem!]!
+  inventoryByLocation(locationId: ID!): [InventoryItem!]!
+  inventoryByProduct(productId: ID!, variantId: ID): InventoryItem
+  
+  # Stock movement queries
+  stockMovement(id: ID!): StockMovement
+  stockMovements(filter: StockMovementFilter): [StockMovement!]!
+  
+  # Location queries
+  location(id: ID!): Location
+  locations(merchantId: ID): [Location!]!
+}
+
+type Mutation {
+  # Inventory mutations
+  createInventoryItem(input: CreateInventoryItemInput!): InventoryItem!
+  updateInventoryItem(id: ID!, input: UpdateInventoryItemInput!): InventoryItem!
+  deleteInventoryItem(id: ID!): Boolean!
+  
+  # Stock adjustments
+  adjustStock(input: AdjustStockInput!): StockMovement!
+  reserveStock(input: ReserveStockInput!): InventoryItem!
+  releaseStock(input: ReleaseStockInput!): InventoryItem!
+  transferStock(input: TransferStockInput!): [StockMovement!]!
+  
+  # Location mutations
+  createLocation(input: CreateLocationInput!): Location!
+  updateLocation(id: ID!, input: UpdateLocationInput!): Location!
+  deleteLocation(id: ID!): Boolean!
+}
+
+# Main InventoryItem type with federation key
+type InventoryItem @key(fields: "id") @goModel(model: "unified-commerce/services/inventory/models.InventoryItem") {
+  id: ID!
+  productId: ID!
+  productVariantId: ID
+  locationId: ID!
+  merchantId: ID!
+  
+  # Stock Information
+  quantityAvailable: Int!
+  quantityReserved: Int!
+  quantityOnHand: Int!
+  quantityCommitted: Int!
+  
+  # Product Information
+  sku: String!
+  barcode: String
+  productTitle: String
+  variantTitle: String
+  
+  # Tracking Information
+  trackQuantity: Boolean!
+  allowBackorders: Boolean!
+  requiresShipping: Boolean!
+  
+  # Costs
+  costPrice: Float
+  
+  # Metadata
+  metadata: JSON
+  
+  # Timestamps
+  lastStockUpdate: String
+  createdAt: String!
+  updatedAt: String
+  
+  # Relationships
+  location: Location!
+  stockMovements: [StockMovement!]!
+}
+
+type StockMovement @key(fields: "id") @goModel(model: "unified-commerce/services/inventory/models.StockMovement") {
+  id: ID!
+  inventoryItemId: ID!
+  locationId: ID!
+  productId: ID!
+  productVariantId: ID
+  
+  # Movement Information
+  type: StockMovementType!
+  quantity: Int!
+  previousQuantity: Int!
+  newQuantity: Int!
+  
+  # Reference Information
+  referenceType: String
+  referenceId: String
+  orderId: ID
+  
+  # Metadata
+  reason: String
+  note: String
+  userId: ID
+  metadata: JSON
+  
+  # Timestamps
+  createdAt: String!
+  
+  # Relationships
+  inventoryItem: InventoryItem!
+  location: Location!
+  
+  # Federation relationships
+  user: User
+}
+
+type Location @key(fields: "id") @goModel(model: "unified-commerce/services/inventory/models.Location") {
+  id: ID!
+  merchantId: ID!
+  name: String!
+  code: String!
+  type: LocationType!
+  
+  # Address Information
+  address: Address
+  
+  # Contact Information
+  phone: String
+  email: String
+  
+  # Settings
+  isActive: Boolean!
+  isDefault: Boolean!
+  allowBackorders: Boolean!
+  
+  # Metadata
+  metadata: JSON
+  
+  # Timestamps
+  createdAt: String!
+  updatedAt: String
+  
+  # Relationships
+  inventoryItems: [InventoryItem!]!
+}
+
+type Address @goModel(model: "unified-commerce/services/inventory/models.Address") {
+  address1: String
+  address2: String
+  city: String
+  province: String
+  country: String
+  zip: String
+  latitude: Float
+  longitude: Float
+}
+
+# Enums
+enum StockMovementType {
+  ADJUSTMENT
+  SALE
+  RETURN
+  TRANSFER
+  RESERVATION
+  RELEASE
+  PURCHASE
+  DAMAGE
+  THEFT
+  CORRECTION
+}
+
+enum LocationType {
+  WAREHOUSE
+  STORE
+  FULFILLMENT_CENTER
+  DROPSHIP
+  VIRTUAL
+}
+
+# Input Types
+input InventoryFilter {
+  productId: ID
+  productVariantId: ID
+  locationId: ID
+  merchantId: ID
+  sku: String
+  trackQuantity: Boolean
+  limit: Int
+  offset: Int
+}
+
+input StockMovementFilter {
+  inventoryItemId: ID
+  locationId: ID
+  productId: ID
+  type: StockMovementType
+  referenceType: String
+  referenceId: String
+  orderId: ID
+  userId: ID
+  dateFrom: String
+  dateTo: String
+  limit: Int
+  offset: Int
+}
+
+input CreateInventoryItemInput {
+  productId: ID!
+  productVariantId: ID
+  locationId: ID!
+  merchantId: ID!
+  sku: String!
+  barcode: String
+  productTitle: String
+  variantTitle: String
+  quantityOnHand: Int!
+  trackQuantity: Boolean
+  allowBackorders: Boolean
+  requiresShipping: Boolean
+  costPrice: Float
+  metadata: JSON
+}
+
+input UpdateInventoryItemInput {
+  sku: String
+  barcode: String
+  productTitle: String
+  variantTitle: String
+  trackQuantity: Boolean
+  allowBackorders: Boolean
+  requiresShipping: Boolean
+  costPrice: Float
+  metadata: JSON
+}
+
+input AdjustStockInput {
+  inventoryItemId: ID!
+  quantity: Int!
+  reason: String!
+  note: String
+  userId: ID
+  metadata: JSON
+}
+
+input ReserveStockInput {
+  inventoryItemId: ID!
+  quantity: Int!
+  orderId: ID
+  reason: String
+  userId: ID
+}
+
+input ReleaseStockInput {
+  inventoryItemId: ID!
+  quantity: Int!
+  orderId: ID
+  reason: String
+  userId: ID
+}
+
+input TransferStockInput {
+  fromLocationId: ID!
+  toLocationId: ID!
+  productId: ID!
+  productVariantId: ID
+  quantity: Int!
+  reason: String
+  note: String
+  userId: ID
+  metadata: JSON
+}
+
+input CreateLocationInput {
+  merchantId: ID!
+  name: String!
+  code: String!
+  type: LocationType!
+  address: AddressInput
+  phone: String
+  email: String
+  isActive: Boolean
+  isDefault: Boolean
+  allowBackorders: Boolean
+  metadata: JSON
+}
+
+input UpdateLocationInput {
+  name: String
+  code: String
+  type: LocationType
+  address: AddressInput
+  phone: String
+  email: String
+  isActive: Boolean
+  isDefault: Boolean
+  allowBackorders: Boolean
+  metadata: JSON
+}
+
+input AddressInput {
+  address1: String
+  address2: String
+  city: String
+  province: String
+  country: String
+  zip: String
+  latitude: Float
+  longitude: Float
+}
+
+# Scalar for JSON data
+scalar JSON

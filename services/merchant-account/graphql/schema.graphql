@@ -1,0 +1,813 @@
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@external", "@requires", "@provides", "@shareable"])
+
+# ==========================================
+# MERCHANT ACCOUNT FEDERATION SCHEMA
+# ==========================================
+# This service manages merchant accounts, stores, subscriptions,
+# banking information, and business settings
+
+# ==========================================
+# FEDERATION ENTITIES
+# ==========================================
+
+# Merchant entity - core business account
+type Merchant @key(fields: "id") {
+  id: ID!
+  businessName: String!
+  legalName: String
+  businessType: BusinessType!
+  industry: String
+  taxId: String
+  websiteUrl: String
+  description: String
+  logoUrl: String
+  primaryEmail: String!
+  primaryPhone: String
+  status: MerchantStatus!
+  isVerified: Boolean!
+  verifiedAt: DateTime
+  onboardingStep: Int!
+  settings: MerchantSettings!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  
+  # Owned relationships
+  addresses: [MerchantAddress!]!
+  bankAccounts: [BankAccount!]!
+  subscriptions: [Subscription!]!
+  stores: [Store!]!
+  members: [MerchantMember!]!
+  
+  # Federation relationships
+  user: User @external
+}
+
+# Store entity - individual store locations/channels
+type Store @key(fields: "id") {
+  id: ID!
+  merchantId: ID!
+  name: String!
+  description: String
+  storeType: StoreType!
+  status: StoreStatus!
+  domain: String
+  isActive: Boolean!
+  settings: StoreSettings!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  
+  # Owned relationships
+  merchant: Merchant!
+  address: StoreAddress
+  
+  # Federation relationships (extend from other services)
+  products: [Product!]! @external
+  inventory: [InventoryItem!]! @external
+  orders: [Order!]! @external
+}
+
+# Subscription entity - merchant subscription plans
+type Subscription @key(fields: "id") {
+  id: ID!
+  merchantId: ID!
+  planId: ID!
+  status: SubscriptionStatus!
+  billingCycle: BillingCycle!
+  currentPeriodStart: DateTime!
+  currentPeriodEnd: DateTime!
+  cancelAt: DateTime
+  canceledAt: DateTime
+  trialStart: DateTime
+  trialEnd: DateTime
+  amount: Float!
+  currency: String!
+  features: [String!]!
+  limits: SubscriptionLimits!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  
+  # Owned relationships
+  merchant: Merchant!
+  plan: SubscriptionPlan!
+  
+  # Federation relationships
+  payments: [Payment!]! @external
+}
+
+# ==========================================
+# FEDERATION EXTENSIONS
+# ==========================================
+
+# Extend User from Identity service
+extend type User @key(fields: "id") {
+  id: ID! @external
+  email: String! @external
+  
+  # Add merchant relationships
+  ownedMerchants: [Merchant!]!
+  merchantMemberships: [MerchantMember!]!
+  currentMerchant: Merchant
+}
+
+# Extend Product from Product Catalog service  
+extend type Product @key(fields: "id") {
+  id: ID! @external
+  storeId: ID! @external
+  
+  # Add merchant context
+  store: Store! @requires(fields: "storeId")
+}
+
+# Extend Order from Order service
+extend type Order @key(fields: "id") {
+  id: ID! @external
+  merchantId: ID! @external
+  storeId: ID! @external
+  
+  # Add merchant relationships
+  merchant: Merchant! @requires(fields: "merchantId")
+  store: Store! @requires(fields: "storeId")
+}
+
+# ==========================================
+# SUPPORTING TYPES
+# ==========================================
+
+# Merchant address information
+type MerchantAddress {
+  id: ID!
+  merchantId: ID!
+  type: AddressType!
+  label: String
+  company: String
+  address1: String!
+  address2: String
+  city: String!
+  state: String
+  postalCode: String!
+  country: String!
+  phone: String
+  isDefault: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+# Banking account information
+type BankAccount {
+  id: ID!
+  merchantId: ID!
+  accountHolderName: String!
+  bankName: String!
+  accountType: AccountType!
+  routingNumber: String!
+  accountNumberMask: String! # Last 4 digits only for security
+  currency: String!
+  isVerified: Boolean!
+  isDefault: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+# Store address
+type StoreAddress {
+  id: ID!
+  storeId: ID!
+  address1: String!
+  address2: String
+  city: String!
+  state: String
+  postalCode: String!
+  country: String!
+  phone: String
+  coordinates: Coordinates
+}
+
+# Geographic coordinates
+type Coordinates {
+  latitude: Float!
+  longitude: Float!
+}
+
+# Merchant team member
+type MerchantMember {
+  id: ID!
+  merchantId: ID!
+  userId: ID!
+  role: MemberRole!
+  permissions: [Permission!]!
+  status: MemberStatus!
+  invitedAt: DateTime!
+  joinedAt: DateTime
+  lastActiveAt: DateTime
+}
+
+# Subscription plan details
+type SubscriptionPlan {
+  id: ID!
+  name: String!
+  description: String!
+  price: Float!
+  currency: String!
+  billingCycle: BillingCycle!
+  features: [String!]!
+  limits: SubscriptionLimits!
+  isActive: Boolean!
+}
+
+# Merchant configuration settings
+type MerchantSettings {
+  currency: String!
+  timezone: String!
+  dateFormat: String!
+  weightUnit: String!
+  dimensionUnit: String!
+  orderIdPrefix: String!
+  notificationPreferences: NotificationPreferences!
+  businessHours: BusinessHours!
+  shippingZones: [String!]!
+  taxSettings: TaxSettings!
+}
+
+# Store configuration settings
+type StoreSettings {
+  currency: String!
+  timezone: String!
+  isOnline: Boolean!
+  allowPickup: Boolean!
+  allowDelivery: Boolean!
+  deliveryRadius: Float
+  minimumOrder: Float
+  processingTime: String!
+  theme: StoreTheme!
+}
+
+# Store visual theme
+type StoreTheme {
+  primaryColor: String!
+  secondaryColor: String!
+  logoUrl: String
+  bannerUrl: String
+  customCSS: String
+}
+
+# Notification preferences
+type NotificationPreferences {
+  orderNotifications: Boolean!
+  paymentNotifications: Boolean!
+  inventoryAlerts: Boolean!
+  marketingEmails: Boolean!
+  systemUpdates: Boolean!
+}
+
+# Business hours configuration
+type BusinessHours {
+  monday: DayHours
+  tuesday: DayHours
+  wednesday: DayHours
+  thursday: DayHours
+  friday: DayHours
+  saturday: DayHours
+  sunday: DayHours
+  holidays: [HolidayHours!]!
+}
+
+# Daily hours
+type DayHours {
+  isOpen: Boolean!
+  openTime: String
+  closeTime: String
+  breaks: [TimeSlot!]!
+}
+
+# Holiday hours
+type HolidayHours {
+  date: Date!
+  name: String!
+  isOpen: Boolean!
+  openTime: String
+  closeTime: String
+}
+
+# Time slot
+type TimeSlot {
+  startTime: String!
+  endTime: String!
+}
+
+# Tax configuration
+type TaxSettings {
+  enableTax: Boolean!
+  taxIncluded: Boolean!
+  defaultTaxRate: Float!
+  taxRegistrationNumber: String
+  exemptions: [String!]!
+}
+
+# Subscription limits
+type SubscriptionLimits {
+  maxProducts: Int!
+  maxOrders: Int!
+  maxStores: Int!
+  maxUsers: Int!
+  storageGB: Float!
+  apiCallsPerMonth: Int!
+  features: [String!]!
+}
+
+# Permission definition
+type Permission {
+  id: ID!
+  name: String!
+  description: String!
+  resource: String!
+  action: String!
+}
+
+# ==========================================
+# ENUMS
+# ==========================================
+
+enum BusinessType {
+  SOLE_PROPRIETORSHIP
+  PARTNERSHIP
+  CORPORATION
+  LLC
+  NONPROFIT
+  OTHER
+}
+
+enum MerchantStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  CLOSED
+  UNDER_REVIEW
+}
+
+enum StoreType {
+  ONLINE
+  PHYSICAL
+  HYBRID
+  MARKETPLACE
+  MOBILE
+}
+
+enum StoreStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+  SUSPENDED
+}
+
+enum AddressType {
+  BUSINESS
+  BILLING
+  SHIPPING
+  WAREHOUSE
+  LEGAL
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  BUSINESS_CHECKING
+  BUSINESS_SAVINGS
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  UNPAID
+  EXPIRED
+}
+
+enum BillingCycle {
+  MONTHLY
+  QUARTERLY
+  ANNUALLY
+  CUSTOM
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MANAGER
+  STAFF
+  VIEWER
+  ACCOUNTANT
+}
+
+enum MemberStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+}
+
+# ==========================================
+# SCALARS
+# ==========================================
+
+scalar DateTime
+scalar Date
+scalar JSON
+
+# ==========================================
+# QUERIES
+# ==========================================
+
+type Query {
+  # Merchant queries
+  merchant(id: ID!): Merchant
+  merchants(filter: MerchantFilter, pagination: PaginationInput): MerchantConnection!
+  myMerchants: [Merchant!]!
+  
+  # Store queries
+  store(id: ID!): Store
+  stores(merchantId: ID, filter: StoreFilter, pagination: PaginationInput): StoreConnection!
+  
+  # Subscription queries
+  subscription(id: ID!): Subscription
+  subscriptions(merchantId: ID!, filter: SubscriptionFilter): [Subscription!]!
+  subscriptionPlans: [SubscriptionPlan!]!
+  
+  # Member queries
+  merchantMembers(merchantId: ID!): [MerchantMember!]!
+  myMemberships: [MerchantMember!]!
+}
+
+# ==========================================
+# MUTATIONS
+# ==========================================
+
+type Mutation {
+  # Merchant mutations
+  createMerchant(input: CreateMerchantInput!): MerchantResponse!
+  updateMerchant(id: ID!, input: UpdateMerchantInput!): MerchantResponse!
+  deleteMerchant(id: ID!): DeleteResponse!
+  verifyMerchant(id: ID!): MerchantResponse!
+  
+  # Store mutations
+  createStore(input: CreateStoreInput!): StoreResponse!
+  updateStore(id: ID!, input: UpdateStoreInput!): StoreResponse!
+  deleteStore(id: ID!): DeleteResponse!
+  
+  # Address mutations
+  createMerchantAddress(input: CreateAddressInput!): AddressResponse!
+  updateMerchantAddress(id: ID!, input: UpdateAddressInput!): AddressResponse!
+  deleteMerchantAddress(id: ID!): DeleteResponse!
+  
+  # Bank account mutations
+  createBankAccount(input: CreateBankAccountInput!): BankAccountResponse!
+  updateBankAccount(id: ID!, input: UpdateBankAccountInput!): BankAccountResponse!
+  deleteBankAccount(id: ID!): DeleteResponse!
+  verifyBankAccount(id: ID!): BankAccountResponse!
+  
+  # Subscription mutations
+  createSubscription(input: CreateSubscriptionInput!): SubscriptionResponse!
+  updateSubscription(id: ID!, input: UpdateSubscriptionInput!): SubscriptionResponse!
+  cancelSubscription(id: ID!, reason: String): SubscriptionResponse!
+  
+  # Member mutations
+  inviteMember(input: InviteMemberInput!): MemberResponse!
+  updateMemberRole(id: ID!, role: MemberRole!): MemberResponse!
+  removeMember(id: ID!): DeleteResponse!
+  acceptInvitation(token: String!): MemberResponse!
+}
+
+# ==========================================
+# INPUT TYPES
+# ==========================================
+
+input MerchantFilter {
+  businessName: String
+  status: MerchantStatus
+  businessType: BusinessType
+  industry: String
+  isVerified: Boolean
+  createdAfter: DateTime
+  createdBefore: DateTime
+}
+
+input StoreFilter {
+  name: String
+  storeType: StoreType
+  status: StoreStatus
+  isActive: Boolean
+}
+
+input SubscriptionFilter {
+  status: SubscriptionStatus
+  planId: ID
+  billingCycle: BillingCycle
+}
+
+input CreateMerchantInput {
+  businessName: String!
+  legalName: String
+  businessType: BusinessType!
+  industry: String
+  taxId: String
+  websiteUrl: String
+  description: String
+  primaryEmail: String!
+  primaryPhone: String
+  settings: MerchantSettingsInput
+}
+
+input UpdateMerchantInput {
+  businessName: String
+  legalName: String
+  businessType: BusinessType
+  industry: String
+  taxId: String
+  websiteUrl: String
+  description: String
+  logoUrl: String
+  primaryEmail: String
+  primaryPhone: String
+  settings: MerchantSettingsInput
+}
+
+input CreateStoreInput {
+  merchantId: ID!
+  name: String!
+  description: String
+  storeType: StoreType!
+  domain: String
+  settings: StoreSettingsInput
+  address: CreateStoreAddressInput
+}
+
+input UpdateStoreInput {
+  name: String
+  description: String
+  storeType: StoreType
+  domain: String
+  status: StoreStatus
+  isActive: Boolean
+  settings: StoreSettingsInput
+}
+
+input CreateAddressInput {
+  merchantId: ID!
+  type: AddressType!
+  label: String
+  company: String
+  address1: String!
+  address2: String
+  city: String!
+  state: String
+  postalCode: String!
+  country: String!
+  phone: String
+  isDefault: Boolean
+}
+
+input UpdateAddressInput {
+  type: AddressType
+  label: String
+  company: String
+  address1: String
+  address2: String
+  city: String
+  state: String
+  postalCode: String
+  country: String
+  phone: String
+  isDefault: Boolean
+}
+
+input CreateBankAccountInput {
+  merchantId: ID!
+  accountHolderName: String!
+  bankName: String!
+  accountType: AccountType!
+  routingNumber: String!
+  accountNumber: String!
+  currency: String
+  isDefault: Boolean
+}
+
+input UpdateBankAccountInput {
+  accountHolderName: String
+  bankName: String
+  accountType: AccountType
+  routingNumber: String
+  accountNumber: String
+  currency: String
+  isDefault: Boolean
+}
+
+input CreateSubscriptionInput {
+  merchantId: ID!
+  planId: ID!
+  billingCycle: BillingCycle!
+  trialDays: Int
+}
+
+input UpdateSubscriptionInput {
+  planId: ID
+  billingCycle: BillingCycle
+}
+
+input InviteMemberInput {
+  merchantId: ID!
+  email: String!
+  role: MemberRole!
+  permissions: [String!]
+}
+
+input CreateStoreAddressInput {
+  address1: String!
+  address2: String
+  city: String!
+  state: String
+  postalCode: String!
+  country: String!
+  phone: String
+  latitude: Float
+  longitude: Float
+}
+
+input MerchantSettingsInput {
+  currency: String
+  timezone: String
+  dateFormat: String
+  weightUnit: String
+  dimensionUnit: String
+  orderIdPrefix: String
+  notificationPreferences: NotificationPreferencesInput
+  businessHours: BusinessHoursInput
+  shippingZones: [String!]
+  taxSettings: TaxSettingsInput
+}
+
+input StoreSettingsInput {
+  currency: String
+  timezone: String
+  isOnline: Boolean
+  allowPickup: Boolean
+  allowDelivery: Boolean
+  deliveryRadius: Float
+  minimumOrder: Float
+  processingTime: String
+  theme: StoreThemeInput
+}
+
+input StoreThemeInput {
+  primaryColor: String
+  secondaryColor: String
+  logoUrl: String
+  bannerUrl: String
+  customCSS: String
+}
+
+input NotificationPreferencesInput {
+  orderNotifications: Boolean
+  paymentNotifications: Boolean
+  inventoryAlerts: Boolean
+  marketingEmails: Boolean
+  systemUpdates: Boolean
+}
+
+input BusinessHoursInput {
+  monday: DayHoursInput
+  tuesday: DayHoursInput
+  wednesday: DayHoursInput
+  thursday: DayHoursInput
+  friday: DayHoursInput
+  saturday: DayHoursInput
+  sunday: DayHoursInput
+  holidays: [HolidayHoursInput!]
+}
+
+input DayHoursInput {
+  isOpen: Boolean!
+  openTime: String
+  closeTime: String
+  breaks: [TimeSlotInput!]
+}
+
+input HolidayHoursInput {
+  date: Date!
+  name: String!
+  isOpen: Boolean!
+  openTime: String
+  closeTime: String
+}
+
+input TimeSlotInput {
+  startTime: String!
+  endTime: String!
+}
+
+input TaxSettingsInput {
+  enableTax: Boolean
+  taxIncluded: Boolean
+  defaultTaxRate: Float
+  taxRegistrationNumber: String
+  exemptions: [String!]
+}
+
+input PaginationInput {
+  limit: Int
+  offset: Int
+  orderBy: String
+  orderDirection: OrderDirection
+}
+
+enum OrderDirection {
+  ASC
+  DESC
+}
+
+# ==========================================
+# RESPONSE TYPES
+# ==========================================
+
+type MerchantResponse {
+  success: Boolean!
+  message: String
+  merchant: Merchant
+  errors: [FieldError!]
+}
+
+type StoreResponse {
+  success: Boolean!
+  message: String
+  store: Store
+  errors: [FieldError!]
+}
+
+type AddressResponse {
+  success: Boolean!
+  message: String
+  address: MerchantAddress
+  errors: [FieldError!]
+}
+
+type BankAccountResponse {
+  success: Boolean!
+  message: String
+  bankAccount: BankAccount
+  errors: [FieldError!]
+}
+
+type SubscriptionResponse {
+  success: Boolean!
+  message: String
+  subscription: Subscription
+  errors: [FieldError!]
+}
+
+type MemberResponse {
+  success: Boolean!
+  message: String
+  member: MerchantMember
+  errors: [FieldError!]
+}
+
+type DeleteResponse {
+  success: Boolean!
+  message: String
+  errors: [FieldError!]
+}
+
+type FieldError {
+  field: String!
+  message: String!
+}
+
+# Connection types for pagination
+type MerchantConnection {
+  edges: [MerchantEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type MerchantEdge {
+  node: Merchant!
+  cursor: String!
+}
+
+type StoreConnection {
+  edges: [StoreEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type StoreEdge {
+  node: Store!
+  cursor: String!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}

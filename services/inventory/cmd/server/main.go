@@ -11,6 +11,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
+	"unified-commerce/services/inventory/eventhandlers"
+	"unified-commerce/services/inventory/graphql"
 	"unified-commerce/services/inventory/handlers"
 	"unified-commerce/services/inventory/models"
 	"unified-commerce/services/inventory/repository"
@@ -20,7 +22,6 @@ import (
 	"unified-commerce/services/shared/logger"
 	"unified-commerce/services/shared/middleware"
 	"unified-commerce/shared/messaging"
-	"unified-commerce/services/inventory/eventhandlers"
 )
 
 func main() {
@@ -110,6 +111,13 @@ func main() {
 
 	// Register routes
 	inventoryHandler.RegisterRoutes(router)
+
+	// Add GraphQL endpoints
+	graphqlHandler := graphql.NewGraphQLHandler(inventoryService, log)
+	playgroundHandler := graphql.NewGraphQLPlaygroundHandler()
+
+	router.Any("/graphql", gin.WrapH(graphqlHandler))
+	router.GET("/graphql/playground", gin.WrapH(playgroundHandler))
 
 	// Start server
 	srv := &http.Server{

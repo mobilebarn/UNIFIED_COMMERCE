@@ -330,6 +330,11 @@ func NewRepository(db *database.PostgresDB) *Repository {
 	}
 }
 
+// DB returns underlying gorm DB for one-off internal operations (avoid in regular code paths)
+func (r *Repository) DB() *database.PostgresDB {
+	return r.User.db
+}
+
 // Migrate runs database migrations for all models
 func (r *Repository) Migrate() error {
 	return r.User.db.DB.AutoMigrate(

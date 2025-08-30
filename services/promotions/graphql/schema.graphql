@@ -1,0 +1,384 @@
+directive @goModel(model: String, models: [String!]) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
+directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+
+extend type User @key(fields: "id") {
+  id: ID! @external
+}
+
+extend type Product @key(fields: "id") {
+  id: ID! @external
+}
+
+extend type Order @key(fields: "id") {
+  id: ID! @external
+}
+
+type Query {
+  # Promotion queries
+  promotion(id: ID!): Promotion
+  promotions(filter: PromotionFilter): [Promotion!]!
+  activePromotions(merchantId: ID!): [Promotion!]!
+  
+  # Discount code queries
+  discountCode(code: String!): DiscountCode
+  discountCodes(promotionId: ID): [DiscountCode!]!
+  validateDiscountCode(code: String!, cartTotal: Float!): DiscountCodeValidation!
+  
+  # Campaign queries
+  campaign(id: ID!): Campaign
+  campaigns(filter: CampaignFilter): [Campaign!]!
+}
+
+type Mutation {
+  # Promotion mutations
+  createPromotion(input: CreatePromotionInput!): Promotion!
+  updatePromotion(id: ID!, input: UpdatePromotionInput!): Promotion!
+  deletePromotion(id: ID!): Boolean!
+  activatePromotion(id: ID!): Promotion!
+  deactivatePromotion(id: ID!): Promotion!
+  
+  # Discount code mutations
+  generateDiscountCodes(input: GenerateDiscountCodesInput!): [DiscountCode!]!
+  updateDiscountCode(id: ID!, input: UpdateDiscountCodeInput!): DiscountCode!
+  deleteDiscountCode(id: ID!): Boolean!
+  
+  # Campaign mutations
+  createCampaign(input: CreateCampaignInput!): Campaign!
+  updateCampaign(id: ID!, input: UpdateCampaignInput!): Campaign!
+  deleteCampaign(id: ID!): Boolean!
+  
+  # Usage tracking
+  applyDiscount(input: ApplyDiscountInput!): DiscountApplication!
+}
+
+# Main Promotion type with federation key
+type Promotion @key(fields: "id") @goModel(model: "unified-commerce/services/promotions/models.Promotion") {
+  id: ID!
+  merchantId: ID!
+  name: String!
+  description: String
+  type: PromotionType!
+  status: PromotionStatus!
+  
+  # Discount Configuration
+  discountType: DiscountType!
+  discountValue: Float!
+  
+  # Minimum Requirements
+  minimumRequirements: MinimumRequirements
+  
+  # Usage Limits
+  usageLimits: UsageLimits
+  
+  # Target Configuration
+  applicableProducts: [ID!]!
+  applicableCollections: [ID!]!
+  applicableCustomers: [ID!]!
+  
+  # Date Configuration
+  startsAt: String!
+  endsAt: String
+  
+  # Metadata
+  priority: Int!
+  internalNotes: String
+  
+  # Timestamps
+  createdAt: String!
+  updatedAt: String
+  
+  # Relationships
+  discountCodes: [DiscountCode!]!
+  applications: [DiscountApplication!]!
+  campaign: Campaign
+}
+
+type DiscountCode @key(fields: "id") @goModel(model: "unified-commerce/services/promotions/models.DiscountCode") {
+  id: ID!
+  promotionId: ID!
+  code: String!
+  isActive: Boolean!
+  
+  # Usage Information
+  usageCount: Int!
+  usageLimit: Int
+  usageLimitPerCustomer: Int
+  
+  # Date Configuration
+  startsAt: String
+  endsAt: String
+  
+  # Timestamps
+  createdAt: String!
+  updatedAt: String
+  
+  # Relationships
+  promotion: Promotion!
+  applications: [DiscountApplication!]!
+}
+
+type DiscountApplication @goModel(model: "unified-commerce/services/promotions/models.DiscountApplication") {
+  id: ID!
+  promotionId: ID!
+  discountCodeId: ID
+  orderId: ID!
+  customerId: ID
+  
+  # Application Details
+  discountAmount: Float!
+  appliedAt: String!
+  
+  # Metadata
+  metadata: JSON
+  
+  # Relationships
+  promotion: Promotion!
+  discountCode: DiscountCode
+  
+  # Federation relationships
+  order: Order
+  customer: User
+}
+
+type Campaign @key(fields: "id") @goModel(model: "unified-commerce/services/promotions/models.Campaign") {
+  id: ID!
+  merchantId: ID!
+  name: String!
+  description: String
+  type: CampaignType!
+  status: CampaignStatus!
+  
+  # Date Configuration
+  startsAt: String!
+  endsAt: String
+  
+  # Budget and Goals
+  budget: Float
+  goalType: CampaignGoalType
+  goalValue: Float
+  
+  # Targeting
+  targetAudience: TargetAudience
+  
+  # Metadata
+  metadata: JSON
+  
+  # Timestamps
+  createdAt: String!
+  updatedAt: String
+  
+  # Relationships
+  promotions: [Promotion!]!
+}
+
+type MinimumRequirements @goModel(model: "unified-commerce/services/promotions/models.MinimumRequirements") {
+  type: MinimumRequirementType!
+  value: Float!
+}
+
+type UsageLimits @goModel(model: "unified-commerce/services/promotions/models.UsageLimits") {
+  totalUsageLimit: Int
+  oncePerCustomer: Boolean!
+  perCustomerUsageLimit: Int
+}
+
+type TargetAudience @goModel(model: "unified-commerce/services/promotions/models.TargetAudience") {
+  customerSegments: [String!]!
+  customerTags: [String!]!
+  newCustomersOnly: Boolean!
+  returningCustomersOnly: Boolean!
+}
+
+type DiscountCodeValidation {
+  isValid: Boolean!
+  discountCode: DiscountCode
+  errors: [String!]!
+  applicableAmount: Float
+}
+
+# Enums
+enum PromotionType {
+  PERCENTAGE_DISCOUNT
+  FIXED_AMOUNT_DISCOUNT
+  FREE_SHIPPING
+  BUY_X_GET_Y
+  SPEND_X_GET_Y
+}
+
+enum PromotionStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+  EXPIRED
+  SCHEDULED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
+}
+
+enum MinimumRequirementType {
+  SUBTOTAL
+  QUANTITY
+  NONE
+}
+
+enum CampaignType {
+  SEASONAL
+  FLASH_SALE
+  LOYALTY
+  ACQUISITION
+  RETENTION
+  CLEARANCE
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum CampaignGoalType {
+  REVENUE
+  ORDERS
+  CUSTOMERS
+  CONVERSIONS
+}
+
+# Input Types
+input PromotionFilter {
+  merchantId: ID
+  type: PromotionType
+  status: PromotionStatus
+  campaignId: ID
+  search: String
+  limit: Int
+  offset: Int
+}
+
+input CampaignFilter {
+  merchantId: ID
+  type: CampaignType
+  status: CampaignStatus
+  limit: Int
+  offset: Int
+}
+
+input CreatePromotionInput {
+  merchantId: ID!
+  name: String!
+  description: String
+  type: PromotionType!
+  discountType: DiscountType!
+  discountValue: Float!
+  minimumRequirements: MinimumRequirementsInput
+  usageLimits: UsageLimitsInput
+  applicableProducts: [ID!]
+  applicableCollections: [ID!]
+  applicableCustomers: [ID!]
+  startsAt: String!
+  endsAt: String
+  priority: Int
+  campaignId: ID
+  internalNotes: String
+}
+
+input UpdatePromotionInput {
+  name: String
+  description: String
+  type: PromotionType
+  discountType: DiscountType
+  discountValue: Float
+  minimumRequirements: MinimumRequirementsInput
+  usageLimits: UsageLimitsInput
+  applicableProducts: [ID!]
+  applicableCollections: [ID!]
+  applicableCustomers: [ID!]
+  startsAt: String
+  endsAt: String
+  priority: Int
+  status: PromotionStatus
+  internalNotes: String
+}
+
+input GenerateDiscountCodesInput {
+  promotionId: ID!
+  count: Int!
+  prefix: String
+  length: Int
+  usageLimit: Int
+  usageLimitPerCustomer: Int
+  startsAt: String
+  endsAt: String
+}
+
+input UpdateDiscountCodeInput {
+  isActive: Boolean
+  usageLimit: Int
+  usageLimitPerCustomer: Int
+  startsAt: String
+  endsAt: String
+}
+
+input CreateCampaignInput {
+  merchantId: ID!
+  name: String!
+  description: String
+  type: CampaignType!
+  startsAt: String!
+  endsAt: String
+  budget: Float
+  goalType: CampaignGoalType
+  goalValue: Float
+  targetAudience: TargetAudienceInput
+  metadata: JSON
+}
+
+input UpdateCampaignInput {
+  name: String
+  description: String
+  type: CampaignType
+  status: CampaignStatus
+  startsAt: String
+  endsAt: String
+  budget: Float
+  goalType: CampaignGoalType
+  goalValue: Float
+  targetAudience: TargetAudienceInput
+  metadata: JSON
+}
+
+input ApplyDiscountInput {
+  promotionId: ID
+  discountCodeId: ID
+  discountCode: String
+  orderId: ID!
+  customerId: ID
+  cartTotal: Float!
+  metadata: JSON
+}
+
+input MinimumRequirementsInput {
+  type: MinimumRequirementType!
+  value: Float!
+}
+
+input UsageLimitsInput {
+  totalUsageLimit: Int
+  oncePerCustomer: Boolean
+  perCustomerUsageLimit: Int
+}
+
+input TargetAudienceInput {
+  customerSegments: [String!]
+  customerTags: [String!]
+  newCustomersOnly: Boolean
+  returningCustomersOnly: Boolean
+}
+
+# Scalar for JSON data
+scalar JSON
