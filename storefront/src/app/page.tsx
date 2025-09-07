@@ -2,11 +2,22 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { useQuery } from '@apollo/client';
 import { ProductCard } from '@/components/ProductCard';
+import { GET_PRODUCTS } from '@/graphql/queries';
+import type { Product } from '@/graphql/queries';
 
 export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   
+  const { loading, error, data } = useQuery(GET_PRODUCTS, {
+    variables: {
+      filter: {
+        limit: 8
+      }
+    }
+  });
+
   const categories = [
     { id: 'all', name: 'All Categories' },
     { id: 'electronics', name: 'Electronics' },
@@ -15,7 +26,32 @@ export default function HomePage() {
     { id: 'beauty', name: 'Beauty & Personal Care' }
   ];
 
-  const featuredProducts = [
+  const collections = [
+    {
+      id: "electronics",
+      name: "Electronics",
+      description: "The latest gadgets and tech innovations",
+      image: "https://via.placeholder.com/600x400/3B82F6/FFFFFF?text=Electronics",
+      itemCount: 120
+    },
+    {
+      id: "fashion",
+      name: "Fashion",
+      description: "Trending styles for every occasion",
+      image: "https://via.placeholder.com/600x400/EC4899/FFFFFF?text=Fashion",
+      itemCount: 250
+    },
+    {
+      id: "home",
+      name: "Home & Kitchen",
+      description: "Elevate your living space",
+      image: "https://via.placeholder.com/600x400/F97316/FFFFFF?text=Home",
+      itemCount: 180
+    }
+  ];
+
+  // Use real data if available, otherwise fall back to mock data
+  const featuredProducts = data?.products || [
     {
       id: "1",
       name: "Premium Wireless Headphones",
@@ -105,34 +141,10 @@ export default function HomePage() {
       badges: ["Organic"]
     }
   ];
-  
-  const collections = [
-    {
-      id: "electronics",
-      name: "Electronics",
-      description: "The latest gadgets and tech innovations",
-      image: "https://via.placeholder.com/600x400/3B82F6/FFFFFF?text=Electronics",
-      itemCount: 120
-    },
-    {
-      id: "fashion",
-      name: "Fashion",
-      description: "Trending styles for every occasion",
-      image: "https://via.placeholder.com/600x400/EC4899/FFFFFF?text=Fashion",
-      itemCount: 250
-    },
-    {
-      id: "home",
-      name: "Home & Kitchen",
-      description: "Elevate your living space",
-      image: "https://via.placeholder.com/600x400/F97316/FFFFFF?text=Home",
-      itemCount: 180
-    }
-  ];
 
   const displayedProducts = selectedCategory === 'all' 
     ? featuredProducts 
-    : featuredProducts.filter(product => product.category === selectedCategory);
+    : featuredProducts.filter((product: any) => product.category === selectedCategory);
 
   return (
     <div className="min-h-screen">
@@ -210,7 +222,7 @@ export default function HomePage() {
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {displayedProducts.map((product) => (
+            {displayedProducts.map((product: any) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>

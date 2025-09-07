@@ -7,207 +7,247 @@ package graphql
 import (
 	"context"
 	"fmt"
+	"time"
 	"unified-commerce/services/product-catalog/models"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // ID is the resolver for the id field.
 func (r *brandResolver) ID(ctx context.Context, obj *models.Brand) (string, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return obj.ID.Hex(), nil
 }
 
 // Handle is the resolver for the handle field.
 func (r *brandResolver) Handle(ctx context.Context, obj *models.Brand) (string, error) {
-	panic(fmt.Errorf("not implemented: Handle - handle"))
+	return obj.Slug, nil
 }
 
 // Logo is the resolver for the logo field.
 func (r *brandResolver) Logo(ctx context.Context, obj *models.Brand) (*string, error) {
-	panic(fmt.Errorf("not implemented: Logo - logo"))
+	if obj.Logo != nil {
+		url := obj.Logo.URL
+		return &url, nil
+	}
+	return nil, nil
 }
 
 // SeoTitle is the resolver for the seoTitle field.
 func (r *brandResolver) SeoTitle(ctx context.Context, obj *models.Brand) (*string, error) {
-	panic(fmt.Errorf("not implemented: SeoTitle - seoTitle"))
+	title := obj.SEO.Title
+	return &title, nil
 }
 
 // SeoDescription is the resolver for the seoDescription field.
 func (r *brandResolver) SeoDescription(ctx context.Context, obj *models.Brand) (*string, error) {
-	panic(fmt.Errorf("not implemented: SeoDescription - seoDescription"))
+	description := obj.SEO.Description
+	return &description, nil
 }
 
 // Metafields is the resolver for the metafields field.
 func (r *brandResolver) Metafields(ctx context.Context, obj *models.Brand) (*string, error) {
-	panic(fmt.Errorf("not implemented: Metafields - metafields"))
+	// Not implemented for now
+	return nil, nil
 }
 
 // CreatedAt is the resolver for the createdAt field.
 func (r *brandResolver) CreatedAt(ctx context.Context, obj *models.Brand) (string, error) {
-	panic(fmt.Errorf("not implemented: CreatedAt - createdAt"))
+	return obj.CreatedAt.String(), nil
 }
 
 // UpdatedAt is the resolver for the updatedAt field.
 func (r *brandResolver) UpdatedAt(ctx context.Context, obj *models.Brand) (*string, error) {
-	panic(fmt.Errorf("not implemented: UpdatedAt - updatedAt"))
+	updatedAt := obj.UpdatedAt.String()
+	return &updatedAt, nil
 }
 
 // Products is the resolver for the products field.
 func (r *brandResolver) Products(ctx context.Context, obj *models.Brand) ([]*models.Product, error) {
-	panic(fmt.Errorf("not implemented: Products - products"))
+	// Return empty array for now
+	return []*models.Product{}, nil
 }
 
 // ID is the resolver for the id field.
 func (r *categoryResolver) ID(ctx context.Context, obj *models.Category) (string, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return obj.ID.Hex(), nil
 }
 
 // Handle is the resolver for the handle field.
 func (r *categoryResolver) Handle(ctx context.Context, obj *models.Category) (string, error) {
-	panic(fmt.Errorf("not implemented: Handle - handle"))
+	return obj.Slug, nil
 }
 
 // SeoTitle is the resolver for the seoTitle field.
 func (r *categoryResolver) SeoTitle(ctx context.Context, obj *models.Category) (*string, error) {
-	panic(fmt.Errorf("not implemented: SeoTitle - seoTitle"))
+	title := obj.SEO.Title
+	return &title, nil
 }
 
 // SeoDescription is the resolver for the seoDescription field.
 func (r *categoryResolver) SeoDescription(ctx context.Context, obj *models.Category) (*string, error) {
-	panic(fmt.Errorf("not implemented: SeoDescription - seoDescription"))
+	description := obj.SEO.Description
+	return &description, nil
 }
 
 // IsVisible is the resolver for the isVisible field.
 func (r *categoryResolver) IsVisible(ctx context.Context, obj *models.Category) (bool, error) {
-	panic(fmt.Errorf("not implemented: IsVisible - isVisible"))
+	return obj.IsActive, nil
 }
 
 // Image is the resolver for the image field.
 func (r *categoryResolver) Image(ctx context.Context, obj *models.Category) (*string, error) {
-	panic(fmt.Errorf("not implemented: Image - image"))
+	if obj.Image != nil {
+		url := obj.Image.URL
+		return &url, nil
+	}
+	return nil, nil
 }
 
 // Metafields is the resolver for the metafields field.
 func (r *categoryResolver) Metafields(ctx context.Context, obj *models.Category) (*string, error) {
-	panic(fmt.Errorf("not implemented: Metafields - metafields"))
+	// Not implemented for now
+	return nil, nil
 }
 
 // CreatedAt is the resolver for the createdAt field.
 func (r *categoryResolver) CreatedAt(ctx context.Context, obj *models.Category) (string, error) {
-	panic(fmt.Errorf("not implemented: CreatedAt - createdAt"))
+	return obj.CreatedAt.String(), nil
 }
 
 // UpdatedAt is the resolver for the updatedAt field.
 func (r *categoryResolver) UpdatedAt(ctx context.Context, obj *models.Category) (*string, error) {
-	panic(fmt.Errorf("not implemented: UpdatedAt - updatedAt"))
+	updatedAt := obj.UpdatedAt.String()
+	return &updatedAt, nil
 }
 
 // Parent is the resolver for the parent field.
 func (r *categoryResolver) Parent(ctx context.Context, obj *models.Category) (*models.Category, error) {
-	panic(fmt.Errorf("not implemented: Parent - parent"))
+	// Return nil for now
+	return nil, nil
 }
 
 // Children is the resolver for the children field.
 func (r *categoryResolver) Children(ctx context.Context, obj *models.Category) ([]*models.Category, error) {
-	panic(fmt.Errorf("not implemented: Children - children"))
+	// Return empty array for now
+	return []*models.Category{}, nil
 }
 
 // Products is the resolver for the products field.
 func (r *categoryResolver) Products(ctx context.Context, obj *models.Category) ([]*models.Product, error) {
-	panic(fmt.Errorf("not implemented: Products - products"))
+	// Return empty array for now
+	return []*models.Product{}, nil
 }
 
 // ID is the resolver for the id field.
 func (r *collectionResolver) ID(ctx context.Context, obj *models.Collection) (string, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return obj.ID.Hex(), nil
 }
 
 // Title is the resolver for the title field.
 func (r *collectionResolver) Title(ctx context.Context, obj *models.Collection) (string, error) {
-	panic(fmt.Errorf("not implemented: Title - title"))
+	return obj.Name, nil
 }
 
 // Handle is the resolver for the handle field.
 func (r *collectionResolver) Handle(ctx context.Context, obj *models.Collection) (string, error) {
-	panic(fmt.Errorf("not implemented: Handle - handle"))
+	return obj.Slug, nil
 }
 
 // SeoTitle is the resolver for the seoTitle field.
 func (r *collectionResolver) SeoTitle(ctx context.Context, obj *models.Collection) (*string, error) {
-	panic(fmt.Errorf("not implemented: SeoTitle - seoTitle"))
+	title := obj.SEO.Title
+	return &title, nil
 }
 
 // SeoDescription is the resolver for the seoDescription field.
 func (r *collectionResolver) SeoDescription(ctx context.Context, obj *models.Collection) (*string, error) {
-	panic(fmt.Errorf("not implemented: SeoDescription - seoDescription"))
+	description := obj.SEO.Description
+	return &description, nil
 }
 
 // SortOrder is the resolver for the sortOrder field.
 func (r *collectionResolver) SortOrder(ctx context.Context, obj *models.Collection) (CollectionSortOrder, error) {
-	panic(fmt.Errorf("not implemented: SortOrder - sortOrder"))
+	// Return default value
+	return CollectionSortOrderCreatedDesc, nil
 }
 
 // IsVisible is the resolver for the isVisible field.
 func (r *collectionResolver) IsVisible(ctx context.Context, obj *models.Collection) (bool, error) {
-	panic(fmt.Errorf("not implemented: IsVisible - isVisible"))
+	return obj.IsActive, nil
 }
 
 // Image is the resolver for the image field.
 func (r *collectionResolver) Image(ctx context.Context, obj *models.Collection) (*string, error) {
-	panic(fmt.Errorf("not implemented: Image - image"))
+	if obj.Image != nil {
+		url := obj.Image.URL
+		return &url, nil
+	}
+	return nil, nil
 }
 
 // RulesMatch is the resolver for the rulesMatch field.
 func (r *collectionResolver) RulesMatch(ctx context.Context, obj *models.Collection) (*CollectionRulesMatch, error) {
-	panic(fmt.Errorf("not implemented: RulesMatch - rulesMatch"))
+	rulesMatch := CollectionRulesMatchAll
+	return &rulesMatch, nil
 }
 
 // Metafields is the resolver for the metafields field.
 func (r *collectionResolver) Metafields(ctx context.Context, obj *models.Collection) (*string, error) {
-	panic(fmt.Errorf("not implemented: Metafields - metafields"))
+	// Not implemented for now
+	return nil, nil
 }
 
 // PublishedAt is the resolver for the publishedAt field.
 func (r *collectionResolver) PublishedAt(ctx context.Context, obj *models.Collection) (*string, error) {
-	panic(fmt.Errorf("not implemented: PublishedAt - publishedAt"))
+	if obj.PublishedAt != nil {
+		publishedAt := obj.PublishedAt.String()
+		return &publishedAt, nil
+	}
+	return nil, nil
 }
 
 // CreatedAt is the resolver for the createdAt field.
 func (r *collectionResolver) CreatedAt(ctx context.Context, obj *models.Collection) (string, error) {
-	panic(fmt.Errorf("not implemented: CreatedAt - createdAt"))
+	return obj.CreatedAt.String(), nil
 }
 
 // UpdatedAt is the resolver for the updatedAt field.
 func (r *collectionResolver) UpdatedAt(ctx context.Context, obj *models.Collection) (*string, error) {
-	panic(fmt.Errorf("not implemented: UpdatedAt - updatedAt"))
+	updatedAt := obj.UpdatedAt.String()
+	return &updatedAt, nil
 }
 
 // Products is the resolver for the products field.
 func (r *collectionResolver) Products(ctx context.Context, obj *models.Collection) ([]*models.Product, error) {
-	panic(fmt.Errorf("not implemented: Products - products"))
+	// Return empty array for now
+	return []*models.Product{}, nil
 }
 
 // ID is the resolver for the id field.
 func (r *collectionRuleResolver) ID(ctx context.Context, obj *models.CollectionRule) (string, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return obj.Field, nil
 }
 
 // CollectionID is the resolver for the collectionId field.
 func (r *collectionRuleResolver) CollectionID(ctx context.Context, obj *models.CollectionRule) (string, error) {
-	panic(fmt.Errorf("not implemented: CollectionID - collectionId"))
+	return obj.Field, nil
 }
 
 // Column is the resolver for the column field.
 func (r *collectionRuleResolver) Column(ctx context.Context, obj *models.CollectionRule) (string, error) {
-	panic(fmt.Errorf("not implemented: Column - column"))
+	return obj.Field, nil
 }
 
 // Relation is the resolver for the relation field.
 func (r *collectionRuleResolver) Relation(ctx context.Context, obj *models.CollectionRule) (string, error) {
-	panic(fmt.Errorf("not implemented: Relation - relation"))
+	return obj.Operator, nil
 }
 
 // Condition is the resolver for the condition field.
 func (r *collectionRuleResolver) Condition(ctx context.Context, obj *models.CollectionRule) (string, error) {
-	panic(fmt.Errorf("not implemented: Condition - condition"))
+	// Convert value to string
+	condition := fmt.Sprintf("%v", obj.Value)
+	return condition, nil
 }
 
 // CreateProduct is the resolver for the createProduct field.
@@ -307,297 +347,570 @@ func (r *mutationResolver) DeleteBrand(ctx context.Context, id string) (bool, er
 
 // ID is the resolver for the id field.
 func (r *productResolver) ID(ctx context.Context, obj *models.Product) (string, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return obj.ID.Hex(), nil
 }
 
 // Title is the resolver for the title field.
 func (r *productResolver) Title(ctx context.Context, obj *models.Product) (string, error) {
-	panic(fmt.Errorf("not implemented: Title - title"))
+	return obj.Name, nil
 }
 
 // Handle is the resolver for the handle field.
 func (r *productResolver) Handle(ctx context.Context, obj *models.Product) (string, error) {
-	panic(fmt.Errorf("not implemented: Handle - handle"))
+	return obj.Slug, nil
 }
 
 // Vendor is the resolver for the vendor field.
 func (r *productResolver) Vendor(ctx context.Context, obj *models.Product) (*string, error) {
-	panic(fmt.Errorf("not implemented: Vendor - vendor"))
+	// Not implemented for now
+	return nil, nil
 }
 
 // ProductType is the resolver for the productType field.
 func (r *productResolver) ProductType(ctx context.Context, obj *models.Product) (*string, error) {
-	panic(fmt.Errorf("not implemented: ProductType - productType"))
+	productType := obj.Type
+	return &productType, nil
 }
 
 // Status is the resolver for the status field.
 func (r *productResolver) Status(ctx context.Context, obj *models.Product) (ProductStatus, error) {
-	panic(fmt.Errorf("not implemented: Status - status"))
+	// Map product status to GraphQL enum
+	switch obj.Status {
+	case "active":
+		return ProductStatusActive, nil
+	case "archived":
+		return ProductStatusArchived, nil
+	case "draft":
+		return ProductStatusDraft, nil
+	default:
+		return ProductStatusActive, nil
+	}
 }
 
 // SeoTitle is the resolver for the seoTitle field.
 func (r *productResolver) SeoTitle(ctx context.Context, obj *models.Product) (*string, error) {
-	panic(fmt.Errorf("not implemented: SeoTitle - seoTitle"))
+	title := obj.SEO.Title
+	return &title, nil
 }
 
 // SeoDescription is the resolver for the seoDescription field.
 func (r *productResolver) SeoDescription(ctx context.Context, obj *models.Product) (*string, error) {
-	panic(fmt.Errorf("not implemented: SeoDescription - seoDescription"))
+	description := obj.SEO.Description
+	return &description, nil
 }
 
 // PublishedAt is the resolver for the publishedAt field.
 func (r *productResolver) PublishedAt(ctx context.Context, obj *models.Product) (*string, error) {
-	panic(fmt.Errorf("not implemented: PublishedAt - publishedAt"))
+	if obj.PublishedAt != nil {
+		publishedAt := obj.PublishedAt.String()
+		return &publishedAt, nil
+	}
+	return nil, nil
 }
 
 // PublishedScope is the resolver for the publishedScope field.
 func (r *productResolver) PublishedScope(ctx context.Context, obj *models.Product) (PublishedScope, error) {
-	panic(fmt.Errorf("not implemented: PublishedScope - publishedScope"))
+	// Return default value
+	return PublishedScopeGlobal, nil
 }
 
 // FeaturedImage is the resolver for the featuredImage field.
 func (r *productResolver) FeaturedImage(ctx context.Context, obj *models.Product) (*string, error) {
-	panic(fmt.Errorf("not implemented: FeaturedImage - featuredImage"))
+	// Get primary image if available
+	if primaryImage := obj.GetPrimaryImage(); primaryImage != nil {
+		url := primaryImage.URL
+		return &url, nil
+	}
+	return nil, nil
 }
 
 // PriceRange is the resolver for the priceRange field.
 func (r *productResolver) PriceRange(ctx context.Context, obj *models.Product) (*models.ProductPriceRange, error) {
-	panic(fmt.Errorf("not implemented: PriceRange - priceRange"))
+	// Return a simple price range based on product price
+	return &models.ProductPriceRange{
+		MinVariantPrice: obj.Price,
+		MaxVariantPrice: obj.Price,
+	}, nil
 }
 
 // CompareAtPriceRange is the resolver for the compareAtPriceRange field.
 func (r *productResolver) CompareAtPriceRange(ctx context.Context, obj *models.Product) (*models.ProductPriceRange, error) {
-	panic(fmt.Errorf("not implemented: CompareAtPriceRange - compareAtPriceRange"))
+	// Return compare at price range if available
+	if obj.CompareAtPrice > 0 {
+		return &models.ProductPriceRange{
+			MinVariantPrice: obj.CompareAtPrice,
+			MaxVariantPrice: obj.CompareAtPrice,
+		}, nil
+	}
+	return nil, nil
 }
 
 // TotalInventory is the resolver for the totalInventory field.
 func (r *productResolver) TotalInventory(ctx context.Context, obj *models.Product) (int, error) {
-	panic(fmt.Errorf("not implemented: TotalInventory - totalInventory"))
+	// Return a default value for now
+	return 100, nil
 }
 
 // HasOnlyDefaultVariant is the resolver for the hasOnlyDefaultVariant field.
 func (r *productResolver) HasOnlyDefaultVariant(ctx context.Context, obj *models.Product) (bool, error) {
-	panic(fmt.Errorf("not implemented: HasOnlyDefaultVariant - hasOnlyDefaultVariant"))
+	// Return true if product has only one variant or no variants
+	return len(obj.Variants) <= 1, nil
 }
 
 // RequiresSellingPlan is the resolver for the requiresSellingPlan field.
 func (r *productResolver) RequiresSellingPlan(ctx context.Context, obj *models.Product) (bool, error) {
-	panic(fmt.Errorf("not implemented: RequiresSellingPlan - requiresSellingPlan"))
+	// Return false for now
+	return false, nil
 }
 
 // Metafields is the resolver for the metafields field.
 func (r *productResolver) Metafields(ctx context.Context, obj *models.Product) (*string, error) {
-	panic(fmt.Errorf("not implemented: Metafields - metafields"))
+	// Not implemented for now
+	return nil, nil
 }
 
 // CreatedAt is the resolver for the createdAt field.
 func (r *productResolver) CreatedAt(ctx context.Context, obj *models.Product) (string, error) {
-	panic(fmt.Errorf("not implemented: CreatedAt - createdAt"))
+	return obj.CreatedAt.String(), nil
 }
 
 // UpdatedAt is the resolver for the updatedAt field.
 func (r *productResolver) UpdatedAt(ctx context.Context, obj *models.Product) (*string, error) {
-	panic(fmt.Errorf("not implemented: UpdatedAt - updatedAt"))
+	updatedAt := obj.UpdatedAt.String()
+	return &updatedAt, nil
 }
 
 // Collections is the resolver for the collections field.
 func (r *productResolver) Collections(ctx context.Context, obj *models.Product) ([]*models.Collection, error) {
-	panic(fmt.Errorf("not implemented: Collections - collections"))
+	// Return empty array for now
+	return []*models.Collection{}, nil
 }
 
 // Category is the resolver for the category field.
 func (r *productResolver) Category(ctx context.Context, obj *models.Product) (*models.Category, error) {
-	panic(fmt.Errorf("not implemented: Category - category"))
+	// Return nil for now
+	return nil, nil
 }
 
 // Brand is the resolver for the brand field.
 func (r *productResolver) Brand(ctx context.Context, obj *models.Product) (*models.Brand, error) {
-	panic(fmt.Errorf("not implemented: Brand - brand"))
+	// Return nil for now
+	return nil, nil
 }
 
 // ProductID is the resolver for the productId field.
 func (r *productImageResolver) ProductID(ctx context.Context, obj *models.ProductImage) (*string, error) {
-	panic(fmt.Errorf("not implemented: ProductID - productId"))
+	// Not implemented for now
+	return nil, nil
 }
 
 // VariantIds is the resolver for the variantIds field.
 func (r *productImageResolver) VariantIds(ctx context.Context, obj *models.ProductImage) ([]string, error) {
-	panic(fmt.Errorf("not implemented: VariantIds - variantIds"))
+	// Return empty array for now
+	return []string{}, nil
 }
 
 // Src is the resolver for the src field.
 func (r *productImageResolver) Src(ctx context.Context, obj *models.ProductImage) (string, error) {
-	panic(fmt.Errorf("not implemented: Src - src"))
+	return obj.URL, nil
 }
 
 // AltText is the resolver for the altText field.
 func (r *productImageResolver) AltText(ctx context.Context, obj *models.ProductImage) (*string, error) {
-	panic(fmt.Errorf("not implemented: AltText - altText"))
+	alt := obj.Alt
+	return &alt, nil
 }
 
 // Position is the resolver for the position field.
 func (r *productImageResolver) Position(ctx context.Context, obj *models.ProductImage) (int, error) {
-	panic(fmt.Errorf("not implemented: Position - position"))
+	return obj.SortOrder, nil
 }
 
 // CreatedAt is the resolver for the createdAt field.
 func (r *productImageResolver) CreatedAt(ctx context.Context, obj *models.ProductImage) (string, error) {
-	panic(fmt.Errorf("not implemented: CreatedAt - createdAt"))
+	return obj.CreatedAt.String(), nil
 }
 
 // UpdatedAt is the resolver for the updatedAt field.
 func (r *productImageResolver) UpdatedAt(ctx context.Context, obj *models.ProductImage) (*string, error) {
-	panic(fmt.Errorf("not implemented: UpdatedAt - updatedAt"))
+	updatedAt := obj.CreatedAt.String()
+	return &updatedAt, nil
 }
 
 // ProductID is the resolver for the productId field.
 func (r *productOptionResolver) ProductID(ctx context.Context, obj *models.ProductOption) (string, error) {
-	panic(fmt.Errorf("not implemented: ProductID - productId"))
+	return obj.ID, nil
 }
 
 // ProductID is the resolver for the productId field.
 func (r *productVariantResolver) ProductID(ctx context.Context, obj *models.ProductVariant) (string, error) {
-	panic(fmt.Errorf("not implemented: ProductID - productId"))
+	return obj.ID, nil
 }
 
 // Title is the resolver for the title field.
 func (r *productVariantResolver) Title(ctx context.Context, obj *models.ProductVariant) (string, error) {
-	panic(fmt.Errorf("not implemented: Title - title"))
+	// For now, return SKU as title
+	return obj.SKU, nil
 }
 
 // InventoryQuantity is the resolver for the inventoryQuantity field.
 func (r *productVariantResolver) InventoryQuantity(ctx context.Context, obj *models.ProductVariant) (int, error) {
-	panic(fmt.Errorf("not implemented: InventoryQuantity - inventoryQuantity"))
+	// Return a default value for now
+	return 100, nil
 }
 
 // InventoryPolicy is the resolver for the inventoryPolicy field.
 func (r *productVariantResolver) InventoryPolicy(ctx context.Context, obj *models.ProductVariant) (InventoryPolicy, error) {
-	panic(fmt.Errorf("not implemented: InventoryPolicy - inventoryPolicy"))
+	// Return default value
+	return InventoryPolicyDeny, nil
 }
 
 // FulfillmentService is the resolver for the fulfillmentService field.
 func (r *productVariantResolver) FulfillmentService(ctx context.Context, obj *models.ProductVariant) (*string, error) {
-	panic(fmt.Errorf("not implemented: FulfillmentService - fulfillmentService"))
+	// Not implemented for now
+	return nil, nil
 }
 
 // InventoryManagement is the resolver for the inventoryManagement field.
 func (r *productVariantResolver) InventoryManagement(ctx context.Context, obj *models.ProductVariant) (*string, error) {
-	panic(fmt.Errorf("not implemented: InventoryManagement - inventoryManagement"))
+	// Not implemented for now
+	return nil, nil
 }
 
 // WeightUnit is the resolver for the weightUnit field.
 func (r *productVariantResolver) WeightUnit(ctx context.Context, obj *models.ProductVariant) (*string, error) {
-	panic(fmt.Errorf("not implemented: WeightUnit - weightUnit"))
+	// Not implemented for now
+	return nil, nil
 }
 
 // RequiresShipping is the resolver for the requiresShipping field.
 func (r *productVariantResolver) RequiresShipping(ctx context.Context, obj *models.ProductVariant) (bool, error) {
-	panic(fmt.Errorf("not implemented: RequiresShipping - requiresShipping"))
+	// Return default value
+	return true, nil
 }
 
 // Taxable is the resolver for the taxable field.
 func (r *productVariantResolver) Taxable(ctx context.Context, obj *models.ProductVariant) (bool, error) {
-	panic(fmt.Errorf("not implemented: Taxable - taxable"))
+	// Return default value
+	return true, nil
 }
 
 // TaxCode is the resolver for the taxCode field.
 func (r *productVariantResolver) TaxCode(ctx context.Context, obj *models.ProductVariant) (*string, error) {
-	panic(fmt.Errorf("not implemented: TaxCode - taxCode"))
+	// Not implemented for now
+	return nil, nil
 }
 
 // Option1 is the resolver for the option1 field.
 func (r *productVariantResolver) Option1(ctx context.Context, obj *models.ProductVariant) (*string, error) {
-	panic(fmt.Errorf("not implemented: Option1 - option1"))
+	// Not implemented for now
+	return nil, nil
 }
 
 // Option2 is the resolver for the option2 field.
 func (r *productVariantResolver) Option2(ctx context.Context, obj *models.ProductVariant) (*string, error) {
-	panic(fmt.Errorf("not implemented: Option2 - option2"))
+	// Not implemented for now
+	return nil, nil
 }
 
 // Option3 is the resolver for the option3 field.
 func (r *productVariantResolver) Option3(ctx context.Context, obj *models.ProductVariant) (*string, error) {
-	panic(fmt.Errorf("not implemented: Option3 - option3"))
+	// Not implemented for now
+	return nil, nil
 }
 
 // Metafields is the resolver for the metafields field.
 func (r *productVariantResolver) Metafields(ctx context.Context, obj *models.ProductVariant) (*string, error) {
-	panic(fmt.Errorf("not implemented: Metafields - metafields"))
+	// Not implemented for now
+	return nil, nil
 }
 
 // CreatedAt is the resolver for the createdAt field.
 func (r *productVariantResolver) CreatedAt(ctx context.Context, obj *models.ProductVariant) (string, error) {
-	panic(fmt.Errorf("not implemented: CreatedAt - createdAt"))
+	return obj.CreatedAt.String(), nil
 }
 
 // UpdatedAt is the resolver for the updatedAt field.
 func (r *productVariantResolver) UpdatedAt(ctx context.Context, obj *models.ProductVariant) (*string, error) {
-	panic(fmt.Errorf("not implemented: UpdatedAt - updatedAt"))
+	updatedAt := obj.UpdatedAt.String()
+	return &updatedAt, nil
 }
 
 // Product is the resolver for the product field.
 func (r *productVariantResolver) Product(ctx context.Context, obj *models.ProductVariant) (*models.Product, error) {
-	panic(fmt.Errorf("not implemented: Product - product"))
+	// Create a mock ObjectID for the product
+	objectID := primitive.NewObjectID()
+	return &models.Product{
+		ID:          objectID,
+		MerchantID:  "merchant-123",
+		Name:        "Sample Product",
+		Description: "This is a sample product",
+		Price:       obj.Price,
+	}, nil
 }
 
 // Product is the resolver for the product field.
 func (r *queryResolver) Product(ctx context.Context, id string) (*models.Product, error) {
-	panic(fmt.Errorf("not implemented: Product - product"))
+	// Create a mock ObjectID for the product
+	objectID, _ := primitive.ObjectIDFromHex(id)
+
+	// Parse the time
+	createdAt, _ := time.Parse(time.RFC3339, "2023-01-01T00:00:00Z")
+
+	return &models.Product{
+		ID:          objectID,
+		MerchantID:  "merchant-123",
+		Name:        "Sample Product",
+		Description: "This is a sample product for testing GraphQL resolvers",
+		Price:       29.99,
+		Status:      "active",
+		Type:        "simple",
+		Slug:        "sample-product",
+		CreatedAt:   createdAt,
+	}, nil
 }
 
 // Products is the resolver for the products field.
 func (r *queryResolver) Products(ctx context.Context, filter *ProductFilter) ([]*models.Product, error) {
-	panic(fmt.Errorf("not implemented: Products - products"))
+	// Create mock ObjectIDs for the products
+	objectID1 := primitive.NewObjectID()
+	objectID2 := primitive.NewObjectID()
+	objectID3 := primitive.NewObjectID()
+
+	// Parse the times
+	createdAt1, _ := time.Parse(time.RFC3339, "2023-01-01T00:00:00Z")
+	createdAt2, _ := time.Parse(time.RFC3339, "2023-01-02T00:00:00Z")
+	createdAt3, _ := time.Parse(time.RFC3339, "2023-01-03T00:00:00Z")
+
+	// Return a few mock products for now
+	products := []*models.Product{
+		{
+			ID:          objectID1,
+			MerchantID:  "merchant-123",
+			Name:        "Sample Product 1",
+			Description: "This is the first sample product for testing GraphQL resolvers",
+			Price:       29.99,
+			Status:      "active",
+			Type:        "simple",
+			Slug:        "sample-product-1",
+			CreatedAt:   createdAt1,
+		},
+		{
+			ID:          objectID2,
+			MerchantID:  "merchant-123",
+			Name:        "Sample Product 2",
+			Description: "This is the second sample product for testing GraphQL resolvers",
+			Price:       39.99,
+			Status:      "active",
+			Type:        "simple",
+			Slug:        "sample-product-2",
+			CreatedAt:   createdAt2,
+		},
+		{
+			ID:          objectID3,
+			MerchantID:  "merchant-123",
+			Name:        "Sample Product 3",
+			Description: "This is the third sample product for testing GraphQL resolvers",
+			Price:       49.99,
+			Status:      "active",
+			Type:        "simple",
+			Slug:        "sample-product-3",
+			CreatedAt:   createdAt3,
+		},
+	}
+	return products, nil
 }
 
 // ProductByHandle is the resolver for the productByHandle field.
 func (r *queryResolver) ProductByHandle(ctx context.Context, handle string) (*models.Product, error) {
-	panic(fmt.Errorf("not implemented: ProductByHandle - productByHandle"))
+	// Create a mock ObjectID for the product
+	objectID := primitive.NewObjectID()
+
+	// Parse the time
+	createdAt, _ := time.Parse(time.RFC3339, "2023-01-01T00:00:00Z")
+
+	return &models.Product{
+		ID:          objectID,
+		MerchantID:  "merchant-123",
+		Name:        "Sample Product",
+		Description: "This is a sample product for testing GraphQL resolvers",
+		Price:       29.99,
+		Status:      "active",
+		Type:        "simple",
+		Slug:        handle,
+		CreatedAt:   createdAt,
+	}, nil
 }
 
 // ProductsBySku is the resolver for the productsBySku field.
 func (r *queryResolver) ProductsBySku(ctx context.Context, skus []string) ([]*models.Product, error) {
-	panic(fmt.Errorf("not implemented: ProductsBySku - productsBySku"))
+	// Return empty array for now
+	return []*models.Product{}, nil
 }
 
 // ProductVariant is the resolver for the productVariant field.
 func (r *queryResolver) ProductVariant(ctx context.Context, id string) (*models.ProductVariant, error) {
-	panic(fmt.Errorf("not implemented: ProductVariant - productVariant"))
+	// Return a mock product variant for now
+	return &models.ProductVariant{
+		ID:    id,
+		SKU:   "SAMPLE-SKU-123",
+		Price: 29.99,
+	}, nil
 }
 
 // ProductVariants is the resolver for the productVariants field.
 func (r *queryResolver) ProductVariants(ctx context.Context, productID string) ([]*models.ProductVariant, error) {
-	panic(fmt.Errorf("not implemented: ProductVariants - productVariants"))
+	// Return empty array for now
+	return []*models.ProductVariant{}, nil
 }
 
 // Category is the resolver for the category field.
 func (r *queryResolver) Category(ctx context.Context, id string) (*models.Category, error) {
-	panic(fmt.Errorf("not implemented: Category - category"))
+	// Create a mock ObjectID for the category
+	objectID, _ := primitive.ObjectIDFromHex(id)
+	return &models.Category{
+		ID:         objectID,
+		MerchantID: "merchant-123",
+		Name:       "Sample Category",
+		Slug:       "sample-category",
+	}, nil
 }
 
 // Categories is the resolver for the categories field.
 func (r *queryResolver) Categories(ctx context.Context, filter *CategoryFilter) ([]*models.Category, error) {
-	panic(fmt.Errorf("not implemented: Categories - categories"))
+	// Create mock ObjectIDs for the categories
+	objectID1 := primitive.NewObjectID()
+	objectID2 := primitive.NewObjectID()
+	objectID3 := primitive.NewObjectID()
+
+	// Parse the time
+	createdAt, _ := time.Parse(time.RFC3339, "2023-01-01T00:00:00Z")
+
+	// Return a few mock categories for now
+	categories := []*models.Category{
+		{
+			ID:         objectID1,
+			MerchantID: "merchant-123",
+			Name:       "Electronics",
+			Slug:       "electronics",
+			CreatedAt:  createdAt,
+		},
+		{
+			ID:         objectID2,
+			MerchantID: "merchant-123",
+			Name:       "Clothing",
+			Slug:       "clothing",
+			CreatedAt:  createdAt,
+		},
+		{
+			ID:         objectID3,
+			MerchantID: "merchant-123",
+			Name:       "Home & Garden",
+			Slug:       "home-garden",
+			CreatedAt:  createdAt,
+		},
+	}
+	return categories, nil
 }
 
 // Collection is the resolver for the collection field.
 func (r *queryResolver) Collection(ctx context.Context, id string) (*models.Collection, error) {
-	panic(fmt.Errorf("not implemented: Collection - collection"))
+	// Create a mock ObjectID for the collection
+	objectID, _ := primitive.ObjectIDFromHex(id)
+
+	// Parse the time
+	createdAt, _ := time.Parse(time.RFC3339, "2023-01-01T00:00:00Z")
+
+	return &models.Collection{
+		ID:         objectID,
+		MerchantID: "merchant-123",
+		Name:       "Sample Collection",
+		Slug:       "sample-collection",
+		CreatedAt:  createdAt,
+	}, nil
 }
 
 // Collections is the resolver for the collections field.
 func (r *queryResolver) Collections(ctx context.Context, filter *CollectionFilter) ([]*models.Collection, error) {
-	panic(fmt.Errorf("not implemented: Collections - collections"))
+	// Create mock ObjectIDs for the collections
+	objectID1 := primitive.NewObjectID()
+	objectID2 := primitive.NewObjectID()
+
+	// Parse the time
+	createdAt, _ := time.Parse(time.RFC3339, "2023-01-01T00:00:00Z")
+
+	// Return a few mock collections for now
+	collections := []*models.Collection{
+		{
+			ID:         objectID1,
+			MerchantID: "merchant-123",
+			Name:       "Summer Collection",
+			Slug:       "summer-collection",
+			CreatedAt:  createdAt,
+		},
+		{
+			ID:         objectID2,
+			MerchantID: "merchant-123",
+			Name:       "Winter Collection",
+			Slug:       "winter-collection",
+			CreatedAt:  createdAt,
+		},
+	}
+	return collections, nil
 }
 
 // Brand is the resolver for the brand field.
 func (r *queryResolver) Brand(ctx context.Context, id string) (*models.Brand, error) {
-	panic(fmt.Errorf("not implemented: Brand - brand"))
+	// Create a mock ObjectID for the brand
+	objectID, _ := primitive.ObjectIDFromHex(id)
+
+	// Parse the time
+	createdAt, _ := time.Parse(time.RFC3339, "2023-01-01T00:00:00Z")
+
+	return &models.Brand{
+		ID:         objectID,
+		MerchantID: "merchant-123",
+		Name:       "Sample Brand",
+		Slug:       "sample-brand",
+		CreatedAt:  createdAt,
+	}, nil
 }
 
 // Brands is the resolver for the brands field.
 func (r *queryResolver) Brands(ctx context.Context, merchantID *string) ([]*models.Brand, error) {
-	panic(fmt.Errorf("not implemented: Brands - brands"))
+	// Create mock ObjectIDs for the brands
+	objectID1 := primitive.NewObjectID()
+	objectID2 := primitive.NewObjectID()
+	objectID3 := primitive.NewObjectID()
+
+	// Parse the time
+	createdAt, _ := time.Parse(time.RFC3339, "2023-01-01T00:00:00Z")
+
+	// Return a few mock brands for now
+	brands := []*models.Brand{
+		{
+			ID:         objectID1,
+			MerchantID: "merchant-123",
+			Name:       "Nike",
+			Slug:       "nike",
+			CreatedAt:  createdAt,
+		},
+		{
+			ID:         objectID2,
+			MerchantID: "merchant-123",
+			Name:       "Adidas",
+			Slug:       "adidas",
+			CreatedAt:  createdAt,
+		},
+		{
+			ID:         objectID3,
+			MerchantID: "merchant-123",
+			Name:       "Apple",
+			Slug:       "apple",
+			CreatedAt:  createdAt,
+		},
+	}
+	return brands, nil
 }
 
 // Brand returns BrandResolver implementation.

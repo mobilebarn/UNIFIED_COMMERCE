@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCart } from './CartProvider';
 
 // Define a flexible product type that can handle both mock data and GraphQL data
@@ -47,7 +48,8 @@ export function ProductCard({ product }: ProductCardProps) {
     );
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent navigation when adding to cart
     addToCart({
       id: product.id,
       name: productTitle,
@@ -57,7 +59,7 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow group relative">
+    <Link href={`/products/${product.id}`} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow group relative">
       <div className="relative overflow-hidden h-64">
         <img 
           src={productImageUrl} 
@@ -65,6 +67,12 @@ export function ProductCard({ product }: ProductCardProps) {
           className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
         />
         <div className="absolute inset-0 bg-black bg-opacity-20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+          <button 
+            onClick={handleAddToCart}
+            className="bg-white text-gray-900 px-4 py-2 rounded-md font-medium text-sm transform translate-y-4 group-hover:translate-y-0 transition-transform mr-2"
+          >
+            Add to Cart
+          </button>
           <button className="bg-white text-gray-900 px-4 py-2 rounded-md font-medium text-sm transform translate-y-4 group-hover:translate-y-0 transition-transform">
             Quick View
           </button>
@@ -96,6 +104,6 @@ export function ProductCard({ product }: ProductCardProps) {
           </button>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

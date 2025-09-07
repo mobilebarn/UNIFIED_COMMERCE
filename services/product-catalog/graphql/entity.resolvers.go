@@ -6,33 +6,70 @@ package graphql
 
 import (
 	"context"
-	"fmt"
 	"unified-commerce/services/product-catalog/models"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // FindBrandByID is the resolver for the findBrandByID field.
 func (r *entityResolver) FindBrandByID(ctx context.Context, id string) (*models.Brand, error) {
-	panic(fmt.Errorf("not implemented: FindBrandByID - findBrandByID"))
+	// For now, return a mock brand
+	// In a real implementation, this would fetch from the database
+	objectID, _ := primitive.ObjectIDFromHex(id)
+	return &models.Brand{
+		ID:         objectID,
+		MerchantID: "merchant-123",
+		Name:       "Sample Brand",
+	}, nil
 }
 
 // FindCategoryByID is the resolver for the findCategoryByID field.
 func (r *entityResolver) FindCategoryByID(ctx context.Context, id string) (*models.Category, error) {
-	panic(fmt.Errorf("not implemented: FindCategoryByID - findCategoryByID"))
+	// For now, return a mock category
+	// In a real implementation, this would fetch from the database
+	objectID, _ := primitive.ObjectIDFromHex(id)
+	return &models.Category{
+		ID:         objectID,
+		MerchantID: "merchant-123",
+		Name:       "Sample Category",
+	}, nil
 }
 
 // FindCollectionByID is the resolver for the findCollectionByID field.
 func (r *entityResolver) FindCollectionByID(ctx context.Context, id string) (*models.Collection, error) {
-	panic(fmt.Errorf("not implemented: FindCollectionByID - findCollectionByID"))
+	// For now, return a mock collection
+	// In a real implementation, this would fetch from the database
+	objectID, _ := primitive.ObjectIDFromHex(id)
+	return &models.Collection{
+		ID:         objectID,
+		MerchantID: "merchant-123",
+		Name:       "Sample Collection",
+	}, nil
 }
 
 // FindProductByID is the resolver for the findProductByID field.
 func (r *entityResolver) FindProductByID(ctx context.Context, id string) (*models.Product, error) {
-	panic(fmt.Errorf("not implemented: FindProductByID - findProductByID"))
+	// For now, return a mock product
+	// In a real implementation, this would fetch from the database
+	objectID, _ := primitive.ObjectIDFromHex(id)
+	return &models.Product{
+		ID:          objectID,
+		MerchantID:  "merchant-123",
+		Name:        "Sample Product",
+		Description: "This is a sample product",
+		Price:       29.99,
+	}, nil
 }
 
 // FindProductVariantByID is the resolver for the findProductVariantByID field.
 func (r *entityResolver) FindProductVariantByID(ctx context.Context, id string) (*models.ProductVariant, error) {
-	panic(fmt.Errorf("not implemented: FindProductVariantByID - findProductVariantByID"))
+	// For now, return a mock product variant
+	// In a real implementation, this would fetch from the database
+	return &models.ProductVariant{
+		ID:    id,
+		SKU:   "SAMPLE-SKU-123",
+		Price: 29.99,
+	}, nil
 }
 
 // Entity returns EntityResolver implementation.

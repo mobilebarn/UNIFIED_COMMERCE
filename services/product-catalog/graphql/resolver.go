@@ -6,7 +6,7 @@ import (
 )
 
 // Resolver provides resolution context for GraphQL resolvers.
-// It holds dependencies like the IdentityService, making them available to resolver functions.
+// It holds dependencies like the ProductService, making them available to resolver functions.
 type Resolver struct {
 	ProductService *service.ProductService
 	Logger         *logger.Logger
