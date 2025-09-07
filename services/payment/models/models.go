@@ -39,18 +39,23 @@ type Payment struct {
 	Events        []PaymentEvent `json:"events,omitempty" gorm:"foreignKey:PaymentID"`
 }
 
+// IsEntity marks Payment as a federation entity
+func (p Payment) IsEntity() {}
+
 // PaymentStatus represents the status of a payment
 type PaymentStatus string
 
 const (
 	PaymentStatusPending           PaymentStatus = "pending"
-	PaymentStatusProcessing        PaymentStatus = "processing"
 	PaymentStatusAuthorized        PaymentStatus = "authorized"
 	PaymentStatusCaptured          PaymentStatus = "captured"
 	PaymentStatusFailed            PaymentStatus = "failed"
 	PaymentStatusCancelled         PaymentStatus = "cancelled"
 	PaymentStatusRefunded          PaymentStatus = "refunded"
 	PaymentStatusPartiallyRefunded PaymentStatus = "partially_refunded"
+	PaymentStatusVoided            PaymentStatus = "voided"
+	PaymentStatusPartiallyPaid     PaymentStatus = "partially_paid"
+	PaymentStatusPaid              PaymentStatus = "paid"
 )
 
 // PaymentMethod represents a payment method
@@ -73,6 +78,9 @@ type PaymentMethod struct {
 	CreatedAt   time.Time              `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt   time.Time              `json:"updated_at" gorm:"autoUpdateTime"`
 }
+
+// IsEntity marks PaymentMethod as a federation entity
+func (pm PaymentMethod) IsEntity() {}
 
 // PaymentMethodType represents the type of payment method
 type PaymentMethodType string
@@ -120,6 +128,9 @@ type Refund struct {
 	// Relationships
 	Payment Payment `json:"payment,omitempty" gorm:"foreignKey:PaymentID"`
 }
+
+// IsEntity marks Refund as a federation entity
+func (r Refund) IsEntity() {}
 
 // RefundStatus represents the status of a refund
 type RefundStatus string
@@ -200,6 +211,75 @@ const (
 	SettlementStatusFailed    SettlementStatus = "failed"
 )
 
+// Address represents a billing or shipping address
+type Address struct {
+	FirstName  string  `json:"first_name"`
+	LastName   string  `json:"last_name"`
+	Company    string  `json:"company"`
+	Street1    string  `json:"street1"`
+	Street2    string  `json:"street2"`
+	City       string  `json:"city"`
+	State      string  `json:"state"`
+	Country    string  `json:"country"`
+	PostalCode string  `json:"postal_code"`
+	Phone      string  `json:"phone"`
+	Latitude   float64 `json:"latitude"`
+	Longitude  float64 `json:"longitude"`
+}
+
+// IsEntity marks Address as a federation entity
+func (a Address) IsEntity() {}
+
+// Transaction represents a payment transaction record
+type Transaction struct {
+	ID                uuid.UUID              `json:"id" gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	PaymentID         uuid.UUID              `json:"payment_id" gorm:"type:uuid;not null;index"`
+	OrderID           *uuid.UUID             `json:"order_id" gorm:"type:uuid;index"`
+	Amount            float64                `json:"amount" gorm:"type:decimal(12,2);not null"`
+	Currency          string                 `json:"currency" gorm:"default:'USD'"`
+	Type              TransactionType        `json:"type" gorm:"not null"`
+	Status            TransactionStatus      `json:"status" gorm:"default:'pending'"`
+	Gateway           string                 `json:"gateway" gorm:"not null"`
+	GatewayReference  string                 `json:"gateway_reference"`
+	ProcessorResponse string                 `json:"processor_response"`
+	FailureReason     string                 `json:"failure_reason"`
+	Metadata          map[string]interface{} `json:"metadata" gorm:"type:jsonb"`
+	Description       string                 `json:"description"`
+	ProcessedAt       *time.Time             `json:"processed_at"`
+	CreatedAt         time.Time              `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt         time.Time              `json:"updated_at" gorm:"autoUpdateTime"`
+
+	// Relationships
+	Payment Payment `json:"payment,omitempty" gorm:"foreignKey:PaymentID"`
+}
+
+// IsEntity marks Transaction as a federation entity
+func (t Transaction) IsEntity() {}
+
+// TransactionType represents the type of transaction
+type TransactionType string
+
+const (
+	TransactionTypeAuthorization TransactionType = "authorization"
+	TransactionTypeCapture       TransactionType = "capture"
+	TransactionTypeRefund        TransactionType = "refund"
+	TransactionTypeVoid          TransactionType = "void"
+	TransactionTypeFee           TransactionType = "fee"
+)
+
+// TransactionStatus represents the status of a transaction
+type TransactionStatus string
+
+const (
+	TransactionStatusPending    TransactionStatus = "pending"
+	TransactionStatusProcessing TransactionStatus = "processing"
+	TransactionStatusSuccess    TransactionStatus = "success"
+	TransactionStatusFailed     TransactionStatus = "failed"
+	TransactionStatusCancelled  TransactionStatus = "cancelled"
+	TransactionStatusError      TransactionStatus = "error"
+	TransactionStatusFailure    TransactionStatus = "failure"
+)
+
 // BeforeCreate sets up UUID for new records
 func (p *Payment) BeforeCreate(tx *gorm.DB) error {
 	if p.ID == uuid.Nil {
@@ -239,6 +319,13 @@ func (pe *PaymentEvent) BeforeCreate(tx *gorm.DB) error {
 func (s *Settlement) BeforeCreate(tx *gorm.DB) error {
 	if s.ID == uuid.Nil {
 		s.ID = uuid.New()
+	}
+	return nil
+}
+
+func (t *Transaction) BeforeCreate(tx *gorm.DB) error {
+	if t.ID == uuid.Nil {
+		t.ID = uuid.New()
 	}
 	return nil
 }

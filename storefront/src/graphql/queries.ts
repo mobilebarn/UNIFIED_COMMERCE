@@ -1,156 +1,96 @@
 import { gql } from '@apollo/client';
 
-// Product Queries
+// This file contains the GraphQL queries, mutations, and TypeScript interfaces
+// for the storefront. It is aligned with the latest backend schema.
+
+//---------------------------
+// INTERFACES
+//---------------------------
+
+export interface Product {
+  id: string;
+  title: string;
+  description?: string;
+  price: number;
+  status: 'ACTIVE' | 'DRAFT' | 'ARCHIVED';
+  imageUrl?: string; // Assuming the schema might provide a primary image URL
+  variants?: ProductVariant[];
+  categories?: Category[];
+  createdAt: string;
+}
+
+export interface ProductVariant {
+  id: string;
+  sku: string;
+  price: number;
+  inventory?: {
+    quantity: number;
+  };
+}
+
+export interface Category {
+  id: string;
+  name: string;
+}
+
+//---------------------------
+// QUERIES
+//---------------------------
+
 export const GET_PRODUCTS = gql`
-  query GetProducts($limit: Int, $offset: Int, $search: String) {
-    products(limit: $limit, offset: $offset, search: $search) {
+  query GetProducts($filter: ProductFilter) {
+    products(filter: $filter) {
       id
-      name
+      title
       description
       price
-      image
-      category
-      inventory {
-        quantity
-        inStock
-      }
+      status
       createdAt
-      updatedAt
+      # Assuming a primary image URL might be available on the product itself
+      # If not, we might need to get it from variants or another source
+      # imageUrl 
+      variants {
+        id
+        price
+        inventory {
+          quantity
+        }
+      }
+      categories {
+        id
+        name
+      }
     }
   }
 `;
 
-export const GET_PRODUCT = gql`
-  query GetProduct($id: ID!) {
+export const GET_PRODUCT_BY_ID = gql`
+  query GetProductById($id: ID!) {
     product(id: $id) {
       id
-      name
+      title
       description
       price
-      image
-      category
-      inventory {
-        quantity
-        inStock
-      }
-      createdAt
-      updatedAt
-    }
-  }
-`;
-
-// User Queries
-export const GET_USER_PROFILE = gql`
-  query GetUserProfile {
-    userProfile {
-      id
-      email
-      firstName
-      lastName
-      role
-      createdAt
-    }
-  }
-`;
-
-export const GET_USER_ORDERS = gql`
-  query GetUserOrders {
-    userOrders {
-      id
       status
-      total
-      items {
-        id
-        productId
-        productName
-        quantity
-        price
-      }
       createdAt
-      updatedAt
-    }
-  }
-`;
-
-// Authentication Mutations
-export const LOGIN_MUTATION = gql`
-  mutation Login($email: String!, $password: String!) {
-    login(email: $email, password: $password) {
-      token
-      user {
+      variants {
         id
-        email
-        firstName
-        lastName
-        role
-      }
-    }
-  }
-`;
-
-export const REGISTER_MUTATION = gql`
-  mutation Register($input: RegisterInput!) {
-    register(input: $input) {
-      token
-      user {
-        id
-        email
-        firstName
-        lastName
-        role
-      }
-    }
-  }
-`;
-
-// Order Mutations
-export const CREATE_ORDER = gql`
-  mutation CreateOrder($input: OrderInput!) {
-    createOrder(input: $input) {
-      id
-      status
-      total
-      items {
-        id
-        productId
-        productName
-        quantity
+        sku
         price
+        inventory {
+          quantity
+        }
       }
-      createdAt
+      categories {
+        id
+        name
+      }
     }
   }
 `;
 
-// Cart Mutations (if using server-side cart)
-export const ADD_TO_CART = gql`
-  mutation AddToCart($productId: ID!, $quantity: Int!) {
-    addToCart(productId: $productId, quantity: $quantity) {
-      id
-      items {
-        id
-        productId
-        productName
-        quantity
-        price
-      }
-      total
-    }
-  }
-`;
+//---------------------------
+// MUTATIONS
+//---------------------------
 
-export const REMOVE_FROM_CART = gql`
-  mutation RemoveFromCart($productId: ID!) {
-    removeFromCart(productId: $productId) {
-      id
-      items {
-        id
-        productId
-        productName
-        quantity
-        price
-      }
-      total
-    }
-  }
-`;
+// Cart-related mutations would go here

@@ -378,15 +378,10 @@ func (r *OrderRepository) CreateTransaction(ctx context.Context, transaction *mo
 		}
 
 		// Create payment event
-		eventType := models.OrderEventPaymentAuthorized
-		if transaction.Kind == models.TransactionKindCapture || transaction.Kind == models.TransactionKindSale {
-			eventType = models.OrderEventPaymentCaptured
-		}
-
 		event := &models.OrderEvent{
 			OrderID:     transaction.OrderID,
-			EventType:   eventType,
-			Description: fmt.Sprintf("Payment %s: %s %.2f", transaction.Kind, transaction.Currency, transaction.Amount),
+			EventType:   models.OrderEventPaymentAuthorized,
+			Description: fmt.Sprintf("Payment transaction created: %s", transaction.ID.String()),
 		}
 		if err := tx.Create(event).Error; err != nil {
 			return err

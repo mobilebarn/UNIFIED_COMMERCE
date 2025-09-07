@@ -1,8 +1,22 @@
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@external", "@requires", "@provides", "@shareable"])
+
 directive @goModel(model: String, models: [String!]) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
 directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
 
 extend type User @key(fields: "id") {
   id: ID! @external
+}
+
+# Extend the Address type from the inventory service
+extend type Address @key(fields: "firstName lastName street1 street2 city state country postalCode") @shareable {
+  firstName: String @external
+  lastName: String @external
+  street1: String @external
+  street2: String @external
+  city: String @external
+  state: String @external
+  country: String @external
+  postalCode: String @external
 }
 
 type Query {
@@ -12,7 +26,7 @@ type Query {
   cartBySession(sessionId: String!): Cart
   
   # Line item queries
-  lineItem(id: ID!): CartLineItem
+  cartLineItem(id: ID!): CartLineItem @shareable
 }
 
 type Mutation {
@@ -22,9 +36,9 @@ type Mutation {
   deleteCart(id: ID!): Boolean!
   
   # Line item mutations
-  addLineItem(input: AddLineItemInput!): CartLineItem!
-  updateLineItem(id: ID!, input: UpdateLineItemInput!): CartLineItem!
-  removeLineItem(id: ID!): Boolean!
+  addCartLineItem(input: AddLineItemInput!): CartLineItem! @shareable
+  updateCartLineItem(id: ID!, input: UpdateLineItemInput!): CartLineItem! @shareable
+  removeCartLineItem(id: ID!): Boolean! @shareable
   
   # Cart actions
   clearCart(cartId: ID!): Boolean!
@@ -90,7 +104,7 @@ type Cart @key(fields: "id") @goModel(model: "unified-commerce/services/cart/mod
   customer: User
 }
 
-type CartLineItem @goModel(model: "unified-commerce/services/cart/models.CartLineItem") {
+type CartLineItem @goModel(model: "unified-commerce/services/cart/models.CartLineItem") @shareable {
   id: ID!
   cartId: ID!
   productId: ID!
@@ -176,27 +190,12 @@ type CartLineItemDiscountAllocation @goModel(model: "unified-commerce/services/c
   updatedAt: String
 }
 
-type Address @goModel(model: "unified-commerce/services/cart/models.Address") {
-  firstName: String
-  lastName: String
-  company: String
-  address1: String
-  address2: String
-  city: String
-  province: String
-  country: String
-  zip: String
-  phone: String
-  latitude: Float
-  longitude: Float
-}
-
 # Enums
 enum CartStatus {
-  ACTIVE
-  ABANDONED
-  COMPLETED
-  EXPIRED
+  active
+  abandoned
+  completed
+  expired
 }
 
 enum CheckoutStep {
@@ -211,6 +210,9 @@ enum DiscountType {
   MANUAL
   CODE
   AUTOMATIC
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
 }
 
 enum DiscountValueType {
@@ -292,12 +294,12 @@ input AddressInput {
   firstName: String
   lastName: String
   company: String
-  address1: String
-  address2: String
+  street1: String
+  street2: String
   city: String
-  province: String
+  state: String
   country: String
-  zip: String
+  postalCode: String
   phone: String
   latitude: Float
   longitude: Float

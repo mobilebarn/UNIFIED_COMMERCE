@@ -436,3 +436,8 @@ func (s *MerchantService) GetSubscription(ctx context.Context, merchantID, userI
 
 	return s.repo.Subscription.GetActiveByMerchantID(ctx, merchantID)
 }
+
+// GetMerchantByID retrieves a merchant by ID
+func (s *MerchantService) GetMerchantByID(ctx context.Context, id string) (*models.Merchant, error) {
+	return s.repo.Merchant.GetByID(ctx, id)
+}

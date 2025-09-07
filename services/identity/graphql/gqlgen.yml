@@ -1,6 +1,6 @@
 # Where are all the schema files located? globs are supported eg  src/**/*.graphqls
 schema:
-  - ./*.graphql
+  - ./schema.graphql
 
 # Where should the generated server code go?
 exec:
@@ -11,6 +11,7 @@ exec:
 federation:
   filename: federation.go
   package: graphql
+  version: 2
 
 # Where should any generated models go?
 model:

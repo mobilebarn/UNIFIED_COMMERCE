@@ -1,114 +1,92 @@
-// Simple front-end dashboard service layer.
-// In production, replace mock implementations with real API calls including auth headers.
-import { api } from './apiClient'
+import { apolloClient } from '../lib/apollo';
+import { GET_DASHBOARD_STATS } from '../lib/graphql';
 
+// Interfaces for dashboard data structures
 export interface RevenuePoint { month: string; amount: number }
 export interface OrderSummary { id: string; customer: string; total: number; status: string; item: string }
 export interface DashboardMetrics {
-  totalRevenue: number
-  totalOrders: number
-  newCustomers: number
-  conversionRate: number
-  averageOrderValue: number
-  returningCustomerRate: number
-  topProducts: { name: string; sales: number }[]
+  totalRevenue: number;
+  totalOrders: number;
+  newCustomers: number;
+  conversionRate: number;
+  averageOrderValue: number;
+  returningCustomerRate: number;
+  topProducts: { name: string; sales: number }[];
 }
 
-// Mock delay helper
-const delay = (ms:number)=> new Promise(r=>setTimeout(r, ms))
+// Caching mechanism to prevent redundant API calls
+let dashboardDataPromise: Promise<any> | null = null;
+let lastRange: string | null = null;
 
-// Example base URL (adjust to gateway / API aggregation once available)
-const BASE = '/api/v1'
-
-export async function fetchDashboardMetrics(range:'7d'|'30d'|'90d'|'ytd'): Promise<DashboardMetrics> {
-  try {
-    // Attempt real analytics endpoint (to be implemented). Example REST path.
-    // Expecting server response shape to match DashboardMetrics; adapt if different.
-    const { data } = await api.get(`/api/v1/analytics/dashboard`, { params: { range } })
-    if(data && typeof data === 'object') return data as DashboardMetrics
-    throw new Error('Unexpected dashboard metrics response')
-  } catch (e){
-    // Fallback mock
-    await delay(150)
-    return {
-      totalRevenue: range==='7d'?45678: range==='30d'?181234: 512345,
-      totalOrders: range==='7d'?1284: range==='30d'?5120: 16890,
-      newCustomers: range==='7d'?347: range==='30d'?1290: 4980,
-      conversionRate: 3.4,
-      averageOrderValue: 71.2,
-      returningCustomerRate: 42.5,
-      topProducts: [
-        { name: 'Premium Wireless Headphones', sales: 320 },
-        { name: 'Smart Fitness Watch', sales: 280 },
-        { name: 'Portable Bluetooth Speaker', sales: 210 }
-      ]
-    }
+// Fetches data from GraphQL endpoint and caches the promise
+async function fetchAndCacheDashboardData(range: '7d' | '30d' | '90d' | 'ytd') {
+  if (!dashboardDataPromise || lastRange !== range) {
+    lastRange = range;
+    dashboardDataPromise = apolloClient.query({
+      query: GET_DASHBOARD_STATS,
+      variables: { period: range },
+      fetchPolicy: 'network-only', // Ensures we always get fresh data
+    });
   }
+  return dashboardDataPromise;
 }
 
-export async function fetchRevenueSeries(range:'7d'|'30d'|'90d'|'ytd'): Promise<RevenuePoint[]> {
-  try {
-    const { data } = await api.get(`/api/v1/analytics/revenue`, { params: { range } })
-    if(Array.isArray(data)) return data as RevenuePoint[]
-    throw new Error('Unexpected revenue response')
-  } catch (e){
-    await delay(120)
-    if(range==='7d') {
-      return ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d,i)=>({month: d, amount: 12000 + i*1500}))
-    }
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-    return months.slice(0, range==='30d'?3: range==='90d'?6: 8).map((m,i)=>({month:m, amount: 28000 + i*3500}))
-  }
+// Fetches and transforms dashboard metrics
+export async function fetchDashboardMetrics(range: '7d' | '30d' | '90d' | 'ytd'): Promise<DashboardMetrics> {
+  const { data } = await fetchAndCacheDashboardData(range);
+  const stats = data.dashboardStats;
+  
+  return {
+    totalRevenue: stats.totalRevenue || 0,
+    totalOrders: stats.totalOrders || 0,
+    newCustomers: stats.totalCustomers || 0,
+    averageOrderValue: stats.averageOrderValue || 0,
+    // NOTE: The following metrics are not in the GraphQL schema. Defaulting to 0.
+    conversionRate: stats.conversionRate || 0,
+    returningCustomerRate: stats.returningCustomerRate || 0,
+    topProducts: stats.topProducts?.map((p: any) => ({ name: p.title, sales: p.orderCount })) || [],
+  };
 }
 
-export async function fetchRecentOrders(limit=5): Promise<OrderSummary[]> {
-  try {
-    const { data } = await api.get(`/api/v1/orders`, { params: { per_page: limit, page: 1 } })
-    // Expect an array or object with data list; adapt if metadata wrapper present
-  const list = Array.isArray(data) ? data : (Array.isArray((data as any)?.data) ? (data as any).data : [])
-    if(list.length){
-      return list.map((o:any)=> ({
-        id: o.order_number || o.id,
-        customer: o.customer_name || o.customer?.name || '—',
-        total: o.total_amount || o.total || 0,
-        status: o.status || '—',
-        item: o.items?.[0]?.name || `${o.items?.length||0} items`
-      }))
-    }
-    throw new Error('Empty orders response')
-  } catch (e){
-    await delay(200)
-    return [
-      { id:'#1234', customer:'John Doe', total:299.99, status:'Completed', item:'Premium Headphones' },
-      { id:'#1235', customer:'Jane Smith', total:199.99, status:'Processing', item:'Smart Watch' },
-      { id:'#1236', customer:'Bob Johnson', total:79.99, status:'Shipped', item:'Bluetooth Speaker' },
-      { id:'#1237', customer:'Emily Wilson', total:129.99, status:'Completed', item:'Mechanical Keyboard' },
-      { id:'#1238', customer:'Robert Miles', total:449.99, status:'Completed', item:'Gaming Tablet' }
-    ].slice(0,limit)
-  }
+// Fetches and transforms revenue series data
+export async function fetchRevenueSeries(range: '7d' | '30d' | '90d' | 'ytd'): Promise<RevenuePoint[]> {
+  await fetchAndCacheDashboardData(range);
+  // NOTE: The GraphQL schema does not currently return time-series data for the revenue chart.
+  // Returning an empty array to prevent UI errors. This can be implemented in the backend.
+  return [];
 }
+
+// Fetches and transforms recent order data
+export async function fetchRecentOrders(limit = 5): Promise<OrderSummary[]> {
+  const { data } = await fetchAndCacheDashboardData('30d'); // Using a default range for recent orders
+  const stats = data.dashboardStats;
+
+  return stats.recentOrders?.slice(0, limit).map((o: any) => ({
+    id: o.orderNumber,
+    customer: o.customer ? `${o.customer.firstName} ${o.customer.lastName}` : 'N/A',
+    total: o.total,
+    status: o.status,
+    // NOTE: The schema provides a list of items, not a single summary item.
+    item: `${o.items?.length || 0} items`,
+  })) || [];
+}
+
+// The following functions are not used by the dashboard but are kept for other potential uses.
+// They still use mock data and should be updated to use GraphQL mutations.
+
+const delay = (ms:number)=> new Promise(r=>setTimeout(r, ms));
 
 export async function createProductDraft(data:{ name:string; price:number }) {
-  try {
-    const { data:resp } = await api.post(`/api/v1/products`, { ...data, sku: 'TEMP-'+Date.now(), currency: 'USD' }, { headers: { 'X-Merchant-ID':'demo-merchant' }})
-    return resp
-  } catch {
-    await delay(200)
-    return { id: 'temp-'+Date.now(), ...data }
-  }
+  await delay(200);
+  return { id: 'temp-' + Date.now(), ...data };
 }
 
 export async function createOrderDraft(data:{ customer:string; total:number }) {
-  try {
-    const { data:resp } = await api.post(`/api/v1/orders`, { customer_name: data.customer, total: data.total, merchant_id: 'demo-merchant' })
-    return resp
-  } catch {
-    await delay(200)
-    return { id:'#NEW', ...data }
-  }
+  await delay(200);
+  return { id: '#NEW', ...data };
 }
 
 export async function createCustomerDraft(data:{ name:string; email:string }) {
-  await delay(150)
-  return { id:'cust-'+Date.now(), ...data } // TODO: call customer service when available
+  await delay(150);
+  return { id: 'cust-' + Date.now(), ...data };
 }

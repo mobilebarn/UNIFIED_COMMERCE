@@ -1,36 +1,54 @@
-# Where are all the schema files located? globs are supported eg  src/**/*.graphqls
+﻿﻿# Where are all the schema files located? globs are supported eg  src/**/*.graphqls
 schema:
-  - ./*.graphql
+  - graphql/*.graphql
 
 # Where should the generated server code go?
 exec:
-  filename: generated.go
+  filename: graphql/generated.go
   package: graphql
 
 # Uncomment to enable federation
 federation:
-  filename: federation.go
+  filename: graphql/federation.go
   package: graphql
 
 # Where should any generated models go?
 model:
-  filename: models_gen.go
+  filename: graphql/models_gen.go
   package: graphql
 
 # Where should the resolver implementations go?
 resolver:
   layout: follow-schema
-  dir: .
+  dir: graphql
   package: graphql
 
-# Optional: turn on use `gqlgen:"fieldName"` tags in your models
+# Optional: turn on use ` + "`" + `gqlgen:"fieldName"` + "`" + ` tags in your models
 # struct_tag: json
 
 # Optional: turn on to use []Thing instead of []*Thing
 # omit_slice_element_pointers: false
 
-# Tell gqlgen about any existing models you want to reuse for
-# GraphQL. These normally come from the database or an API.
+# Optional: turn off to make struct-type struct fields not use pointers
+# e.g. type Thing struct { FieldA OtherThing } instead of { FieldA *OtherThing }
+# struct_fields_always_pointers: true
+
+# Optional: turn off to make resolvers return values instead of pointers for structs
+# resolvers_always_return_pointers: true
+
+# Optional: set to speed up generation time by not performing a final validation pass.
+# skip_validation: true
+
+# gqlgen will search for any type names in the schema in these go packages
+# if they match it will use them, otherwise it will generate them.
+autobind:
+  - "unified-commerce/services/cart/models"
+
+# This section declares type mapping between the GraphQL and go type systems
+#
+# The first line in each type will be used as defaults for resolver arguments and
+# modelgen, the others will be allowed when binding to fields. Configure them to
+# your liking
 models:
   ID:
     model:
@@ -38,19 +56,8 @@ models:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
-  JSON:
-    model: github.com/99designs/gqlgen/graphql.Map
-  CartStatus:
-    model: unified-commerce/services/cart/models.CartStatus
-  CheckoutStep:
-    model: unified-commerce/services/cart/models.CheckoutStep
-  DiscountType:
-    model: unified-commerce/services/cart/models.DiscountType
-  DiscountValueType:
-    model: unified-commerce/services/cart/models.DiscountValueType
-  AllocationMethod:
-    model: unified-commerce/services/cart/models.AllocationMethod
-  TargetSelection:
-    model: unified-commerce/services/cart/models.TargetSelection
-  TargetType:
-    model: unified-commerce/services/cart/models.TargetType
+  Int:
+    model:
+      - github.com/99designs/gqlgen/graphql.Int
+      - github.com/99designs/gqlgen/graphql.Int64
+      - github.com/99designs/gqlgen/graphql.Int32

@@ -1,0 +1,320 @@
+directive @goModel(model: String, models: [String!]) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
+directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+
+extend type User @key(fields: "id") {
+  id: ID! @external
+}
+
+extend type Order @key(fields: "id") {
+  id: ID! @external
+}
+
+type Query {
+  # Payment queries
+  payment(id: ID!): Payment
+  payments(filter: PaymentFilter): [Payment!]!
+  paymentMethod(id: ID!): PaymentMethod
+  paymentMethods(customerId: ID): [PaymentMethod!]!
+  
+  # Transaction queries
+  transaction(id: ID!): Transaction
+  transactions(filter: TransactionFilter): [Transaction!]!
+}
+
+type Mutation {
+  # Payment mutations
+  createPayment(input: CreatePaymentInput!): Payment!
+  capturePayment(id: ID!, amount: Float): Payment!
+  refundPayment(id: ID!, input: RefundPaymentInput!): Payment!
+  voidPayment(id: ID!): Payment!
+  
+  # Payment method mutations
+  createPaymentMethod(input: CreatePaymentMethodInput!): PaymentMethod!
+  updatePaymentMethod(id: ID!, input: UpdatePaymentMethodInput!): PaymentMethod!
+  deletePaymentMethod(id: ID!): Boolean!
+  setDefaultPaymentMethod(id: ID!, customerId: ID!): PaymentMethod!
+  
+  # Transaction mutations
+  createTransaction(input: CreateTransactionInput!): Transaction!
+}
+
+# Main Payment type with federation key
+type Payment @key(fields: "id") @goModel(model: "unified-commerce/services/payment/models.Payment") {
+  id: ID!
+  orderId: ID
+  customerId: ID
+  merchantId: ID!
+  amount: Float!
+  currency: String!
+  status: PaymentStatus!
+  gateway: String!
+  gatewayTransactionId: String
+  
+  # Payment Method
+  paymentMethodId: String
+  paymentMethodType: PaymentMethodType!
+  
+  # Billing Information
+  billingAddress: Address
+  
+  # Processing Information
+  processorResponse: String
+  failureReason: String
+  
+  # Metadata
+  metadata: JSON
+  description: String
+  
+  # Timestamps
+  authorizedAt: String
+  capturedAt: String
+  failedAt: String
+  refundedAt: String
+  voidedAt: String
+  createdAt: String!
+  updatedAt: String
+  
+  # Relationships
+  transactions: [Transaction!]!
+  refunds: [Refund!]!
+  
+  # Federation relationships
+  order: Order
+  customer: User
+}
+
+type PaymentMethod @key(fields: "id") @goModel(model: "unified-commerce/services/payment/models.PaymentMethod") {
+  id: ID!
+  customerId: ID!
+  merchantId: ID!
+  type: PaymentMethodType!
+  isDefault: Boolean!
+  
+  # Card Information (if applicable)
+  cardLast4: String
+  cardBrand: String
+  cardExpMonth: Int
+  cardExpYear: Int
+  cardFingerprint: String
+  
+  # Bank Account Information (if applicable)
+  bankLast4: String
+  bankName: String
+  bankAccountType: String
+  
+  # Digital Wallet Information (if applicable)
+  walletType: String
+  walletEmail: String
+  
+  # Billing Information
+  billingAddress: Address
+  
+  # Metadata
+  metadata: JSON
+  
+  # Timestamps
+  createdAt: String!
+  updatedAt: String
+  
+  # Federation relationships
+  customer: User
+}
+
+type Transaction @key(fields: "id") @goModel(model: "unified-commerce/services/payment/models.Transaction") {
+  id: ID!
+  paymentId: ID!
+  orderId: ID
+  amount: Float!
+  currency: String!
+  type: TransactionType!
+  status: TransactionStatus!
+  gateway: String!
+  gatewayTransactionId: String
+  
+  # Processing Information
+  processorResponse: String
+  failureReason: String
+  
+  # Metadata
+  metadata: JSON
+  description: String
+  
+  # Timestamps
+  processedAt: String
+  createdAt: String!
+  updatedAt: String
+  
+  # Relationships
+  payment: Payment!
+  
+  # Federation relationships
+  order: Order
+}
+
+type Refund @goModel(model: "unified-commerce/services/payment/models.Refund") {
+  id: ID!
+  paymentId: ID!
+  orderId: ID
+  amount: Float!
+  currency: String!
+  status: RefundStatus!
+  reason: String
+  
+  # Processing Information
+  gatewayRefundId: String
+  processorResponse: String
+  failureReason: String
+  
+  # Metadata
+  metadata: JSON
+  
+  # Timestamps
+  processedAt: String
+  createdAt: String!
+  updatedAt: String
+  
+  # Relationships
+  payment: Payment!
+}
+
+type Address @goModel(model: "unified-commerce/services/payment/models.Address") {
+  firstName: String
+  lastName: String
+  company: String
+  address1: String
+  address2: String
+  city: String
+  province: String
+  country: String
+  zip: String
+  phone: String
+}
+
+# Enums
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  VOIDED
+}
+
+enum PaymentMethodType {
+  CREDIT_CARD
+  DEBIT_CARD
+  BANK_ACCOUNT
+  DIGITAL_WALLET
+  CRYPTOCURRENCY
+  GIFT_CARD
+  STORE_CREDIT
+}
+
+enum TransactionType {
+  AUTHORIZATION
+  CAPTURE
+  SALE
+  REFUND
+  VOID
+  CREDIT
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+enum RefundStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+# Input Types
+input PaymentFilter {
+  orderId: ID
+  customerId: ID
+  merchantId: ID
+  status: PaymentStatus
+  gateway: String
+  limit: Int
+  offset: Int
+}
+
+input TransactionFilter {
+  paymentId: ID
+  orderId: ID
+  type: TransactionType
+  status: TransactionStatus
+  gateway: String
+  limit: Int
+  offset: Int
+}
+
+input CreatePaymentInput {
+  orderId: ID
+  customerId: ID
+  merchantId: ID!
+  amount: Float!
+  currency: String!
+  paymentMethodId: String!
+  billingAddress: AddressInput
+  description: String
+  metadata: JSON
+}
+
+input RefundPaymentInput {
+  amount: Float!
+  reason: String
+  description: String
+  metadata: JSON
+}
+
+input CreatePaymentMethodInput {
+  customerId: ID!
+  merchantId: ID!
+  type: PaymentMethodType!
+  token: String!
+  isDefault: Boolean
+  billingAddress: AddressInput
+  metadata: JSON
+}
+
+input UpdatePaymentMethodInput {
+  isDefault: Boolean
+  billingAddress: AddressInput
+  metadata: JSON
+}
+
+input CreateTransactionInput {
+  paymentId: ID!
+  orderId: ID
+  amount: Float!
+  currency: String!
+  type: TransactionType!
+  description: String
+  metadata: JSON
+}
+
+input AddressInput {
+  firstName: String
+  lastName: String
+  company: String
+  address1: String
+  address2: String
+  city: String
+  province: String
+  country: String
+  zip: String
+  phone: String
+}
+
+# Scalar for JSON data
+scalar JSON

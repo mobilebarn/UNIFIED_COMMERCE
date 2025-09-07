@@ -97,7 +97,7 @@ func main() {
 
 	// Add GraphQL endpoints
 	graphqlHandler := graphql.NewGraphQLHandler(cartService, log)
-	playgroundHandler := graphql.NewGraphQLPlaygroundHandler()
+	playgroundHandler := graphql.NewPlaygroundHandler()
 
 	router.Any("/graphql", gin.WrapH(graphqlHandler))
 	router.GET("/graphql/playground", gin.WrapH(playgroundHandler))

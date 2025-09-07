@@ -166,7 +166,7 @@ func (s *PaymentService) ProcessPayment(ctx context.Context, paymentID uuid.UUID
 
 	// Update payment status to processing
 	now := time.Now()
-	if err := s.repo.UpdatePaymentStatus(ctx, paymentID, models.PaymentStatusProcessing, &now); err != nil {
+	if err := s.repo.UpdatePaymentStatus(ctx, paymentID, models.PaymentStatusPending, &now); err != nil {
 		s.logger.WithError(err).Error("Failed to update payment status to processing")
 		return err
 	}
@@ -253,7 +253,7 @@ func (s *PaymentService) CancelPayment(ctx context.Context, paymentID uuid.UUID)
 	}
 
 	// Check if payment can be cancelled
-	if payment.Status != models.PaymentStatusPending && payment.Status != models.PaymentStatusProcessing {
+	if payment.Status != models.PaymentStatusPending && payment.Status != models.PaymentStatusPending {
 		return ErrInvalidPaymentStatus
 	}
 

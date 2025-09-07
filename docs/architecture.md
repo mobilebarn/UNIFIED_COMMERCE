@@ -80,7 +80,7 @@ graph TB
 
 ## Core Services Architecture
 
-### Identity Service (Implemented ✅)
+### Identity Service (Code Complete 🔧 Testing Required)
 
 ```mermaid
 graph TB
@@ -125,6 +125,8 @@ graph TB
     SR --> SESSIONS
     AS --> AUDIT
 ```
+
+**Status:** Code complete, database migrations implemented, requires operational testing
 
 ## Data Architecture
 

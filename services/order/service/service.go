@@ -486,14 +486,8 @@ func (s *OrderService) MarkFulfillmentShipped(ctx context.Context, fulfillmentID
 
 // CreateTransactionRequest represents a request to create a transaction
 type CreateTransactionRequest struct {
-	OrderID              uuid.UUID              `json:"order_id" validate:"required"`
-	Kind                 models.TransactionKind `json:"kind" validate:"required"`
-	Gateway              string                 `json:"gateway" validate:"required"`
-	Amount               float64                `json:"amount" validate:"required,min=0"`
-	Currency             string                 `json:"currency"`
-	GatewayTransactionID string                 `json:"gateway_transaction_id"`
-	PaymentMethodID      string                 `json:"payment_method_id"`
-	AuthorizationCode    string                 `json:"authorization_code"`
+	OrderID uuid.UUID `json:"order_id" validate:"required"`
+	// We're not storing detailed transaction information since it's managed by the payment service
 }
 
 // CreateTransaction creates a new payment transaction
@@ -507,19 +501,7 @@ func (s *OrderService) CreateTransaction(ctx context.Context, req *CreateTransac
 	}
 
 	transaction := &models.Transaction{
-		OrderID:              req.OrderID,
-		Kind:                 req.Kind,
-		Gateway:              req.Gateway,
-		Status:               models.TransactionStatusPending,
-		Amount:               req.Amount,
-		Currency:             req.Currency,
-		GatewayTransactionID: req.GatewayTransactionID,
-		PaymentMethodID:      req.PaymentMethodID,
-		AuthorizationCode:    req.AuthorizationCode,
-	}
-
-	if transaction.Currency == "" {
-		transaction.Currency = order.Currency
+		OrderID: req.OrderID,
 	}
 
 	if err := s.repo.CreateTransaction(ctx, transaction); err != nil {

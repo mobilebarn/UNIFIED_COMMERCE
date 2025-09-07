@@ -5,16 +5,17 @@ import (
 	"unified-commerce/services/shared/logger"
 )
 
-// Resolver is the root resolver
+// Resolver provides resolution context for GraphQL resolvers.
+// It holds dependencies like the CartService, making them available to resolver functions.
 type Resolver struct {
-	cartService *service.CartService
-	logger      *logger.Logger
+	CartService *service.CartService
+	Logger      *logger.Logger
 }
 
-// NewResolver creates a new resolver
+// NewResolver creates a new Resolver instance.
 func NewResolver(cartService *service.CartService, logger *logger.Logger) *Resolver {
 	return &Resolver{
-		cartService: cartService,
-		logger:      logger,
+		CartService: cartService,
+		Logger:      logger,
 	}
 }

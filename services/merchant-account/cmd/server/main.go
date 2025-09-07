@@ -58,13 +58,14 @@ func setupRoutes(router *gin.Engine, baseService *service.BaseService) {
 
 	// Create handlers
 	handler := handlers.NewMerchantHandler(merchantService, baseService.Logger)
-	graphqlHandler := graphql.NewHandler(repo, merchantService, baseService.Logger)
+	graphqlHandler := graphql.NewGraphQLHandler(merchantService, baseService.Logger)
 
 	// Register REST routes
 	handler.RegisterRoutes(router)
 
 	// Register GraphQL endpoint
-	router.POST("/graphql", graphqlHandler.GraphQLHandler)
+	router.POST("/graphql", gin.WrapH(graphqlHandler))
+
 }
 
 // seedInitialData seeds the database with initial subscription plans

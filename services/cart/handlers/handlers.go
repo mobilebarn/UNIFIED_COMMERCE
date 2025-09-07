@@ -502,15 +502,15 @@ func (h *CartHandler) UpdateCheckoutShippingAddress(c *gin.Context) {
 	}
 
 	address := models.Address{
-		FirstName: req.Address.CustomerFirstName,
-		LastName:  req.Address.CustomerLastName,
-		Address1:  req.Address.ShippingAddress.Address1,
-		Address2:  req.Address.ShippingAddress.Address2,
-		City:      req.Address.ShippingAddress.City,
-		Province:  req.Address.ShippingAddress.Province,
-		Country:   req.Address.ShippingAddress.Country,
-		Zip:       req.Address.ShippingAddress.Zip,
-		Phone:     req.Address.CustomerPhone,
+		FirstName:  req.Address.CustomerFirstName,
+		LastName:   req.Address.CustomerLastName,
+		Street1:    req.Address.ShippingAddress.Street1,
+		Street2:    req.Address.ShippingAddress.Street2,
+		City:       req.Address.ShippingAddress.City,
+		State:      req.Address.ShippingAddress.State,
+		Country:    req.Address.ShippingAddress.Country,
+		PostalCode: req.Address.ShippingAddress.PostalCode,
+		Phone:      req.Address.CustomerPhone,
 	}
 
 	checkout, err := h.service.UpdateCheckoutShippingAddress(c.Request.Context(), checkoutID, address)

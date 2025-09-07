@@ -1,0 +1,89 @@
+directive @goModel(model: String, models: [String!]) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
+directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+
+extend type User @key(fields: "id") {
+  id: ID! @external
+}
+
+type Query {
+  # Order queries
+  order(id: ID!): Order
+  orders(filter: OrderFilter): [Order!]!
+  myOrders: [Order!]!
+}
+
+type Mutation {
+  # Order mutations
+  createOrder(input: CreateOrderInput!): Order!
+  updateOrder(id: ID!, input: UpdateOrderInput!): Order!
+  cancelOrder(id: ID!): Order!
+  completeOrder(id: ID!): Order!
+}
+
+# Order Types
+type Order @key(fields: "id") @goModel(model: "unified-commerce/services/order/models.Order") {
+  id: ID!
+  orderNumber: String!
+  merchantId: ID!
+  customerId: ID
+  status: OrderStatus!
+  totalPrice: Float!
+  currency: String!
+  lineItems: [OrderLineItem!]!
+  createdAt: String!
+  updatedAt: String
+  
+  # Federation relationships
+  customer: User
+}
+
+type OrderLineItem @key(fields: "id") @goModel(model: "unified-commerce/services/order/models.OrderLineItem") {
+  id: ID!
+  orderId: ID!
+  productId: ID!
+  quantity: Int!
+  price: Float!
+  totalPrice: Float!
+  title: String!
+  createdAt: String!
+  updatedAt: String
+}
+
+# Enums
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+# Input Types
+input OrderFilter {
+  status: OrderStatus
+  customerId: ID
+  merchantId: ID
+  dateFrom: String
+  dateTo: String
+}
+
+input CreateOrderInput {
+  merchantId: ID!
+  customerId: ID
+  lineItems: [CreateOrderLineItemInput!]!
+}
+
+input CreateOrderLineItemInput {
+  productId: ID!
+  quantity: Int!
+  price: Float!
+  title: String!
+}
+
+input UpdateOrderInput {
+  status: OrderStatus
+}
+
+scalar JSON

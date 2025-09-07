@@ -31,6 +31,9 @@ type Promotion struct {
 	DiscountCodes []DiscountCode `json:"discount_codes,omitempty" gorm:"foreignKey:PromotionID"`
 }
 
+// IsEntity implements the gqlgen federation Entity interface
+func (p *Promotion) IsEntity() {}
+
 // PromoStatus represents the status of a promotion
 type PromoStatus string
 
@@ -146,6 +149,9 @@ type DiscountCode struct {
 	Promotion Promotion   `json:"promotion,omitempty" gorm:"foreignKey:PromotionID"`
 	Usages    []CodeUsage `json:"usages,omitempty" gorm:"foreignKey:DiscountCodeID"`
 }
+
+// IsEntity implements the gqlgen federation Entity interface
+func (dc *DiscountCode) IsEntity() {}
 
 // CodeStatus represents the status of a discount code
 type CodeStatus string
@@ -421,3 +427,120 @@ func (la *LoyaltyActivity) BeforeCreate(tx *gorm.DB) error {
 	}
 	return nil
 }
+
+// DiscountApplication represents an application of a discount to an order
+type DiscountApplication struct {
+	ID             uuid.UUID              `json:"id" gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	PromotionID    uuid.UUID              `json:"promotion_id" gorm:"type:uuid;not null;index"`
+	DiscountCodeID *uuid.UUID             `json:"discount_code_id" gorm:"type:uuid;index"`
+	OrderID        uuid.UUID              `json:"order_id" gorm:"type:uuid;not null;index"`
+	CustomerID     *uuid.UUID             `json:"customer_id" gorm:"type:uuid;index"`
+	DiscountAmount float64                `json:"discount_amount" gorm:"type:decimal(12,2);not null"`
+	AppliedAt      time.Time              `json:"applied_at" gorm:"not null"`
+	Metadata       map[string]interface{} `json:"metadata" gorm:"type:jsonb"`
+	CreatedAt      time.Time              `json:"created_at" gorm:"autoCreateTime"`
+
+	// Relationships
+	Promotion    Promotion     `json:"promotion,omitempty" gorm:"foreignKey:PromotionID"`
+	DiscountCode *DiscountCode `json:"discount_code,omitempty" gorm:"foreignKey:DiscountCodeID"`
+}
+
+// IsEntity implements the gqlgen federation Entity interface
+func (da *DiscountApplication) IsEntity() {}
+
+// Campaign represents a promotional campaign
+type Campaign struct {
+	ID             uuid.UUID              `json:"id" gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	MerchantID     uuid.UUID              `json:"merchant_id" gorm:"type:uuid;not null;index"`
+	Name           string                 `json:"name" gorm:"not null"`
+	Description    string                 `json:"description"`
+	Type           CampaignType           `json:"type" gorm:"not null"`
+	Status         CampaignStatus         `json:"status" gorm:"default:'draft'"`
+	StartDate      time.Time              `json:"start_date" gorm:"not null"`
+	EndDate        *time.Time             `json:"end_date"`
+	Budget         *float64               `json:"budget" gorm:"type:decimal(12,2)"`
+	GoalType       *CampaignGoalType      `json:"goal_type"`
+	GoalValue      *float64               `json:"goal_value" gorm:"type:decimal(12,2)"`
+	TargetAudience *TargetAudience        `json:"target_audience" gorm:"type:jsonb"`
+	Metadata       map[string]interface{} `json:"metadata" gorm:"type:jsonb"`
+	CreatedAt      time.Time              `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt      time.Time              `json:"updated_at" gorm:"autoUpdateTime"`
+
+	// Relationships
+	Promotions []Promotion `json:"promotions,omitempty" gorm:"foreignKey:CampaignID"`
+}
+
+// IsEntity implements the gqlgen federation Entity interface
+func (c *Campaign) IsEntity() {}
+
+// CampaignType represents the type of campaign
+type CampaignType string
+
+const (
+	CampaignTypeSeasonal    CampaignType = "seasonal"
+	CampaignTypeFlashSale   CampaignType = "flash_sale"
+	CampaignTypeLoyalty     CampaignType = "loyalty"
+	CampaignTypeAcquisition CampaignType = "acquisition"
+	CampaignTypeRetention   CampaignType = "retention"
+	CampaignTypeClearance   CampaignType = "clearance"
+)
+
+// CampaignStatus represents the status of a campaign
+type CampaignStatus string
+
+const (
+	CampaignStatusDraft     CampaignStatus = "draft"
+	CampaignStatusActive    CampaignStatus = "active"
+	CampaignStatusPaused    CampaignStatus = "paused"
+	CampaignStatusCompleted CampaignStatus = "completed"
+	CampaignStatusCancelled CampaignStatus = "cancelled"
+)
+
+// CampaignGoalType represents the goal type of a campaign
+type CampaignGoalType string
+
+const (
+	CampaignGoalTypeRevenue     CampaignGoalType = "revenue"
+	CampaignGoalTypeOrders      CampaignGoalType = "orders"
+	CampaignGoalTypeCustomers   CampaignGoalType = "customers"
+	CampaignGoalTypeConversions CampaignGoalType = "conversions"
+)
+
+// MinimumRequirements represents the minimum requirements for a promotion
+type MinimumRequirements struct {
+	Type  MinimumRequirementType `json:"type"`
+	Value float64                `json:"value"`
+}
+
+// IsEntity implements the gqlgen federation Entity interface
+func (mr *MinimumRequirements) IsEntity() {}
+
+// MinimumRequirementType represents the type of minimum requirement
+type MinimumRequirementType string
+
+const (
+	MinimumRequirementTypeSubtotal MinimumRequirementType = "subtotal"
+	MinimumRequirementTypeQuantity MinimumRequirementType = "quantity"
+	MinimumRequirementTypeNone     MinimumRequirementType = "none"
+)
+
+// UsageLimits represents the usage limits for a promotion
+type UsageLimits struct {
+	TotalUsageLimit       *int `json:"total_usage_limit"`
+	OncePerCustomer       bool `json:"once_per_customer"`
+	PerCustomerUsageLimit *int `json:"per_customer_usage_limit"`
+}
+
+// IsEntity implements the gqlgen federation Entity interface
+func (ul *UsageLimits) IsEntity() {}
+
+// TargetAudience represents the target audience for a campaign
+type TargetAudience struct {
+	CustomerSegments       []string `json:"customer_segments"`
+	CustomerTags           []string `json:"customer_tags"`
+	NewCustomersOnly       bool     `json:"new_customers_only"`
+	ReturningCustomersOnly bool     `json:"returning_customers_only"`
+}
+
+// IsEntity implements the gqlgen federation Entity interface
+func (ta *TargetAudience) IsEntity() {}

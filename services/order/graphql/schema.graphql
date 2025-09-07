@@ -1,8 +1,80 @@
+# Federation directives
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@external", "@requires", "@provides", "@shareable"])
+
 directive @goModel(model: String, models: [String!]) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
 directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
 
 extend type User @key(fields: "id") {
   id: ID! @external
+}
+
+# Extend the Transaction type from the payment service
+# Uncommenting now that payment service is available
+extend type Transaction @key(fields: "id") @shareable {
+  id: ID! @external
+  kind: TransactionKind! @shareable
+  paymentMethodId: String @shareable
+}
+
+# Extend the Address type from the inventory service
+extend type Address @key(fields: "firstName lastName street1 street2 city state country postalCode") @shareable {
+  firstName: String @shareable
+  lastName: String @shareable
+  company: String @shareable
+  street1: String @shareable
+  street2: String @shareable
+  city: String @shareable
+  state: String @shareable
+  country: String @shareable
+  postalCode: String @shareable
+  phone: String @shareable
+  latitude: Float @shareable
+  longitude: Float @shareable
+  timezone: String @shareable
+}
+
+type CustomerInfo {
+  firstName: String!
+  lastName: String!
+  email: String!
+  phone: String
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+  RETURNED
+}
+
+enum FulfillmentStatus {
+  UNFULFILLED
+  PARTIALLY_FULFILLED
+  FULFILLED
+  RESTOCKED
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  VOIDED
+  PARTIALLY_PAID
+  PAID
+}
+
+enum LineItemFulfillmentStatus {
+  UNFULFILLED
+  FULFILLED
+  RESTOCKED
 }
 
 type Query {
@@ -83,11 +155,13 @@ type Order @key(fields: "id") @goModel(model: "unified-commerce/services/order/m
   # Relationships
   lineItems: [OrderLineItem!]!
   fulfillments: [Fulfillment!]!
-  transactions: [Transaction!]!
-  refunds: [Refund!]!
   
   # Federation - extend User relationship
   customerUser: User
+  
+  # Extend to reference the payment service's Transaction entity
+  # Uncommenting now that payment service is available
+  transactions: [Transaction!]!
 }
 
 type OrderLineItem @goModel(model: "unified-commerce/services/order/models.OrderLineItem") {
@@ -131,29 +205,6 @@ type OrderLineItem @goModel(model: "unified-commerce/services/order/models.Order
   order: Order!
 }
 
-type CustomerInfo @goModel(model: "unified-commerce/services/order/models.CustomerInfo") {
-  email: String!
-  phone: String
-  firstName: String!
-  lastName: String!
-  acceptsMarketing: Boolean!
-}
-
-type Address @goModel(model: "unified-commerce/services/order/models.Address") {
-  firstName: String
-  lastName: String
-  company: String
-  address1: String
-  address2: String
-  city: String
-  province: String
-  country: String
-  zip: String
-  phone: String
-  latitude: Float
-  longitude: Float
-}
-
 type Fulfillment @goModel(model: "unified-commerce/services/order/models.Fulfillment") {
   id: ID!
   orderId: ID!
@@ -166,71 +217,12 @@ type Fulfillment @goModel(model: "unified-commerce/services/order/models.Fulfill
   updatedAt: String
 }
 
-type Transaction @goModel(model: "unified-commerce/services/order/models.Transaction") {
-  id: ID!
-  orderId: ID!
-  amount: Float!
-  currency: String!
-  kind: TransactionKind!
-  status: TransactionStatus!
-  gateway: String!
-  paymentMethodId: String
-  createdAt: String!
-  updatedAt: String
-}
-
-type Refund @goModel(model: "unified-commerce/services/order/models.Refund") {
-  id: ID!
-  orderId: ID!
-  amount: Float!
-  currency: String!
-  reason: String
-  note: String
-  createdAt: String!
-  updatedAt: String
-}
-
-# Enums
-enum OrderStatus {
-  PENDING
-  CONFIRMED
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  CANCELLED
-  REFUNDED
-  RETURNED
-}
-
-enum FulfillmentStatus {
-  UNFULFILLED
-  PARTIAL
-  FULFILLED
-  RESTOCKED
-}
-
-enum PaymentStatus {
-  PENDING
-  AUTHORIZED
-  PARTIALLY_PAID
-  PAID
-  PARTIALLY_REFUNDED
-  REFUNDED
-  VOIDED
-}
-
 enum OrderSource {
   ONLINE
   POS
   PHONE
   MAIL
   DRAFT
-}
-
-enum LineItemFulfillmentStatus {
-  UNFULFILLED
-  FULFILLED
-  RESTOCKED
 }
 
 enum TransactionKind {
@@ -327,12 +319,12 @@ input AddressInput {
   firstName: String
   lastName: String
   company: String
-  address1: String
-  address2: String
+  street1: String
+  street2: String
   city: String
-  province: String
+  state: String
   country: String
-  zip: String
+  postalCode: String
   phone: String
   latitude: Float
   longitude: Float

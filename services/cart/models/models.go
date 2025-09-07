@@ -60,6 +60,9 @@ type Cart struct {
 	DiscountApplications []CartDiscountApplication `json:"discount_applications,omitempty" gorm:"foreignKey:CartID"`
 }
 
+// IsEntity marks Cart as a federation entity
+func (c Cart) IsEntity() {}
+
 // CartStatus represents the status of a cart
 type CartStatus string
 
@@ -83,19 +86,22 @@ const (
 
 // Address represents a billing or shipping address
 type Address struct {
-	FirstName string  `json:"first_name"`
-	LastName  string  `json:"last_name"`
-	Company   string  `json:"company"`
-	Address1  string  `json:"address1"`
-	Address2  string  `json:"address2"`
-	City      string  `json:"city"`
-	Province  string  `json:"province"`
-	Country   string  `json:"country"`
-	Zip       string  `json:"zip"`
-	Phone     string  `json:"phone"`
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
+	FirstName  string  `json:"first_name"`
+	LastName   string  `json:"last_name"`
+	Company    string  `json:"company"`
+	Street1    string  `json:"street1"`
+	Street2    string  `json:"street2"`
+	City       string  `json:"city"`
+	State      string  `json:"state"`
+	Country    string  `json:"country"`
+	PostalCode string  `json:"postal_code"`
+	Phone      string  `json:"phone"`
+	Latitude   float64 `json:"latitude"`
+	Longitude  float64 `json:"longitude"`
 }
+
+// IsEntity marks Address as a federation entity
+func (a Address) IsEntity() {}
 
 // CartLineItem represents an item in a shopping cart
 type CartLineItem struct {

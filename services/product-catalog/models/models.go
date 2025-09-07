@@ -59,6 +59,9 @@ type Product struct {
 	PublishedAt *time.Time `json:"published_at" bson:"published_at"`
 }
 
+// IsEntity implements the gqlgen federation Entity interface
+func (p *Product) IsEntity() {}
+
 // ProductDimensions represents product physical dimensions
 type ProductDimensions struct {
 	Length float64 `json:"length" bson:"length"`
@@ -109,6 +112,9 @@ type ProductVariant struct {
 	UpdatedAt      time.Time              `json:"updated_at" bson:"updated_at"`
 }
 
+// IsEntity implements the gqlgen federation Entity interface
+func (p *ProductVariant) IsEntity() {}
+
 // ProductOption represents product options (like Color, Size)
 type ProductOption struct {
 	ID       string   `json:"id" bson:"id"`
@@ -146,6 +152,9 @@ type Category struct {
 	UpdatedAt   time.Time          `json:"updated_at" bson:"updated_at"`
 }
 
+// IsEntity implements the gqlgen federation Entity interface
+func (c *Category) IsEntity() {}
+
 // Collection represents curated product collections
 type Collection struct {
 	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
@@ -165,6 +174,9 @@ type Collection struct {
 	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt   time.Time          `json:"updated_at" bson:"updated_at"`
 }
+
+// IsEntity implements the gqlgen federation Entity interface
+func (c *Collection) IsEntity() {}
 
 // CollectionRule represents automated collection rules
 type CollectionRule struct {
@@ -188,6 +200,9 @@ type Brand struct {
 	UpdatedAt   time.Time          `json:"updated_at" bson:"updated_at"`
 }
 
+// IsEntity implements the gqlgen federation Entity interface
+func (b *Brand) IsEntity() {}
+
 // ProductReview represents customer product reviews
 type ProductReview struct {
 	ID           primitive.ObjectID `json:"id" bson:"_id,omitempty"`
@@ -203,6 +218,12 @@ type ProductReview struct {
 	HelpfulCount int                `json:"helpful_count" bson:"helpful_count"`
 	CreatedAt    time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt    time.Time          `json:"updated_at" bson:"updated_at"`
+}
+
+// ProductPriceRange represents the price range for a product
+type ProductPriceRange struct {
+	MinVariantPrice float64 `json:"min_variant_price" bson:"min_variant_price"`
+	MaxVariantPrice float64 `json:"max_variant_price" bson:"max_variant_price"`
 }
 
 // Helper methods for Product model

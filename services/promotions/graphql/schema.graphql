@@ -214,6 +214,9 @@ enum PromotionStatus {
 }
 
 enum DiscountType {
+  MANUAL
+  CODE
+  AUTOMATIC
   PERCENTAGE
   FIXED_AMOUNT
   FREE_SHIPPING

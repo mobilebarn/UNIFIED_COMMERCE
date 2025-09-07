@@ -1,0 +1,57 @@
+package messaging
+
+import (
+	"fmt"
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"time"
+)
+
+// KafkaConsumer wraps the confluent-kafka-go consumer.
+type KafkaConsumer struct {
+	consumer *kafka.Consumer
+}
+
+// NewKafkaConsumer creates a new Kafka consumer instance.
+func NewKafkaConsumer(bootstrapServers, groupID string, topics []string) (*KafkaConsumer, error) {
+	c, err := kafka.NewConsumer(&kafka.ConfigMap{
+		"bootstrap.servers":  bootstrapServers,
+		"group.id":           groupID,
+		"auto.offset.reset":  "earliest",
+		"enable.auto.commit": "false",
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create kafka consumer: %w", err)
+	}
+
+	err = c.SubscribeTopics(topics, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to subscribe to topics: %w", err)
+	}
+
+	return &KafkaConsumer{consumer: c}, nil
+}
+
+// Consume starts consuming messages from the subscribed topics.
+// It takes a handler function to process the received messages.
+func (c *KafkaConsumer) Consume(handler func(*kafka.Message) error) {
+	run := true
+	for run {
+		msg, err := c.consumer.ReadMessage(100 * time.Millisecond)
+		if err == nil {
+			// Process the message
+			err = handler(msg)
+			if err == nil {
+				// Commit the message offset
+				c.consumer.CommitMessage(msg)
+			}
+		} else if !err.(kafka.Error).IsTimeout() {
+			// Handle consumer error
+			fmt.Printf("Consumer error: %v (%v)\n", err, msg)
+		}
+	}
+}
+
+// Close closes the Kafka consumer.
+func (c *KafkaConsumer) Close() {
+	c.consumer.Close()
+}

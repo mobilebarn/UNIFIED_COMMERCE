@@ -7,6 +7,14 @@ import (
 	"gorm.io/gorm"
 )
 
+// User represents a user entity for federation (minimal implementation)
+type User struct {
+	ID string `json:"id"`
+}
+
+// IsEntity marks User as a federation entity
+func (u User) IsEntity() {}
+
 // Order represents a customer order
 type Order struct {
 	ID                uuid.UUID         `json:"id" gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
@@ -63,6 +71,9 @@ type Order struct {
 	Returns      []Return        `json:"returns,omitempty" gorm:"foreignKey:OrderID"`
 }
 
+// IsEntity marks Order as a federation entity
+func (o Order) IsEntity() {}
+
 // OrderStatus represents the overall status of an order
 type OrderStatus string
 
@@ -93,6 +104,9 @@ type PaymentStatus string
 const (
 	PaymentStatusPending           PaymentStatus = "pending"
 	PaymentStatusAuthorized        PaymentStatus = "authorized"
+	PaymentStatusCaptured          PaymentStatus = "captured"
+	PaymentStatusFailed            PaymentStatus = "failed"
+	PaymentStatusCancelled         PaymentStatus = "cancelled"
 	PaymentStatusPartiallyPaid     PaymentStatus = "partially_paid"
 	PaymentStatusPaid              PaymentStatus = "paid"
 	PaymentStatusPartiallyRefunded PaymentStatus = "partially_refunded"
@@ -121,19 +135,22 @@ type CustomerInfo struct {
 
 // Address represents a billing or shipping address
 type Address struct {
-	FirstName string  `json:"first_name"`
-	LastName  string  `json:"last_name"`
-	Company   string  `json:"company"`
-	Address1  string  `json:"address1"`
-	Address2  string  `json:"address2"`
-	City      string  `json:"city"`
-	Province  string  `json:"province"`
-	Country   string  `json:"country"`
-	Zip       string  `json:"zip"`
-	Phone     string  `json:"phone"`
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
+	FirstName  string  `json:"first_name"`
+	LastName   string  `json:"last_name"`
+	Company    string  `json:"company"`
+	Street1    string  `json:"street1"`
+	Street2    string  `json:"street2"`
+	City       string  `json:"city"`
+	State      string  `json:"state"`
+	Country    string  `json:"country"`
+	PostalCode string  `json:"postal_code"`
+	Phone      string  `json:"phone"`
+	Latitude   float64 `json:"latitude"`
+	Longitude  float64 `json:"longitude"`
 }
+
+// IsEntity marks Address as a federation entity
+func (a Address) IsEntity() {}
 
 // OrderLineItem represents an item in an order
 type OrderLineItem struct {
@@ -238,60 +255,23 @@ type FulfillmentLineItem struct {
 	LineItem    OrderLineItem `json:"line_item,omitempty" gorm:"foreignKey:LineItemID"`
 }
 
-// Transaction represents a payment transaction
+// Transaction represents a payment transaction (reference to payment service)
 type Transaction struct {
-	ID      uuid.UUID         `json:"id" gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	OrderID uuid.UUID         `json:"order_id" gorm:"type:uuid;not null;index"`
-	Kind    TransactionKind   `json:"kind" gorm:"not null"`
-	Gateway string            `json:"gateway" gorm:"not null"`
-	Status  TransactionStatus `json:"status" gorm:"not null"`
-	Message string            `json:"message"`
+	ID      uuid.UUID `json:"id" gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	OrderID uuid.UUID `json:"order_id" gorm:"type:uuid;not null;index"`
 
-	// Financial Information
-	Amount   float64 `json:"amount" gorm:"type:decimal(12,2);not null"`
-	Currency string  `json:"currency" gorm:"default:'USD'"`
+	// We're not storing the full transaction details here since they're managed by the payment service
+	// This is just a reference to the transaction in the payment service
 
-	// Gateway Information
-	GatewayTransactionID string `json:"gateway_transaction_id"`
-	PaymentMethodID      string `json:"payment_method_id"`
-
-	// Authorization Information
-	AuthorizationCode string `json:"authorization_code"`
-	AVSResultCode     string `json:"avs_result_code"`
-	CVVResultCode     string `json:"cvv_result_code"`
-
-	// Metadata
-	ProcessedAt *time.Time `json:"processed_at"`
-	ParentID    *uuid.UUID `json:"parent_id" gorm:"type:uuid;index"`
-	CreatedAt   time.Time  `json:"created_at" gorm:"autoCreateTime"`
-	UpdatedAt   time.Time  `json:"updated_at" gorm:"autoUpdateTime"`
+	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 
 	// Relationships
-	Order    Order         `json:"order,omitempty" gorm:"foreignKey:OrderID"`
-	Parent   *Transaction  `json:"parent,omitempty" gorm:"foreignKey:ParentID"`
-	Children []Transaction `json:"children,omitempty" gorm:"foreignKey:ParentID"`
+	Order Order `json:"order,omitempty" gorm:"foreignKey:OrderID"`
 }
 
-// TransactionKind represents the type of transaction
-type TransactionKind string
-
-const (
-	TransactionKindSale          TransactionKind = "sale"
-	TransactionKindAuthorization TransactionKind = "authorization"
-	TransactionKindCapture       TransactionKind = "capture"
-	TransactionKindVoid          TransactionKind = "void"
-	TransactionKindRefund        TransactionKind = "refund"
-)
-
-// TransactionStatus represents the status of a transaction
-type TransactionStatus string
-
-const (
-	TransactionStatusPending TransactionStatus = "pending"
-	TransactionStatusSuccess TransactionStatus = "success"
-	TransactionStatusFailure TransactionStatus = "failure"
-	TransactionStatusError   TransactionStatus = "error"
-)
+// IsEntity marks Transaction as a federation entity
+func (t Transaction) IsEntity() {}
 
 // Return represents a product return
 type Return struct {

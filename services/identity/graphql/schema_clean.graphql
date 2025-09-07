@@ -1,0 +1,127 @@
+directive @goModel(model: String, models: [String!]) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
+directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+
+type Query {
+  # User queries
+  user(id: ID!): User
+  users(limit: Int, offset: Int): [User!]!
+  currentUser: User
+  
+  # Role queries
+  role(id: ID!): Role
+  roles: [Role!]!
+  
+  # Permission queries
+  permission(id: ID!): Permission
+  permissions: [Permission!]!
+}
+
+type Mutation {
+  # User mutations
+  register(input: RegisterInput!): AuthPayload!
+  login(input: LoginInput!): AuthPayload!
+  logout: Boolean!
+  changePassword(input: ChangePasswordInput!): Boolean!
+  updateUser(id: ID!, input: UpdateUserInput!): User!
+  deleteUser(id: ID!): Boolean!
+  
+  # Role mutations
+  createRole(input: CreateRoleInput!): Role!
+  updateRole(id: ID!, input: UpdateRoleInput!): Role!
+  deleteRole(id: ID!): Boolean!
+  
+  # Permission mutations
+  createPermission(input: CreatePermissionInput!): Permission!
+  updatePermission(id: ID!, input: UpdatePermissionInput!): Permission!
+  deletePermission(id: ID!): Boolean!
+}
+
+# User Types
+type User @key(fields: "id") @goModel(model: "unified-commerce/services/identity/models.User") {
+  id: ID!
+  email: String!
+  username: String!
+  firstName: String!
+  lastName: String!
+  isActive: Boolean!
+  roles: [Role!]!
+  createdAt: String!
+  updatedAt: String
+}
+
+type Role @goModel(model: "unified-commerce/services/identity/models.Role") {
+  id: ID!
+  name: String!
+  description: String
+  permissions: [Permission!]!
+  users: [User!]!
+  createdAt: String!
+  updatedAt: String
+}
+
+type Permission @goModel(model: "unified-commerce/services/identity/models.Permission") {
+  id: ID!
+  name: String!
+  description: String
+  roles: [Role!]!
+  createdAt: String!
+  updatedAt: String
+}
+
+type AuthPayload {
+  user: User!
+  accessToken: String!
+  refreshToken: String!
+  expiresIn: Int!
+}
+
+# Input Types
+input RegisterInput {
+  email: String!
+  username: String!
+  password: String!
+  firstName: String!
+  lastName: String!
+  phone: String
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input ChangePasswordInput {
+  oldPassword: String!
+  newPassword: String!
+}
+
+input UpdateUserInput {
+  email: String
+  username: String
+  firstName: String
+  lastName: String
+  isActive: Boolean
+  roleIds: [ID!]
+}
+
+input CreateRoleInput {
+  name: String!
+  description: String
+  permissionIds: [ID!]
+}
+
+input UpdateRoleInput {
+  name: String
+  description: String
+  permissionIds: [ID!]
+}
+
+input CreatePermissionInput {
+  name: String!
+  description: String
+}
+
+input UpdatePermissionInput {
+  name: String
+  description: String
+}

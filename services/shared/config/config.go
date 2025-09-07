@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -57,7 +58,11 @@ type Config struct {
 // LoadConfig loads configuration from environment variables and .env file
 func LoadConfig(serviceName string) (*Config, error) {
 	// Load .env file if it exists (for local development)
-	godotenv.Load()
+	// Try to find .env file in current directory or parent directories
+	envFilePath := findEnvFile()
+	if envFilePath != "" {
+		loadEnvWithoutBOM(envFilePath)
+	}
 
 	// Support both DB_* and DATABASE_* prefixes; sanitize service name for default DB
 	sanitizeServiceDBName := func(name string) string {
@@ -126,6 +131,61 @@ func LoadConfig(serviceName string) (*Config, error) {
 	)
 
 	return config, nil
+}
+
+// findEnvFile attempts to find .env file in current directory or parent directories
+func findEnvFile() string {
+	// For payment service, look in the specific service directory first
+	paths := []string{
+		".env",
+		"../.env",
+		"../../.env",
+		"../../../.env",
+		"services/payment/.env", // Add specific path for payment service
+		"../services/payment/.env",
+		"../../services/payment/.env",
+	}
+
+	for _, path := range paths {
+		if _, err := os.Stat(path); err == nil {
+			fmt.Printf("Found .env file at %s\n", path)
+			return path
+		}
+	}
+
+	return ""
+}
+
+// loadEnvWithoutBOM loads .env file and handles BOM if present
+func loadEnvWithoutBOM(filepath string) {
+	// Read the entire file
+	data, err := ioutil.ReadFile(filepath)
+	if err != nil {
+		fmt.Printf("Error reading .env file: %v\n", err)
+		return
+	}
+
+	// Remove BOM if present (UTF-8 BOM is 0xEF,0xBB,0xBF)
+	// Handle multiple BOM sequences if present
+	for len(data) >= 3 && data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF {
+		// BOM found, remove it
+		data = data[3:]
+		fmt.Println("BOM found and removed from .env file")
+	}
+
+	// Parse the env file without BOM
+	envMap, err := godotenv.Unmarshal(string(data))
+	if err != nil {
+		fmt.Printf("Error parsing .env file: %v\n", err)
+		return
+	}
+
+	// Set environment variables
+	for key, value := range envMap {
+		os.Setenv(key, value)
+	}
+
+	fmt.Printf("Successfully loaded .env file, SERVICE_PORT: '%s'\n", os.Getenv("SERVICE_PORT"))
 }
 
 // Helper functions for environment variable parsing

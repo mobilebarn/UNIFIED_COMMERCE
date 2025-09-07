@@ -1,3 +1,6 @@
+# Federation directives
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@external", "@requires", "@provides", "@shareable"])
+
 directive @goModel(model: String, models: [String!]) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
 directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
 
@@ -15,16 +18,12 @@ type Query {
   payments(filter: PaymentFilter): [Payment!]!
   paymentMethod(id: ID!): PaymentMethod
   paymentMethods(customerId: ID): [PaymentMethod!]!
-  
-  # Transaction queries
-  transaction(id: ID!): Transaction
-  transactions(filter: TransactionFilter): [Transaction!]!
 }
 
 type Mutation {
   # Payment mutations
   createPayment(input: CreatePaymentInput!): Payment!
-  capturePayment(id: ID!, amount: Float): Payment!
+  capturePaymentTransaction(id: ID!, amount: Float): Payment!
   refundPayment(id: ID!, input: RefundPaymentInput!): Payment!
   voidPayment(id: ID!): Payment!
   
@@ -33,13 +32,10 @@ type Mutation {
   updatePaymentMethod(id: ID!, input: UpdatePaymentMethodInput!): PaymentMethod!
   deletePaymentMethod(id: ID!): Boolean!
   setDefaultPaymentMethod(id: ID!, customerId: ID!): PaymentMethod!
-  
-  # Transaction mutations
-  createTransaction(input: CreateTransactionInput!): Transaction!
 }
 
 # Main Payment type with federation key
-type Payment @key(fields: "id") @goModel(model: "unified-commerce/services/payment/models.Payment") {
+type Payment @key(fields: "id") @goModel(model: "unified-commerce/services/payment/models.Payment") @shareable {
   id: ID!
   orderId: ID
   customerId: ID
@@ -75,7 +71,6 @@ type Payment @key(fields: "id") @goModel(model: "unified-commerce/services/payme
   updatedAt: String
   
   # Relationships
-  transactions: [Transaction!]!
   refunds: [Refund!]!
   
   # Federation relationships
@@ -120,38 +115,7 @@ type PaymentMethod @key(fields: "id") @goModel(model: "unified-commerce/services
   customer: User
 }
 
-type Transaction @key(fields: "id") @goModel(model: "unified-commerce/services/payment/models.Transaction") {
-  id: ID!
-  paymentId: ID!
-  orderId: ID
-  amount: Float!
-  currency: String!
-  type: TransactionType!
-  status: TransactionStatus!
-  gateway: String!
-  gatewayTransactionId: String
-  
-  # Processing Information
-  processorResponse: String
-  failureReason: String
-  
-  # Metadata
-  metadata: JSON
-  description: String
-  
-  # Timestamps
-  processedAt: String
-  createdAt: String!
-  updatedAt: String
-  
-  # Relationships
-  payment: Payment!
-  
-  # Federation relationships
-  order: Order
-}
-
-type Refund @goModel(model: "unified-commerce/services/payment/models.Refund") {
+type Refund @key(fields: "id") @goModel(model: "unified-commerce/services/payment/models.Refund") @shareable {
   id: ID!
   paymentId: ID!
   orderId: ID
@@ -177,17 +141,47 @@ type Refund @goModel(model: "unified-commerce/services/payment/models.Refund") {
   payment: Payment!
 }
 
-type Address @goModel(model: "unified-commerce/services/payment/models.Address") {
-  firstName: String
-  lastName: String
-  company: String
-  address1: String
-  address2: String
-  city: String
-  province: String
-  country: String
-  zip: String
-  phone: String
+type Transaction @key(fields: "id") @goModel(model: "unified-commerce/services/payment/models.Transaction") @shareable {
+  id: ID!
+  paymentId: ID!
+  orderId: ID
+  amount: Float!
+  currency: String!
+  type: TransactionType!
+  status: TransactionStatus!
+  gateway: String!
+  gatewayReference: String
+  processorResponse: String
+  failureReason: String
+  metadata: JSON
+  description: String
+  processedAt: String
+  createdAt: String!
+  updatedAt: String
+  
+  # Additional fields that were missing
+  kind: TransactionKind! @shareable
+  paymentMethodId: String @shareable
+  
+  # Relationships
+  payment: Payment!
+}
+
+# Extend the Address type from the inventory service
+extend type Address @key(fields: "firstName lastName street1 street2 city state country postalCode") @shareable {
+  firstName: String @shareable
+  lastName: String @shareable
+  company: String @shareable
+  street1: String @shareable
+  street2: String @shareable
+  city: String @shareable
+  state: String @shareable
+  country: String @shareable
+  postalCode: String @shareable
+  phone: String @shareable
+  latitude: Float @shareable
+  longitude: Float @shareable
+  timezone: String @shareable
 }
 
 # Enums
@@ -200,6 +194,8 @@ enum PaymentStatus {
   REFUNDED
   PARTIALLY_REFUNDED
   VOIDED
+  PARTIALLY_PAID
+  PAID
 }
 
 enum PaymentMethodType {
@@ -212,23 +208,6 @@ enum PaymentMethodType {
   STORE_CREDIT
 }
 
-enum TransactionType {
-  AUTHORIZATION
-  CAPTURE
-  SALE
-  REFUND
-  VOID
-  CREDIT
-}
-
-enum TransactionStatus {
-  PENDING
-  PROCESSING
-  SUCCESS
-  FAILED
-  CANCELLED
-}
-
 enum RefundStatus {
   PENDING
   PROCESSING
@@ -237,22 +216,39 @@ enum RefundStatus {
   CANCELLED
 }
 
+enum TransactionType {
+  AUTHORIZATION
+  CAPTURE
+  REFUND
+  VOID
+  FEE
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+  CANCELLED
+  ERROR
+  FAILURE
+}
+
+# Add the missing TransactionKind enum
+enum TransactionKind {
+  AUTHORIZATION
+  CAPTURE
+  SALE
+  VOID
+  REFUND
+}
+
 # Input Types
 input PaymentFilter {
   orderId: ID
   customerId: ID
   merchantId: ID
   status: PaymentStatus
-  gateway: String
-  limit: Int
-  offset: Int
-}
-
-input TransactionFilter {
-  paymentId: ID
-  orderId: ID
-  type: TransactionType
-  status: TransactionStatus
   gateway: String
   limit: Int
   offset: Int
@@ -293,27 +289,19 @@ input UpdatePaymentMethodInput {
   metadata: JSON
 }
 
-input CreateTransactionInput {
-  paymentId: ID!
-  orderId: ID
-  amount: Float!
-  currency: String!
-  type: TransactionType!
-  description: String
-  metadata: JSON
-}
-
 input AddressInput {
   firstName: String
   lastName: String
   company: String
-  address1: String
-  address2: String
+  street1: String
+  street2: String
   city: String
-  province: String
+  state: String
   country: String
-  zip: String
+  postalCode: String
   phone: String
+  latitude: Float
+  longitude: Float
 }
 
 # Scalar for JSON data

@@ -1,0 +1,13 @@
+go 1.25.0
+
+use (
+	./services/cart
+	./services/identity
+	./services/inventory
+	./services/merchant-account
+	./services/order
+	./services/payment
+	./services/product-catalog
+	./services/promotions
+	./services/shared
+)

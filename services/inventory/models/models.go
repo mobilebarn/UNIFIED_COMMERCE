@@ -22,19 +22,28 @@ type Location struct {
 	UpdatedAt   time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }
 
+// IsEntity implements the gqlgen federation Entity interface
+func (l *Location) IsEntity() {}
+
 // Address represents the physical address of a location
 type Address struct {
-	Street1     string  `json:"street1"`
-	Street2     string  `json:"street2"`
-	City        string  `json:"city"`
-	State       string  `json:"state"`
-	PostalCode  string  `json:"postal_code"`
-	Country     string  `json:"country"`
-	Latitude    float64 `json:"latitude"`
-	Longitude   float64 `json:"longitude"`
-	Timezone    string  `json:"timezone"`
-	PhoneNumber string  `json:"phone_number"`
+	FirstName  string  `json:"first_name"`
+	LastName   string  `json:"last_name"`
+	Company    string  `json:"company"`
+	Street1    string  `json:"street1"`
+	Street2    string  `json:"street2"`
+	City       string  `json:"city"`
+	State      string  `json:"state"`
+	PostalCode string  `json:"postal_code"`
+	Country    string  `json:"country"`
+	Phone      string  `json:"phone"`
+	Latitude   float64 `json:"latitude"`
+	Longitude  float64 `json:"longitude"`
+	Timezone   string  `json:"timezone"`
 }
+
+// IsEntity implements the gqlgen federation Entity interface
+func (a *Address) IsEntity() {}
 
 // Settings represents location-specific configuration
 type Settings struct {
@@ -69,6 +78,9 @@ type InventoryItem struct {
 	Location Location `json:"location,omitempty" gorm:"foreignKey:LocationID"`
 }
 
+// IsEntity implements the gqlgen federation Entity interface
+func (i *InventoryItem) IsEntity() {}
+
 // InventoryStatus represents the status of an inventory item
 type InventoryStatus string
 
@@ -102,6 +114,9 @@ type StockMovement struct {
 	InventoryItem InventoryItem `json:"inventory_item,omitempty" gorm:"foreignKey:InventoryItemID"`
 	Location      Location      `json:"location,omitempty" gorm:"foreignKey:LocationID"`
 }
+
+// IsEntity implements the gqlgen federation Entity interface
+func (s *StockMovement) IsEntity() {}
 
 // MovementType represents the direction of stock movement
 type MovementType string
@@ -412,3 +427,6 @@ type User struct {
 	ID   uuid.UUID `json:"id" gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	Name string    `json:"name" gorm:"not null"`
 }
+
+// IsEntity implements the gqlgen federation Entity interface
+func (u *User) IsEntity() {}

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom'
+import { ApolloProvider } from '@apollo/client'
 import { useDashboardStore } from './store/dashboardStore'
+import apolloClient from './lib/apollo'
 import Dashboard from './components/Dashboard'
 import Products from './components/Products'
 import Orders from './components/Orders'
@@ -230,23 +232,25 @@ function App() {
   }, [isAuthenticated, setUser])
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/*" element={
-          <ProtectedRoute>
-            <AppLayout activeTab={activeTab} setActiveTab={setActiveTab}>
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/products" element={<Products />} />
-                <Route path="/orders" element={<Orders />} />
-                <Route path="/analytics" element={<Analytics />} />
-              </Routes>
-            </AppLayout>
-          </ProtectedRoute>
-        } />
-      </Routes>
-    </Router>
+    <ApolloProvider client={apolloClient}>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/*" element={
+            <ProtectedRoute>
+              <AppLayout activeTab={activeTab} setActiveTab={setActiveTab}>
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/products" element={<Products />} />
+                  <Route path="/orders" element={<Orders />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                </Routes>
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </Router>
+    </ApolloProvider>
   )
 }
 

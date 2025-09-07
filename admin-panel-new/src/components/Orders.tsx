@@ -1,79 +1,78 @@
+import React, { useState, useMemo } from 'react';
+import { useOrders } from '../hooks/useGraphQL';
+import { Order } from '../lib/graphql';
+
 export default function Orders() {
-  // Sample filters and orders data
-  const orderStatuses = ["All", "Processing", "Shipped", "Delivered", "Cancelled", "Refunded"];
-  const timeFilters = ["Last 7 days", "Last 30 days", "Last 3 months", "This year"];
-  
-  const orders = [
-    {
-      id: "#12345",
-      customer: { name: "John Doe", email: "john.doe@example.com", avatar: "JD" },
-      date: "2024-01-15",
-      amount: 299.99,
-      items: 2,
-      status: "Completed",
-      paymentMethod: "Credit Card",
-      shippingMethod: "Express"
-    },
-    {
-      id: "#12346",
-      customer: { name: "Jane Smith", email: "jane.smith@example.com", avatar: "JS" },
-      date: "2024-01-16",
-      amount: 199.99,
-      items: 1,
-      status: "Processing",
-      paymentMethod: "PayPal",
-      shippingMethod: "Standard"
-    },
-    {
-      id: "#12347",
-      customer: { name: "Robert Johnson", email: "robert.j@example.com", avatar: "RJ" },
-      date: "2024-01-17",
-      amount: 149.50,
-      items: 3,
-      status: "Shipped",
-      paymentMethod: "Credit Card",
-      shippingMethod: "Standard"
-    },
-    {
-      id: "#12348",
-      customer: { name: "Emily Wilson", email: "emily.w@example.com", avatar: "EW" },
-      date: "2024-01-18",
-      amount: 399.99,
-      items: 2,
-      status: "Delivered",
-      paymentMethod: "Apple Pay",
-      shippingMethod: "Express"
-    },
-    {
-      id: "#12349",
-      customer: { name: "Michael Brown", email: "michael.b@example.com", avatar: "MB" },
-      date: "2024-01-19",
-      amount: 89.99,
-      items: 1,
-      status: "Refunded",
-      paymentMethod: "Credit Card",
-      shippingMethod: "Standard"
-    }
-  ];
-  
-  const getStatusColor = (status) => {
-    switch(status) {
-      case "Completed":
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+
+  // Note: The useOrders hook fetches all orders. For large datasets, 
+  // it would be more performant to implement server-side filtering, sorting, and pagination.
+  const { data, loading, error, refetch } = useOrders();
+  const orders = data?.orders;
+
+  const orderStatuses = ["All", "Pending", "Confirmed", "Processing", "Shipped", "Delivered", "Cancelled"];
+
+  const filteredOrders = useMemo(() => {
+    if (!orders) return [];
+    return orders.filter(order => {
+      const matchesSearch = 
+        order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.customer?.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.customer?.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.customer?.email.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = statusFilter === 'All' || order.status.toLowerCase() === statusFilter.toLowerCase();
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [orders, searchTerm, statusFilter]);
+
+  const getStatusColor = (status: string) => {
+    switch(status.toLowerCase()) {
+      case "completed":
+      case "delivered":
         return "bg-green-100 text-green-800";
-      case "Processing":
+      case "processing":
+      case "confirmed":
         return "bg-yellow-100 text-yellow-800";
-      case "Shipped":
+      case "shipped":
         return "bg-blue-100 text-blue-800";
-      case "Delivered":
-        return "bg-emerald-100 text-emerald-800";
-      case "Cancelled":
+      case "cancelled":
         return "bg-gray-100 text-gray-800";
-      case "Refunded":
+      case "refunded":
         return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
   };
+
+  if (loading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading orders...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">Error loading orders: {error.message}</p>
+          <button 
+            onClick={() => refetch()}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="h-full">
@@ -104,7 +103,9 @@ export default function Orders() {
         <div className="relative">
           <input 
             type="text" 
-            placeholder="Search orders..." 
+            placeholder="Search by order #, name, or email..." 
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
             className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md text-sm focus:ring-emerald-500 focus:border-emerald-500"
           />
           <svg className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -112,23 +113,14 @@ export default function Orders() {
           </svg>
         </div>
         
-        <div className="flex gap-4">
-          <div className="relative w-full">
-            <select className="pl-4 pr-10 py-2 w-full border border-gray-300 rounded-md text-sm focus:ring-emerald-500 focus:border-emerald-500 appearance-none">
-              {orderStatuses.map((status, index) => (
-                <option key={index}>{status}</option>
-              ))}
-            </select>
-            <svg className="absolute right-3 top-3 w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"></path>
-            </svg>
-          </div>
-        </div>
-        
-        <div className="relative">
-          <select className="pl-4 pr-10 py-2 w-full border border-gray-300 rounded-md text-sm focus:ring-emerald-500 focus:border-emerald-500 appearance-none">
-            {timeFilters.map((filter, index) => (
-              <option key={index}>{filter}</option>
+        <div className="relative w-full">
+          <select 
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+            className="pl-4 pr-10 py-2 w-full border border-gray-300 rounded-md text-sm focus:ring-emerald-500 focus:border-emerald-500 appearance-none"
+          >
+            {orderStatuses.map((status) => (
+              <option key={status} value={status}>{status}</option>
             ))}
           </select>
           <svg className="absolute right-3 top-3 w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -143,54 +135,40 @@ export default function Orders() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Order
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Customer
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Payment
-                </th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
+                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {orders.map((order, index) => (
-                <tr key={index} className="hover:bg-gray-50">
+              {filteredOrders.map((order) => (
+                <tr key={order.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{order.id}</div>
-                    <div className="text-xs text-gray-500">{order.items} items</div>
+                    <div className="text-sm font-medium text-gray-900">{order.orderNumber}</div>
+                    <div className="text-xs text-gray-500">{order.items?.length || 0} items</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-600">
-                        {order.customer.avatar}
+                        {order.customer?.firstName?.charAt(0)}{order.customer?.lastName?.charAt(0)}
                       </div>
                       <div className="ml-3">
-                        <div className="text-sm font-medium text-gray-900">{order.customer.name}</div>
-                        <div className="text-xs text-gray-500">{order.customer.email}</div>
+                        <div className="text-sm font-medium text-gray-900">{order.customer?.firstName} {order.customer?.lastName}</div>
+                        <div className="text-xs text-gray-500">{order.customer?.email}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{order.date}</div>
-                    <div className="text-xs text-gray-500">{order.shippingMethod}</div>
+                    <div className="text-sm text-gray-900">{new Date(order.createdAt).toLocaleDateString()}</div>
+                    <div className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleTimeString()}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">${order.amount.toFixed(2)}</div>
-                    <div className="text-xs text-gray-500">USD</div>
+                    <div className="text-sm font-medium text-gray-900">${order.total.toFixed(2)}</div>
+                    <div className="text-xs text-gray-500">{order.currency}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold leading-5 rounded-full ${getStatusColor(order.status)}`}>
@@ -198,7 +176,7 @@ export default function Orders() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {order.paymentMethod}
+                    {order.payments?.[0]?.method || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button className="text-emerald-600 hover:text-emerald-900 mr-3">View</button>
@@ -206,6 +184,13 @@ export default function Orders() {
                   </td>
                 </tr>
               ))}
+              {filteredOrders.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                    {loading ? 'Loading...' : 'No orders match your filters.'}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -213,15 +198,9 @@ export default function Orders() {
         {/* Pagination */}
         <div className="px-6 py-3 flex items-center justify-between border-t border-gray-200">
           <div className="text-sm text-gray-500">
-            Showing 1 to 5 of 125 orders
+            Showing {filteredOrders.length} of {orders?.length || 0} results
           </div>
-          <div className="flex items-center space-x-2">
-            <button className="px-3 py-1 rounded-md bg-white border border-gray-300 text-gray-500 hover:bg-gray-50 text-sm">Previous</button>
-            <button className="px-3 py-1 rounded-md bg-emerald-50 border border-emerald-500 text-emerald-600 text-sm">1</button>
-            <button className="px-3 py-1 rounded-md bg-white border border-gray-300 text-gray-500 hover:bg-gray-50 text-sm">2</button>
-            <button className="px-3 py-1 rounded-md bg-white border border-gray-300 text-gray-500 hover:bg-gray-50 text-sm">3</button>
-            <button className="px-3 py-1 rounded-md bg-white border border-gray-300 text-gray-500 hover:bg-gray-50 text-sm">Next</button>
-          </div>
+          {/* Pagination controls would be implemented here */}
         </div>
       </div>
     </div>

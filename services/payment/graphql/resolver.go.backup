@@ -1,0 +1,69 @@
+﻿package graphql
+
+import (
+	"context"
+	"unified-commerce/services/payment/models"
+	"unified-commerce/services/payment/service"
+	"unified-commerce/services/shared/logger"
+
+	"github.com/google/uuid"
+)
+
+// Resolver provides resolution context for GraphQL resolvers.
+// It holds dependencies like the PaymentService, making them available to resolver functions.
+type Resolver struct {
+	PaymentService *service.PaymentService
+	Logger         *logger.Logger
+}
+
+// NewResolver creates a new Resolver instance.
+func NewResolver(PaymentService *service.PaymentService, logger *logger.Logger) *Resolver {
+	return &Resolver{
+		PaymentService: PaymentService,
+		Logger:         logger,
+	}
+}
+
+// Mutation returns MutationResolver implementation.
+func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
+
+// Query returns QueryResolver implementation.
+func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
+
+type mutationResolver struct{ *Resolver }
+type queryResolver struct{ *Resolver }
+
+// CreatePayment implements MutationResolver
+func (r *mutationResolver) CreatePayment(ctx context.Context, input CreatePaymentInput) (*models.Payment, error) {
+	r.Logger.WithField("input", input).Info("Creating payment")
+
+	// Generate UUIDs for proper types
+	paymentID := uuid.New()
+	orderID, _ := uuid.Parse(input.OrderID)
+	customerID, _ := uuid.Parse(input.CustomerID)
+	merchantID, _ := uuid.Parse(input.MerchantID)
+
+	return &models.Payment{
+		ID:         paymentID,
+		OrderID:    orderID,
+		CustomerID: &customerID,
+		MerchantID: merchantID,
+		Amount:     input.Amount,
+		Currency:   input.Currency,
+		Status:     "pending",
+	}, nil
+}
+
+// Payment implements QueryResolver
+func (r *queryResolver) Payment(ctx context.Context, id string) (*models.Payment, error) {
+	r.Logger.WithField("id", id).Info("Getting payment")
+	// TODO: Implement payment lookup
+	return nil, nil
+}
+
+// Payments implements QueryResolver
+func (r *queryResolver) Payments(ctx context.Context, filter *PaymentFilter) ([]*models.Payment, error) {
+	r.Logger.WithField("filter", filter).Info("Getting payments")
+	// TODO: Implement payment search
+	return []*models.Payment{}, nil
+}
