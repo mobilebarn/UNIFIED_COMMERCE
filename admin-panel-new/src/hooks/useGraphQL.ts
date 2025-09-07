@@ -17,6 +17,8 @@ import {
   CREATE_PROMOTION,
   GET_MERCHANT_PROFILE,
   GET_DASHBOARD_STATS,
+  REGISTER_USER,
+  CREATE_ORDER,
   type Product,
   type Order,
   type Customer,
@@ -79,7 +81,34 @@ export const useDeleteProduct = () => {
   });
 };
 
+// Customer/User Hooks
+export const useRegisterUser = () => {
+  const client = useApolloClient();
+  
+  return useMutation(REGISTER_USER, {
+    onCompleted: () => {
+      client.refetchQueries({ include: [GET_CUSTOMERS] });
+    },
+    onError: (error) => {
+      console.error('Error registering user:', error);
+    },
+  });
+};
+
 // Order Hooks
+export const useCreateOrder = () => {
+  const client = useApolloClient();
+  
+  return useMutation(CREATE_ORDER, {
+    onCompleted: () => {
+      client.refetchQueries({ include: [GET_ORDERS] });
+    },
+    onError: (error) => {
+      console.error('Error creating order:', error);
+    },
+  });
+};
+
 export const useOrders = (filter?: any) => {
   return useQuery(GET_ORDERS, {
     variables: { filter },

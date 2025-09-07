@@ -316,6 +316,54 @@ export const CREATE_PROMOTION = gql`
   }
 `;
 
+// Add Customer/User Mutations
+export const REGISTER_USER = gql`
+  mutation RegisterUser($input: RegisterInput!) {
+    register(input: $input) {
+      user {
+        id
+        email
+        username
+        firstName
+        lastName
+        isActive
+        createdAt
+      }
+      accessToken
+      refreshToken
+      expiresIn
+    }
+  }
+`;
+
+// Add Order Mutations
+export const CREATE_ORDER = gql`
+  mutation CreateOrder($input: CreateOrderInput!) {
+    createOrder(input: $input) {
+      id
+      orderNumber
+      status
+      total
+      currency
+      createdAt
+      customer {
+        firstName
+        lastName
+        email
+      }
+      items {
+        id
+        quantity
+        price
+        product {
+          id
+          title
+        }
+      }
+    }
+  }
+`;
+
 // Merchant Account Queries
 export const GET_MERCHANT_PROFILE = gql`
   query GetMerchantProfile {

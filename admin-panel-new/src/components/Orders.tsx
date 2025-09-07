@@ -1,15 +1,18 @@
 import React, { useState, useMemo } from 'react';
-import { useOrders } from '../hooks/useGraphQL';
+import { useOrders, useUpdateOrderStatus } from '../hooks/useGraphQL';
 import { Order } from '../lib/graphql';
 
 export default function Orders() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
 
   // Note: The useOrders hook fetches all orders. For large datasets, 
   // it would be more performant to implement server-side filtering, sorting, and pagination.
   const { data, loading, error, refetch } = useOrders();
   const orders = data?.orders;
+
+  const [updateOrderStatus] = useUpdateOrderStatus();
 
   const orderStatuses = ["All", "Pending", "Confirmed", "Processing", "Shipped", "Delivered", "Cancelled"];
 
@@ -44,6 +47,23 @@ export default function Orders() {
         return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const handleUpdateStatus = async (orderId: string, newStatus: string) => {
+    setUpdatingOrderId(orderId);
+    try {
+      await updateOrderStatus({
+        variables: {
+          id: orderId,
+          status: newStatus.toUpperCase()
+        }
+      });
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      alert('Failed to update order status: ' + (error as Error).message);
+    } finally {
+      setUpdatingOrderId(null);
     }
   };
 
@@ -171,9 +191,33 @@ export default function Orders() {
                     <div className="text-xs text-gray-500">{order.currency}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold leading-5 rounded-full ${getStatusColor(order.status)}`}>
-                      {order.status}
-                    </span>
+                    <div className="flex items-center space-x-2">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold leading-5 rounded-full ${getStatusColor(order.status)}`}>
+                        {order.status}
+                      </span>
+                      {order.status !== 'Delivered' && order.status !== 'Cancelled' && (
+                        <div className="relative">
+                          <select
+                            value={order.status}
+                            onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
+                            disabled={updatingOrderId === order.id}
+                            className="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-emerald-500 focus:border-emerald-500"
+                          >
+                            <option value="PENDING">Pending</option>
+                            <option value="CONFIRMED">Confirmed</option>
+                            <option value="PROCESSING">Processing</option>
+                            <option value="SHIPPED">Shipped</option>
+                            <option value="DELIVERED">Delivered</option>
+                            <option value="CANCELLED">Cancelled</option>
+                          </select>
+                          {updatingOrderId === order.id && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70">
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-emerald-600"></div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {order.payments?.[0]?.method || 'N/A'}

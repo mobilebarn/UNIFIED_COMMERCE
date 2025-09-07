@@ -21,8 +21,8 @@ All core functionality of the Unified Commerce Platform has been successfully im
 - [ ] Add product detail pages with variant selection
 - [ ] Implement shopping cart functionality
 - [ ] Create checkout flow with address and payment selection
-- [ ] Add user authentication and account management
-- [ ] Implement order history and tracking
+- [x] Add user authentication and account management
+- [x] Implement order history and tracking
 - [ ] Add search functionality with autocomplete
 - [ ] Optimize for SEO with SSR/SSG
 - [ ] Implement responsive design for all device sizes

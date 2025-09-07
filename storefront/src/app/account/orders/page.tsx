@@ -1,50 +1,49 @@
 'use client';
 
+import { useQuery } from '@apollo/client';
+import { GET_ORDERS } from '@/graphql/queries';
+import type { Order } from '@/graphql/queries';
+
 export default function OrderHistory() {
-  // Mock order data
-  const orders = [
-    {
-      id: 'ORD-12345',
-      date: '2023-01-10',
-      total: 89.99,
-      status: 'Delivered',
-      items: 3,
-    },
-    {
-      id: 'ORD-12344',
-      date: '2023-01-05',
-      total: 129.99,
-      status: 'Delivered',
-      items: 2,
-    },
-    {
-      id: 'ORD-12343',
-      date: '2022-12-28',
-      total: 45.99,
-      status: 'Delivered',
-      items: 1,
-    },
-    {
-      id: 'ORD-12342',
-      date: '2022-12-15',
-      total: 199.99,
-      status: 'Delivered',
-      items: 4,
-    },
-  ];
+  const { data, loading, error } = useQuery(GET_ORDERS, {
+    variables: {
+      filter: {}
+    }
+  });
+  
+  const orders = data?.orders || [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Delivered':
+      case 'DELIVERED':
         return 'text-green-600 bg-green-100';
-      case 'Processing':
+      case 'PROCESSING':
+      case 'CONFIRMED':
         return 'text-yellow-600 bg-yellow-100';
-      case 'Shipped':
+      case 'SHIPPED':
         return 'text-blue-600 bg-blue-100';
+      case 'CANCELLED':
+        return 'text-red-600 bg-red-100';
       default:
         return 'text-gray-600 bg-gray-100';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <p className="text-red-700">Error loading order history: {error.message}</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -52,12 +51,12 @@ export default function OrderHistory() {
       
       <div className="bg-white shadow overflow-hidden sm:rounded-md">
         <ul className="divide-y divide-gray-200">
-          {orders.map((order) => (
+          {orders.map((order: Order) => (
             <li key={order.id}>
               <div className="px-4 py-4 sm:px-6">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-medium text-blue-600 truncate">
-                    Order #{order.id}
+                    Order #{order.orderNumber}
                   </p>
                   <div className="ml-2 flex-shrink-0 flex">
                     <p className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
@@ -68,12 +67,12 @@ export default function OrderHistory() {
                 <div className="mt-2 sm:flex sm:justify-between">
                   <div className="sm:flex">
                     <p className="flex items-center text-sm text-gray-500">
-                      {order.items} {order.items === 1 ? 'item' : 'items'}
+                      {order.items?.length || 0} {order.items?.length === 1 ? 'item' : 'items'}
                     </p>
                   </div>
                   <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
                     <p>
-                      ${order.total.toFixed(2)} • {new Date(order.date).toLocaleDateString()}
+                      ${order.total.toFixed(2)} • {new Date(order.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                 </div>

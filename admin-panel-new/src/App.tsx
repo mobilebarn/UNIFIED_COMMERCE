@@ -6,6 +6,7 @@ import apolloClient from './lib/apollo'
 import Dashboard from './components/Dashboard'
 import Products from './components/Products'
 import Orders from './components/Orders'
+import Customers from './components/Customers'
 import Analytics from './components/Analytics'
 import Login from './components/Login'
 import './App.css'
@@ -27,6 +28,12 @@ const OrderIcon = () => (
   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
     <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
     <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd"></path>
+  </svg>
+)
+
+const CustomerIcon = () => (
+  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
   </svg>
 )
 
@@ -153,6 +160,20 @@ const AppLayout = ({ children, activeTab, setActiveTab }: {
               </li>
               <li>
                 <Link
+                  to="/customers"
+                  className={`flex items-center gap-3 px-4 py-2.5 rounded-md transition-colors ${
+                    activeTab === 'customers'
+                      ? 'bg-emerald-50 text-emerald-700 font-medium'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                  onClick={() => setActiveTab('customers')}
+                >
+                  <CustomerIcon />
+                  Customers
+                </Link>
+              </li>
+              <li>
+                <Link
                   to="/analytics"
                   className={`flex items-center gap-3 px-4 py-2.5 rounded-md transition-colors ${
                     activeTab === 'analytics'
@@ -243,6 +264,7 @@ function App() {
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/products" element={<Products />} />
                   <Route path="/orders" element={<Orders />} />
+                  <Route path="/customers" element={<Customers />} />
                   <Route path="/analytics" element={<Analytics />} />
                 </Routes>
               </AppLayout>

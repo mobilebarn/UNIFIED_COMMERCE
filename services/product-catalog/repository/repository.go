@@ -317,6 +317,57 @@ func (r *CategoryRepository) GetBySlug(ctx context.Context, merchantID, slug str
 	return &category, nil
 }
 
+// GetChildren retrieves child categories for a parent category
+func (r *CategoryRepository) GetChildren(ctx context.Context, parentID string) ([]models.Category, error) {
+	objectID, err := primitive.ObjectIDFromHex(parentID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid parent category ID: %w", err)
+	}
+
+	filter := bson.M{
+		"parent_id": parentID,
+		"is_active": true,
+	}
+
+	opts := options.Find().SetSort(bson.D{{"sort_order", 1}, {"name", 1}})
+
+	cursor, err := r.collection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var categories []models.Category
+	if err := cursor.All(ctx, &categories); err != nil {
+		return nil, err
+	}
+
+	return categories, nil
+}
+
+// GetParent retrieves the parent category for a category
+func (r *CategoryRepository) GetParent(ctx context.Context, parentID string) (*models.Category, error) {
+	if parentID == "" {
+		return nil, nil // No parent
+	}
+
+	objectID, err := primitive.ObjectIDFromHex(parentID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid parent category ID: %w", err)
+	}
+
+	var category models.Category
+	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&category)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil // Parent not found
+		}
+		return nil, err
+	}
+
+	return &category, nil
+}
+
 // ListByMerchant retrieves categories for a merchant
 func (r *CategoryRepository) ListByMerchant(ctx context.Context, merchantID string) ([]models.Category, error) {
 	filter := bson.M{

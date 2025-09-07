@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { ShoppingCartIcon, HeartIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { useCartStore } from '@/stores/cart';
+import { useMutation, useQuery } from '@apollo/client';
+import { ADD_TO_WISHLIST, REMOVE_FROM_WISHLIST, GET_WISHLIST } from '@/graphql/queries';
 
 interface Product {
   id: string;
@@ -25,9 +27,20 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const [isFavorited, setIsFavorited] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { addItem, openCart } = useCartStore();
+  
+  // Check if product is in wishlist
+  const { data: wishlistData } = useQuery(GET_WISHLIST);
+  const isInWishlist = wishlistData?.wishlist?.some((item: any) => item.productId === product.id);
+  
+  const [addToWishlist] = useMutation(ADD_TO_WISHLIST, {
+    refetchQueries: [{ query: GET_WISHLIST }]
+  });
+  
+  const [removeFromWishlist] = useMutation(REMOVE_FROM_WISHLIST, {
+    refetchQueries: [{ query: GET_WISHLIST }]
+  });
 
   const handleAddToCart = async () => {
     setIsLoading(true);
@@ -46,8 +59,16 @@ export function ProductCard({ product }: ProductCardProps) {
     openCart();
   };
 
-  const toggleFavorite = () => {
-    setIsFavorited(!isFavorited);
+  const toggleWishlist = async () => {
+    try {
+      if (isInWishlist) {
+        await removeFromWishlist({ variables: { productId: product.id } });
+      } else {
+        await addToWishlist({ variables: { productId: product.id } });
+      }
+    } catch (err) {
+      console.error('Error updating wishlist:', err);
+    }
   };
 
   return (
@@ -63,10 +84,10 @@ export function ProductCard({ product }: ProductCardProps) {
         
         {/* Favorite Button */}
         <button
-          onClick={toggleFavorite}
+          onClick={toggleWishlist}
           className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow"
         >
-          {isFavorited ? (
+          {isInWishlist ? (
             <HeartSolidIcon className="h-5 w-5 text-red-500" />
           ) : (
             <HeartIcon className="h-5 w-5 text-gray-400" />
@@ -90,45 +111,43 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
         
         <Link href={`/products/${product.id}`} className="block">
-          <h3 className="font-semibold text-gray-900 mb-2 hover:text-blue-600 transition-colors">
+          <h3 className="font-medium text-gray-900 group-hover:text-blue-600 line-clamp-1">
             {product.name}
           </h3>
         </Link>
         
-        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+        <p className="text-sm text-gray-500 mt-1 line-clamp-2">
           {product.description}
         </p>
-
-        {/* Price and Add to Cart */}
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col">
-            <span className="text-lg font-bold text-gray-900">
-              ${product.price.toFixed(2)}
-            </span>
-            {product.inventory.quantity < 10 && product.inventory.inStock && (
-              <span className="text-xs text-orange-500">
-                Only {product.inventory.quantity} left
-              </span>
-            )}
-          </div>
-
+        
+        <div className="mt-3 flex items-center justify-between">
+          <span className="text-lg font-medium text-gray-900">
+            ${product.price.toFixed(2)}
+          </span>
+          
           <button
             onClick={handleAddToCart}
-            disabled={!product.inventory.inStock || isLoading}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              product.inventory.inStock
-                ? 'bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-400'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            disabled={isLoading || !product.inventory.inStock}
+            className={`flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+              isLoading || !product.inventory.inStock
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
           >
             {isLoading ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <>
+                <svg className="animate-spin -ml-1 mr-1 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Adding...
+              </>
             ) : (
-              <ShoppingCartIcon className="h-4 w-4" />
+              <>
+                <ShoppingCartIcon className="h-4 w-4" />
+                Add to Cart
+              </>
             )}
-            <span className="hidden sm:inline">
-              {product.inventory.inStock ? 'Add to Cart' : 'Unavailable'}
-            </span>
           </button>
         </div>
       </div>

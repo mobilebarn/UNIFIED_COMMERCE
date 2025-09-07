@@ -323,3 +323,11 @@ func (p *Product) HasTag(tag string) bool {
 	}
 	return false
 }
+
+// SearchSuggestion represents a search suggestion for autocomplete
+type SearchSuggestion struct {
+	ID       string  `json:"id"`
+	Title    string  `json:"title"`
+	Type     string  `json:"type"` // "PRODUCT", "CATEGORY", "BRAND"
+	ImageURL *string `json:"image_url,omitempty"`
+}

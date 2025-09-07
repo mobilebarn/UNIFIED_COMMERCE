@@ -1,8 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import { useQuery } from '@apollo/client';
+import { GET_CATEGORIES } from '@/graphql/queries';
+import type { Category } from '@/graphql/queries';
 
 export default function CategoriesPage() {
+  // For now, we'll keep the static categories but in a real implementation,
+  // we would fetch them from the GraphQL API
   const categories = [
     {
       id: 'electronics',

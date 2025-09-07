@@ -6,6 +6,8 @@ export default function Products() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortBy, setSortBy] = useState('newest');
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
   
   // Note: The useProducts hook fetches all products. For large catalogs, 
   // it would be more performant to implement server-side filtering, sorting, and pagination
@@ -14,6 +16,8 @@ export default function Products() {
   const products = data?.products;
 
   const [createProduct] = useCreateProduct();
+  const [updateProduct] = useUpdateProduct();
+  const [deleteProduct] = useDeleteProduct();
 
   // Calculate category counts from actual data
   const categoryStats = useMemo(() => {
@@ -70,6 +74,26 @@ export default function Products() {
       // but an explicit refetch can be used if needed.
     } catch (error) {
       console.error('Error creating product:', error);
+    }
+  };
+
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    setShowEditModal(true);
+  };
+
+  const handleDeleteProduct = async (productId: string) => {
+    if (window.confirm('Are you sure you want to delete this product?')) {
+      try {
+        await deleteProduct({
+          variables: {
+            id: productId
+          }
+        });
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        alert('Failed to delete product: ' + (error as Error).message);
+      }
     }
   };
 
@@ -263,22 +287,16 @@ export default function Products() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                             <button 
-                              onClick={() => {
-                                // TODO: Implement edit functionality
-                                console.log('Edit product:', product.id);
-                              }}
+                              onClick={() => handleEditProduct(product)}
                               className="text-blue-600 hover:text-blue-900 mr-3"
                             >
                               Edit
                             </button>
                             <button 
-                              onClick={() => {
-                                // TODO: Implement view functionality
-                                console.log('View product:', product.id);
-                              }}
-                              className="text-gray-600 hover:text-gray-900"
+                              onClick={() => handleDeleteProduct(product.id)}
+                              className="text-red-600 hover:text-red-900"
                             >
-                              View
+                              Delete
                             </button>
                           </td>
                         </tr>
@@ -320,6 +338,136 @@ export default function Products() {
           </div>
         </div>
       </div>
+      
+      {/* Edit Product Modal */}
+      {showEditModal && editingProduct && (
+        <EditProductModal 
+          product={editingProduct} 
+          onClose={() => setShowEditModal(false)} 
+          onUpdate={async (updatedProduct) => {
+            try {
+              await updateProduct({
+                variables: {
+                  id: updatedProduct.id,
+                  input: {
+                    title: updatedProduct.title,
+                    description: updatedProduct.description,
+                    price: updatedProduct.price,
+                    status: updatedProduct.status,
+                  }
+                }
+              });
+              setShowEditModal(false);
+            } catch (error) {
+              console.error('Error updating product:', error);
+              alert('Failed to update product: ' + (error as Error).message);
+            }
+          }} 
+        />
+      )}
     </div>
   );
 }
+
+// Edit Product Modal Component
+const EditProductModal: React.FC<{
+  product: Product;
+  onClose: () => void;
+  onUpdate: (product: Product) => void;
+}> = ({ product, onClose, onUpdate }) => {
+  const [title, setTitle] = useState(product.title);
+  const [description, setDescription] = useState(product.description || '');
+  const [price, setPrice] = useState(product.price.toString());
+  const [status, setStatus] = useState(product.status);
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    
+    try {
+      await onUpdate({
+        ...product,
+        title,
+        description,
+        price: parseFloat(price),
+        status
+      });
+    } catch (error) {
+      console.error('Error updating product:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
+      <div className="relative bg-white rounded-xl shadow-lg w-full max-w-lg border border-gray-100 animate-fadeIn">
+        <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
+          <h2 className="text-lg font-semibold text-gray-900">Edit Product</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600" aria-label="Close">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div className="px-5 py-4 space-y-4 max-h-[60vh] overflow-y-auto">
+          <form id="edit-product-form" onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+              <input 
+                value={title} 
+                onChange={e => setTitle(e.target.value)} 
+                required 
+                className="w-full rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm" 
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <textarea 
+                value={description} 
+                onChange={e => setDescription(e.target.value)} 
+                className="w-full rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm" 
+                rows={3}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Price (USD)</label>
+              <input 
+                type="number" 
+                step="0.01" 
+                value={price} 
+                onChange={e => setPrice(e.target.value)} 
+                required 
+                className="w-full rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm" 
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <select 
+                value={status} 
+                onChange={e => setStatus(e.target.value as any)} 
+                className="w-full rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              >
+                <option value="active">Active</option>
+                <option value="draft">Draft</option>
+                <option value="archived">Archived</option>
+              </select>
+            </div>
+          </form>
+        </div>
+        <div className="px-5 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl">
+          <div className="flex justify-end gap-3">
+            <button onClick={onClose} className="px-4 py-2 text-sm rounded-md border border-gray-300 bg-white hover:bg-gray-50">Cancel</button>
+            <button 
+              form="edit-product-form" 
+              disabled={saving} 
+              className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

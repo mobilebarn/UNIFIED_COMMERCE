@@ -515,12 +515,22 @@ func (s *ProductService) CreateCategory(ctx context.Context, req *CreateCategory
 	return category, nil
 }
 
-// GetCategories retrieves categories for a merchant
-func (s *ProductService) GetCategories(ctx context.Context, merchantID string) ([]models.Category, error) {
-	return s.repo.Category.ListByMerchant(ctx, merchantID)
-}
-
 // GetCategoryBySlug retrieves a category by slug
 func (s *ProductService) GetCategoryBySlug(ctx context.Context, merchantID, slug string) (*models.Category, error) {
 	return s.repo.Category.GetBySlug(ctx, merchantID, slug)
+}
+
+// GetCategoryChildren retrieves child categories for a parent category
+func (s *ProductService) GetCategoryChildren(ctx context.Context, parentID string) ([]models.Category, error) {
+	return s.repo.Category.GetChildren(ctx, parentID)
+}
+
+// GetCategoryParent retrieves the parent category for a category
+func (s *ProductService) GetCategoryParent(ctx context.Context, parentID string) (*models.Category, error) {
+	return s.repo.Category.GetParent(ctx, parentID)
+}
+
+// GetCategories retrieves categories for a merchant
+func (s *ProductService) GetCategories(ctx context.Context, merchantID string) ([]models.Category, error) {
+	return s.repo.Category.ListByMerchant(ctx, merchantID)
 }

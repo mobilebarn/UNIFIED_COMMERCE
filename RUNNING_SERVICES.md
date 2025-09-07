@@ -47,14 +47,15 @@ All 8 services are successfully federated and accessible through the single Grap
 ## Frontend Applications
 
 1. **Admin Panel** (React)
-   - URL: http://localhost:3002/
-   - Connected to GraphQL Federation Gateway
-   - Real data integration
+   - URL: http://localhost:3004/
+   - UI Complete: Yes
+   - Connected to GraphQL Federation Gateway: Yes
+   - Real data integration: Yes (partial, transitioning from mock data)
 
 2. **Storefront** (Next.js)
-   - URL: http://localhost:3000/
-   - Connected to GraphQL Federation Gateway
-   - Real product data
+   - URL: http://localhost:3002/
+   - Connected to GraphQL Federation Gateway: Yes
+   - Real product data: Yes
 
 ## Infrastructure Services
 
@@ -77,8 +78,8 @@ All infrastructure services are running in Docker containers:
 |---------|-----|------|
 | GraphQL Gateway | http://localhost:4000/graphql | 4000 |
 | GraphQL Health | http://localhost:4000/health | 4000 |
-| Admin Panel | http://localhost:3002/ | 3002 |
-| Storefront | http://localhost:3000/ | 3000 |
+| Admin Panel | http://localhost:3004/ | 3004 |
+| Storefront | http://localhost:3002/ | 3002 |
 | Identity Service | http://localhost:8001/ | 8001 |
 | Cart Service | http://localhost:8002/ | 8002 |
 | Order Service | http://localhost:8003/ | 8003 |
