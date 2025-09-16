@@ -1,6 +1,9 @@
 {
   "dependencies": {
+    "@apollo/client": "^3.11.8",
+    "@stripe/stripe-terminal-react-native": "^0.0.1-beta.26",
     "axios": "^1.11.0",
+    "graphql": "^16.11.0",
     "node-fetch": "^3.3.2"
   }
 }

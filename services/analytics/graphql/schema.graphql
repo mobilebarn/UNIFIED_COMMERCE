@@ -1,0 +1,178 @@
+directive @goModel(model: String, models: [String!]) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
+
+# Federation directives
+directive @key(fields: String!) on OBJECT | INTERFACE
+directive @extends on OBJECT | INTERFACE
+directive @external on OBJECT | FIELD_DEFINITION
+directive @requires(fields: String!) on FIELD_DEFINITION
+directive @provides(fields: String!) on FIELD_DEFINITION
+
+# Extend existing types from other services
+extend type User @key(fields: "id") {
+  id: ID! @external
+  behaviors(limit: Int): [CustomerBehavior!]!
+  recommendations(limit: Int): [ProductRecommendation!]!
+  segments: [CustomerSegment!]!
+}
+
+extend type Product @key(fields: "id") {
+  id: ID! @external
+  recommendations: [ProductRecommendation!]!
+}
+
+# Analytics Types
+type CustomerBehavior @goModel(model: "unified-commerce/services/analytics/internal/models.CustomerBehavior") {
+  id: ID!
+  customerId: ID!
+  sessionId: String!
+  action: CustomerAction!
+  entityId: String!
+  entityType: String!
+  timestamp: String!
+  userAgent: String
+  ipAddress: String
+  referrer: String
+  utmSource: String
+  utmMedium: String
+  utmCampaign: String
+  customData: JSON
+}
+
+type ProductRecommendation @goModel(model: "unified-commerce/services/analytics/internal/models.ProductRecommendation") {
+  id: ID!
+  customerId: ID!
+  productId: ID!
+  product: Product
+  score: Float!
+  recommendationType: RecommendationType!
+  createdAt: String!
+  expiresAt: String!
+}
+
+type CustomerSegment @goModel(model: "unified-commerce/services/analytics/internal/models.CustomerSegment") {
+  id: ID!
+  name: String!
+  description: String
+  customerIds: [ID!]!
+  customers: [User!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type BusinessMetric @goModel(model: "unified-commerce/services/analytics/internal/models.BusinessMetric") {
+  id: ID!
+  name: String!
+  value: Float!
+  dimension: String
+  timestamp: String!
+  tags: JSON
+}
+
+type AnalyticsReport @goModel(model: "unified-commerce/services/analytics/internal/models.AnalyticsReport") {
+  id: ID!
+  name: String!
+  type: AnalyticsReportType!
+  data: JSON!
+  generatedAt: String!
+  periodStart: String!
+  periodEnd: String!
+}
+
+# Enums
+enum CustomerAction {
+  VIEW
+  CLICK
+  ADD_TO_CART
+  REMOVE_FROM_CART
+  PURCHASE
+  SEARCH
+  FILTER
+  SORT
+  SHARE
+  WISHLIST
+  REVIEW
+  RETURN
+}
+
+enum RecommendationType {
+  POPULARITY
+  COLLABORATIVE
+  CONTENT
+  TRENDING
+  SIMILAR
+  PERSONALIZED
+  CATEGORY
+  BRAND
+}
+
+enum AnalyticsReportType {
+  SALES
+  TRAFFIC
+  CONVERSION
+  CUSTOMER
+  INVENTORY
+  FINANCIAL
+  MARKETING
+}
+
+# Input Types
+input TrackCustomerBehaviorInput {
+  customerId: ID!
+  sessionId: String!
+  action: CustomerAction!
+  entityId: String!
+  entityType: String!
+  userAgent: String
+  ipAddress: String
+  referrer: String
+  utmSource: String
+  utmMedium: String
+  utmCampaign: String
+  customData: JSON
+}
+
+input GenerateRecommendationsInput {
+  customerId: ID!
+  algorithm: RecommendationType
+  limit: Int
+}
+
+input CreateCustomerSegmentInput {
+  name: String!
+  description: String
+  customerIds: [ID!]!
+}
+
+input TrackBusinessMetricInput {
+  name: String!
+  value: Float!
+  dimension: String
+  tags: JSON
+}
+
+input GenerateAnalyticsReportInput {
+  type: AnalyticsReportType!
+  periodStart: String!
+  periodEnd: String!
+}
+
+# Queries
+type Query {
+  customerBehaviors(customerId: ID!, limit: Int): [CustomerBehavior!]!
+  productRecommendations(customerId: ID!, limit: Int): [ProductRecommendation!]!
+  customerSegment(id: ID!): CustomerSegment
+  businessMetrics(name: String!, start: String, end: String): [BusinessMetric!]!
+  analyticsReport(input: GenerateAnalyticsReportInput!): AnalyticsReport
+}
+
+# Mutations
+type Mutation {
+  trackCustomerBehavior(input: TrackCustomerBehaviorInput!): CustomerBehavior!
+  generateProductRecommendations(input: GenerateRecommendationsInput!): [ProductRecommendation!]!
+  createCustomerSegment(input: CreateCustomerSegmentInput!): CustomerSegment!
+  trackBusinessMetric(input: TrackBusinessMetricInput!): BusinessMetric!
+  generateAnalyticsReport(input: GenerateAnalyticsReportInput!): AnalyticsReport!
+}
+
+# Scalar for JSON data
+scalar JSON

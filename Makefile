@@ -1,10 +1,10 @@
-# Unified Commerce Platform - Development Makefile
+# Retail OS - Development Makefile
 
 .PHONY: help setup start-infra stop-infra start-services stop-services start-frontend test build clean
 
 # Default target
 help:
-	@echo "Unified Commerce Platform - Development Commands"
+	@echo "Retail OS - Development Commands"
 	@echo "================================================"
 	@echo "setup          - Initial project setup"
 	@echo "start-infra    - Start infrastructure services (databases, etc.)"
@@ -18,8 +18,8 @@ help:
 
 # Initial setup
 setup:
-	@echo "Setting up Unified Commerce Platform..."
-	@go mod init unified-commerce
+	@echo "Setting up Retail OS..."
+	@go mod init retail-os
 	@echo "Installing development dependencies..."
 	@go install github.com/air-verse/air@latest
 	@echo "Setup complete!"

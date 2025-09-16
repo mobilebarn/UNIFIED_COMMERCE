@@ -12,7 +12,7 @@ export function Navigation() {
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0">
             <span className="text-2xl font-bold text-blue-600">
-              Unified Commerce
+              Retail OS
             </span>
           </div>
           <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">

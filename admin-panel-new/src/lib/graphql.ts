@@ -424,6 +424,65 @@ export const GET_DASHBOARD_STATS = gql`
   }
 `;
 
+// Analytics Queries
+export const GET_CUSTOMER_BEHAVIORS = gql`
+  query GetCustomerBehaviors($customerId: ID!, $limit: Int) {
+    customerBehaviors(customerId: $customerId, limit: $limit) {
+      id
+      action
+      entityId
+      entityType
+      timestamp
+      userAgent
+      referrer
+    }
+  }
+`;
+
+export const GET_PRODUCT_RECOMMENDATIONS = gql`
+  query GetProductRecommendations($customerId: ID!, $limit: Int) {
+    productRecommendations(customerId: $customerId, limit: $limit) {
+      id
+      productId
+      score
+      recommendationType
+      createdAt
+      expiresAt
+      product {
+        id
+        title
+        price
+      }
+    }
+  }
+`;
+
+export const GET_CUSTOMER_SEGMENTS = gql`
+  query GetCustomerSegments {
+    customerSegments {
+      id
+      name
+      description
+      customerIds
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const GET_BUSINESS_METRICS = gql`
+  query GetBusinessMetrics($name: String!, $start: String, $end: String) {
+    businessMetrics(name: $name, start: $start, end: $end) {
+      id
+      name
+      value
+      dimension
+      timestamp
+      tags
+    }
+  }
+`;
+
 // TypeScript interfaces for type safety
 export interface Product {
   id: string;

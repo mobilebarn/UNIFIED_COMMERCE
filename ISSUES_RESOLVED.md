@@ -1,10 +1,10 @@
-# UNIFIED COMMERCE - ISSUES RESOLVED
+# RETAIL OS - ISSUES RESOLVED
 
 ## 📅 Date: September 6, 2025
 
 ## 🎯 Summary
 
-This document summarizes all the issues we've identified and resolved during the Unified Commerce platform development, as well as the current issues we're working on.
+This document summarizes all the issues we've identified and resolved during the Retail OS platform development, as well as the current issues we're working on.
 
 ## ✅ Issues Resolved
 

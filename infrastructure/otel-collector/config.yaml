@@ -1,0 +1,47 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+exporters:
+  # Export to Jaeger for tracing visualization
+  jaeger:
+    endpoint: jaeger:14250
+    tls:
+      insecure: true
+
+  # Export to Prometheus for metrics
+  prometheus:
+    endpoint: 0.0.0.0:9464
+    namespace: unified_commerce
+    const_labels:
+      service: unified-commerce-otel-collector
+
+  # Export to logging for debugging
+  logging:
+    loglevel: debug
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+  # Add resource attributes
+  resourcedetection:
+    detectors: [env, system]
+    timeout: 2s
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch, resourcedetection]
+      exporters: [jaeger, logging]
+
+    metrics:
+      receivers: [otlp]
+      processors: [batch, resourcedetection]
+      exporters: [prometheus, logging]

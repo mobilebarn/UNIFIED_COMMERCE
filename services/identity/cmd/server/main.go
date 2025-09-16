@@ -59,7 +59,7 @@ func setupRoutes(router *gin.Engine, baseService *service.BaseService) {
 	repo := repository.NewRepository(baseService.PostgresDB)
 
 	// Create service
-	identityService := identityService.NewIdentityService(repo, baseService.Logger, baseService.Config.JWTSecret)
+	identityService := identityService.NewIdentityService(repo, baseService.Logger, baseService.Config.JWTSecret, baseService.Tracer)
 
 	// Create handler
 	handler := handlers.NewIdentityHandler(identityService, baseService.Logger)

@@ -123,6 +123,57 @@ export interface PaymentMethod {
   isDefault: boolean;
 }
 
+export interface Promotion {
+  id: string;
+  name: string;
+  description?: string;
+  type: string;
+  status: string;
+  discountType: string;
+  discountValue: number;
+  startDate: string;
+  endDate?: string;
+  applicableProducts?: string[];
+  applicableCollections?: string[];
+  applicableCustomers?: string[];
+  priority: number;
+  usageLimit?: number;
+  usedCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DiscountCode {
+  id: string;
+  promotionId: string;
+  code: string;
+  isActive: boolean;
+  usageCount: number;
+  usageLimit?: number;
+  usageLimitPerCustomer?: number;
+  startsAt?: string;
+  endsAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Campaign {
+  id: string;
+  merchantId: string;
+  name: string;
+  description?: string;
+  type: string;
+  status: string;
+  startDate: string;
+  endDate?: string;
+  budget?: number;
+  goalType?: string;
+  goalValue?: number;
+  createdAt: string;
+  updatedAt: string;
+  promotions?: Promotion[];
+}
+
 // Add SearchSuggestion interface
 export interface SearchSuggestion {
   id: string;
@@ -337,6 +388,61 @@ export const GET_SEARCH_SUGGESTIONS = gql`
       title
       type
       imageUrl
+    }
+  }
+`;
+
+export const GET_ACTIVE_PROMOTIONS = gql`
+  query GetActivePromotions($merchantId: ID!) {
+    activePromotions(merchantId: $merchantId) {
+      id
+      name
+      description
+      type
+      status
+      discountType
+      discountValue
+      startDate
+      endDate
+      applicableProducts
+      applicableCollections
+      applicableCustomers
+      priority
+      usageLimit
+      usedCount
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const GET_CAMPAIGNS = gql`
+  query GetCampaigns($filter: CampaignFilter) {
+    campaigns(filter: $filter) {
+      id
+      merchantId
+      name
+      description
+      type
+      status
+      startDate
+      endDate
+      budget
+      goalType
+      goalValue
+      createdAt
+      updatedAt
+      promotions {
+        id
+        name
+        description
+        type
+        status
+        discountType
+        discountValue
+        startDate
+        endDate
+      }
     }
   }
 `;

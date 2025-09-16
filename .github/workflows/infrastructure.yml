@@ -1,0 +1,85 @@
+name: Infrastructure CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'docker-compose.yml'
+      - 'docker-compose.services.yml'
+      - 'k8s/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'docker-compose.yml'
+      - 'docker-compose.services.yml'
+      - 'k8s/**'
+
+jobs:
+  validate:
+    name: Validate Infrastructure
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Validate Docker Compose
+      run: |
+        docker-compose -f docker-compose.yml config
+        docker-compose -f docker-compose.services.yml config
+
+    - name: Validate Kubernetes manifests
+      run: |
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+        kubectl apply --dry-run=client -f k8s/manifests/ -R
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Deploy to Staging Environment
+      run: |
+        echo "Deploying to staging environment"
+        # This would typically involve:
+        # 1. Connecting to staging Kubernetes cluster
+        # 2. Applying Kubernetes manifests
+        # 3. Running database migrations
+        # 4. Performing health checks
+      env:
+        KUBECONFIG: ${{ secrets.STAGING_KUBECONFIG }}
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Deploy to Production Environment
+      run: |
+        echo "Deploying to production environment"
+        # This would typically involve:
+        # 1. Connecting to production Kubernetes cluster
+        # 2. Applying Kubernetes manifests
+        # 3. Running database migrations
+        # 4. Performing health checks
+        # 5. Blue-green deployment or rolling updates
+      env:
+        KUBECONFIG: ${{ secrets.PRODUCTION_KUBECONFIG }}
+
+    - name: Send deployment notification
+      if: success()
+      run: |
+        curl -X POST -H "Content-Type: application/json" \
+        -d '{"text":"Unified Commerce Platform deployed to production successfully!"}' \
+        ${{ secrets.SLACK_WEBHOOK_URL }}

@@ -1,7 +1,7 @@
 # Category Browsing with Subcategories Implementation Summary
 
 ## Overview
-This document summarizes the implementation of hierarchical category browsing with subcategories in the Unified Commerce platform. The implementation enables users to navigate through parent-child category relationships and view products organized in a hierarchical structure.
+This document summarizes the implementation of hierarchical category browsing with subcategories in Retail OS. The implementation enables users to navigate through parent-child category relationships and view products organized in a hierarchical structure.
 
 ## Backend Implementation
 

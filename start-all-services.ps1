@@ -1,5 +1,5 @@
-# Script to start all Unified Commerce services
-Write-Host "Starting all Unified Commerce services..." -ForegroundColor Green
+# Script to start all Retail OS services
+Write-Host "Starting all Retail OS services..." -ForegroundColor Green
 
 # Start Identity Service (8001)
 Write-Host "Starting Identity Service on port 8001..." -ForegroundColor Yellow

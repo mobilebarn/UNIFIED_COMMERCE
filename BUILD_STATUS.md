@@ -1,4 +1,4 @@
-# Unified Commerce Platform - Build Status
+# Retail OS - Build Status
 
 ## ✅ Completed Components
 

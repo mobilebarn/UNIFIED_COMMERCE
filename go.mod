@@ -1,4 +1,4 @@
-module unified-commerce
+module retail-os
 
 go 1.23.0
 
@@ -11,5 +11,8 @@ require (
 	github.com/agnivade/levenshtein v1.2.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
-	github.com/stretchr/testify v1.11.0 // indirect
 )
+
+replace retail-os/services/analytics => ./services/analytics
+
+replace retail-os/services/shared => ./services/shared

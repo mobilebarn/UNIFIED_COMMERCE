@@ -159,6 +159,35 @@ services:
     networks:
       - unified-commerce
 
+  # OpenTelemetry Collector
+  otel-collector:
+    image: otel/opentelemetry-collector:0.117.0
+    container_name: unified-commerce-otel-collector
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./infrastructure/otel-collector/config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4318:4317"   # OTLP gRPC receiver (changed from 4317:4317)
+      - "4319:4318"   # OTLP HTTP receiver (changed from 4318:4318)
+      - "9465:9464"   # Prometheus metrics endpoint (changed from 9464:9464)
+    networks:
+      - unified-commerce
+    depends_on:
+      - jaeger
+
+  # Jaeger for distributed tracing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: unified-commerce-jaeger
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686" # Jaeger UI
+      - "4320:4317"   # OTLP gRPC (changed from 4317:4317)
+      - "4321:4318"   # OTLP HTTP (changed from 4318:4318)
+    networks:
+      - unified-commerce
+
 volumes:
   postgres_data:
   mongodb_data:

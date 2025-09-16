@@ -1,4 +1,4 @@
-Write-Host "Unified Commerce Platform - Build Status" -ForegroundColor Green
+Write-Host "Retail OS - Build Status" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "✅ Infrastructure services are running" -ForegroundColor Green

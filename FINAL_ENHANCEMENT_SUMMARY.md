@@ -4,7 +4,7 @@
 
 ## 🎯 Overview
 
-This document summarizes the final enhancements made to the Unified Commerce platform, focusing on completing the storefront account features and improving the overall user experience.
+This document summarizes the final enhancements made to Retail OS, focusing on completing the storefront account features and improving the overall user experience.
 
 ## ✅ Completed Enhancements
 

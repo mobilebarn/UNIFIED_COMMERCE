@@ -319,11 +319,6 @@ func (r *CategoryRepository) GetBySlug(ctx context.Context, merchantID, slug str
 
 // GetChildren retrieves child categories for a parent category
 func (r *CategoryRepository) GetChildren(ctx context.Context, parentID string) ([]models.Category, error) {
-	objectID, err := primitive.ObjectIDFromHex(parentID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid parent category ID: %w", err)
-	}
-
 	filter := bson.M{
 		"parent_id": parentID,
 		"is_active": true,

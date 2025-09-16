@@ -1,0 +1,187 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'storefront/**'
+      - 'admin-panel-new/**'
+      - 'gateway/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'storefront/**'
+      - 'admin-panel-new/**'
+      - 'gateway/**'
+
+jobs:
+  storefront:
+    name: Storefront Application
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: storefront/package-lock.json
+
+    - name: Install dependencies
+      run: |
+        cd storefront
+        npm ci
+
+    - name: Run linter
+      run: |
+        cd storefront
+        npm run lint
+
+    - name: Run tests
+      run: |
+        cd storefront
+        npm test
+
+    - name: Build application
+      run: |
+        cd storefront
+        npm run build
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: storefront-build
+        path: storefront/.next
+
+  admin-panel:
+    name: Admin Panel Application
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: admin-panel-new/package-lock.json
+
+    - name: Install dependencies
+      run: |
+        cd admin-panel-new
+        npm ci
+
+    - name: Run linter
+      run: |
+        cd admin-panel-new
+        npm run lint
+
+    - name: Run tests
+      run: |
+        cd admin-panel-new
+        npm test
+
+    - name: Build application
+      run: |
+        cd admin-panel-new
+        npm run build
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: admin-panel-build
+        path: admin-panel-new/dist
+
+  gateway:
+    name: GraphQL Gateway
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: gateway/package-lock.json
+
+    - name: Install dependencies
+      run: |
+        cd gateway
+        npm ci
+
+    - name: Run linter
+      run: |
+        cd gateway
+        npm run lint
+
+    - name: Run tests
+      run: |
+        cd gateway
+        npm test
+
+    - name: Build application
+      run: |
+        cd gateway
+        npm run build
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: gateway-build
+        path: gateway/dist
+
+  docker-build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [storefront, admin-panel, gateway]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Login to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and push Storefront image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./storefront
+        push: ${{ github.ref == 'refs/heads/main' }}
+        tags: unifiedcommerce/storefront:latest
+        labels: |
+          org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          org.opencontainers.image.revision=${{ github.sha }}
+
+    - name: Build and push Admin Panel image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./admin-panel-new
+        push: ${{ github.ref == 'refs/heads/main' }}
+        tags: unifiedcommerce/admin-panel:latest
+        labels: |
+          org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          org.opencontainers.image.revision=${{ github.sha }}
+
+    - name: Build and push Gateway image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./gateway
+        push: ${{ github.ref == 'refs/heads/main' }}
+        tags: unifiedcommerce/graphql-gateway:latest
+        labels: |
+          org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          org.opencontainers.image.revision=${{ github.sha }}

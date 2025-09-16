@@ -1,0 +1,26 @@
+{
+  "name": "@retail-os/sample-nodejs",
+  "version": "1.0.0",
+  "description": "Sample Node.js application for Retail OS",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "dotenv": "^16.3.1",
+    "axios": "^1.5.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "retail-os",
+    "ecommerce",
+    "api",
+    "sample"
+  ],
+  "author": "Retail OS",
+  "license": "MIT"
+}

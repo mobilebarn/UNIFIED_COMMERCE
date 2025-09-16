@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: unified-commerce-config
+  namespace: unified-commerce
+data:
+  # Database configurations
+  POSTGRES_DB: "unified_commerce"
+  POSTGRES_USER: "postgres"
+  MONGO_INITDB_DATABASE: "product_catalog"
+  
+  # Redis configuration
+  REDIS_PORT: "6379"
+  
+  # Kafka configuration
+  KAFKA_PORT: "9092"
+  
+  # Service ports
+  IDENTITY_SERVICE_PORT: "8001"
+  CART_SERVICE_PORT: "8002"
+  ORDER_SERVICE_PORT: "8003"
+  PAYMENT_SERVICE_PORT: "8004"
+  INVENTORY_SERVICE_PORT: "8005"
+  PRODUCT_CATALOG_SERVICE_PORT: "8006"
+  PROMOTIONS_SERVICE_PORT: "8007"
+  MERCHANT_ACCOUNT_SERVICE_PORT: "8008"
+  GATEWAY_PORT: "4000"
+  STOREFRONT_PORT: "3000"
+  ADMIN_PANEL_PORT: "3001"
+  
+  # Environment
+  ENVIRONMENT: "production"

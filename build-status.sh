@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "Unified Commerce Platform - Build Status"
+echo "Retail OS - Build Status"
 echo "========================================"
 echo
 echo "✅ Infrastructure services are running"

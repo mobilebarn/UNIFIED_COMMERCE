@@ -23,7 +23,7 @@ export default function SearchResultsPage() {
 
   // Update the page title based on the search query
   useEffect(() => {
-    document.title = `Search Results for "${query}" - Unified Commerce`;
+    document.title = `Search Results for "${query}" - Retail OS`;
   }, [query]);
 
   if (loading) return (

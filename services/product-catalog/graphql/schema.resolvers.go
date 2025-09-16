@@ -125,30 +125,30 @@ func (r *categoryResolver) Parent(ctx context.Context, obj *models.Category) (*m
 	if obj.ParentID == "" {
 		return nil, nil // No parent
 	}
-	
+
 	// Get the parent category from the service
-	parent, err := r.service.GetCategoryParent(ctx, obj.ParentID)
+	parent, err := r.ProductService.GetCategoryParent(ctx, obj.ParentID)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return parent, nil
 }
 
 // Children is the resolver for the children field.
 func (r *categoryResolver) Children(ctx context.Context, obj *models.Category) ([]*models.Category, error) {
 	// Get the child categories from the service
-	children, err := r.service.GetCategoryChildren(ctx, obj.ID.Hex())
+	children, err := r.ProductService.GetCategoryChildren(ctx, obj.ID.Hex())
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Convert to pointer array
 	childrenPtr := make([]*models.Category, len(children))
 	for i := range children {
 		childrenPtr[i] = &children[i]
 	}
-	
+
 	return childrenPtr, nil
 }
 
@@ -940,104 +940,106 @@ func (r *queryResolver) SearchSuggestions(ctx context.Context, query string, lim
 	if limit != nil && *limit > 0 {
 		limitValue = *limit
 	}
-	
+
 	// Create a slice to hold our suggestions
 	suggestions := make([]*models.SearchSuggestion, 0)
-	
+
 	// Search for products
 	productFilter := &ProductFilter{
 		Search: &query,
 		Limit:  &limitValue,
 	}
-	
+
 	products, err := r.Products(ctx, productFilter)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Add product suggestions
 	for _, product := range products {
 		if len(suggestions) >= limitValue {
 			break
 		}
-		
+
 		suggestion := &models.SearchSuggestion{
-			ID:    product.ID,
+			ID:    product.ID.Hex(),
 			Title: product.Name,
 			Type:  "PRODUCT",
 		}
-		
+
 		// Add image URL if available
-		if product.FeaturedImage != nil {
-			suggestion.ImageURL = product.FeaturedImage
+		if len(product.Images) > 0 {
+			suggestion.ImageURL = &product.Images[0].URL
 		}
-		
+
 		suggestions = append(suggestions, suggestion)
 	}
-	
+
 	// If we haven't reached the limit, search for categories
 	if len(suggestions) < limitValue {
-		remainingLimit := limitValue - len(suggestions)
+		categoryLimit := limitValue - len(suggestions)
 		categoryFilter := &CategoryFilter{
-			Limit: &remainingLimit,
+			Limit: &categoryLimit,
 		}
-		
+
 		categories, err := r.Categories(ctx, categoryFilter)
 		if err != nil {
 			return suggestions, nil // Return what we have
 		}
-		
+
 		// Add category suggestions
 		for _, category := range categories {
 			if len(suggestions) >= limitValue {
 				break
 			}
-			
+
 			suggestion := &models.SearchSuggestion{
-				ID:    category.ID,
+				ID:    category.ID.Hex(),
 				Title: category.Name,
 				Type:  "CATEGORY",
 			}
-			
+
 			suggestions = append(suggestions, suggestion)
 		}
 	}
-	
+
 	// If we haven't reached the limit, search for brands
 	if len(suggestions) < limitValue {
-		remainingLimit := limitValue - len(suggestions)
 		var merchantID *string
 		brands, err := r.Brands(ctx, merchantID)
 		if err != nil {
 			return suggestions, nil // Return what we have
 		}
-		
+
 		// Add brand suggestions
 		for _, brand := range brands {
 			if len(suggestions) >= limitValue {
 				break
 			}
-			
+
 			suggestion := &models.SearchSuggestion{
-				ID:    brand.ID,
+				ID:    brand.ID.Hex(),
 				Title: brand.Name,
 				Type:  "BRAND",
 			}
-			
+
 			// Add image URL if available
 			if brand.Logo != nil {
-				suggestion.ImageURL = brand.Logo
+				suggestion.ImageURL = &brand.Logo.URL
 			}
-			
+
 			suggestions = append(suggestions, suggestion)
 		}
 	}
-	
+
 	return suggestions, nil
 }
 
-// Product returns ProductResolver implementation.
-func (r *Resolver) Product() ProductResolver { return &productResolver{r} }
+// Query returns QueryResolver implementation.
+func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
+
+// Brand returns BrandResolver implementation.
+func (r *Resolver) Brand() BrandResolver { return &brandResolver{r} }
 
 // Category returns CategoryResolver implementation.
 func (r *Resolver) Category() CategoryResolver { return &categoryResolver{r} }
@@ -1051,6 +1053,9 @@ func (r *Resolver) CollectionRule() CollectionRuleResolver { return &collectionR
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
+// Product returns ProductResolver implementation.
+func (r *Resolver) Product() ProductResolver { return &productResolver{r} }
+
 // ProductImage returns ProductImageResolver implementation.
 func (r *Resolver) ProductImage() ProductImageResolver { return &productImageResolver{r} }
 
@@ -1060,16 +1065,22 @@ func (r *Resolver) ProductOption() ProductOptionResolver { return &productOption
 // ProductVariant returns ProductVariantResolver implementation.
 func (r *Resolver) ProductVariant() ProductVariantResolver { return &productVariantResolver{r} }
 
-// Query returns QueryResolver implementation.
-func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
-
 type brandResolver struct{ *Resolver }
+
 type categoryResolver struct{ *Resolver }
+
 type collectionResolver struct{ *Resolver }
+
 type collectionRuleResolver struct{ *Resolver }
+
 type mutationResolver struct{ *Resolver }
+
 type productResolver struct{ *Resolver }
+
 type productImageResolver struct{ *Resolver }
+
 type productOptionResolver struct{ *Resolver }
+
 type productVariantResolver struct{ *Resolver }
+
 type queryResolver struct{ *Resolver }

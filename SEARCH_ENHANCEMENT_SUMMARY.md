@@ -1,7 +1,7 @@
 # Search Enhancement Implementation Summary
 
 ## Overview
-This document summarizes the implementation of search enhancements with autocomplete and suggestions for the Unified Commerce storefront.
+This document summarizes the implementation of search enhancements with autocomplete and suggestions for the Retail OS storefront.
 
 ## Features Implemented
 

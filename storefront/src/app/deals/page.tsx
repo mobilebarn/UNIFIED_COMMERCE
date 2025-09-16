@@ -1,99 +1,114 @@
 'use client';
 
+import { useQuery } from '@apollo/client';
+import { useState, useEffect } from 'react';
 import { ProductCard } from '@/components/ProductCard';
+import { GET_ACTIVE_PROMOTIONS, GET_CAMPAIGNS, GET_PRODUCTS } from '@/graphql/queries';
+import type { Promotion, Campaign, Product } from '@/graphql/queries';
 
 export default function DealsPage() {
-  // Mock deal products data
-  const dealProducts = [
-    {
-      id: '1',
-      name: 'Premium Wireless Headphones',
-      price: 89.99,
-      originalPrice: 129.99,
-      discount: 30,
-      description: 'High-quality noise-cancelling wireless headphones with premium sound.',
-      image: 'https://via.placeholder.com/600x600/3B82F6/FFFFFF?text=Headphones',
-      rating: 4.8,
-      reviews: 432,
-    },
-    {
-      id: '2',
-      name: 'Smart Fitness Watch',
-      price: 129.99,
-      originalPrice: 199.99,
-      discount: 35,
-      description: 'Track your fitness goals with this advanced smartwatch.',
-      image: 'https://via.placeholder.com/600x600/10B981/FFFFFF?text=Watch',
-      rating: 4.6,
-      reviews: 251,
-    },
-    {
-      id: '3',
-      name: 'Portable Bluetooth Speaker',
-      price: 45.99,
-      originalPrice: 69.99,
-      discount: 34,
-      description: 'Powerful sound in a compact, portable design.',
-      image: 'https://via.placeholder.com/600x600/F59E0B/FFFFFF?text=Speaker',
-      rating: 4.5,
-      reviews: 198,
-    },
-    {
-      id: '4',
-      name: 'Leather Weekend Bag',
-      price: 159.99,
-      originalPrice: 249.99,
-      discount: 36,
-      description: 'Premium leather travel bag, perfect for weekend getaways.',
-      image: 'https://via.placeholder.com/600x600/6366F1/FFFFFF?text=Bag',
-      rating: 4.7,
-      reviews: 86,
-    },
-    {
-      id: '5',
-      name: 'Smart Home Hub',
-      price: 89.99,
-      originalPrice: 129.99,
-      discount: 31,
-      description: 'Control all your smart home devices from one central hub.',
-      image: 'https://via.placeholder.com/600x600/8B5CF6/FFFFFF?text=Hub',
-      rating: 4.4,
-      reviews: 175,
-    },
-    {
-      id: '6',
-      name: 'Organic Cotton Sheets',
-      price: 69.99,
-      originalPrice: 99.99,
-      discount: 30,
-      description: 'Ultra-soft, 100% organic cotton sheets for the perfect night\'s sleep.',
-      image: 'https://via.placeholder.com/600x600/EC4899/FFFFFF?text=Sheets',
-      rating: 4.9,
-      reviews: 324,
-    },
-    {
-      id: '7',
-      name: 'Premium Coffee Maker',
-      price: 119.99,
-      originalPrice: 179.99,
-      discount: 33,
-      description: 'Barista-quality coffee from the comfort of your own home.',
-      image: 'https://via.placeholder.com/600x600/F97316/FFFFFF?text=Coffee',
-      rating: 4.7,
-      reviews: 213,
-    },
-    {
-      id: '8',
-      name: 'Natural Skincare Set',
-      price: 49.99,
-      originalPrice: 79.99,
-      discount: 38,
-      description: 'All-natural skincare products made with organic ingredients.',
-      image: 'https://via.placeholder.com/600x600/14B8A6/FFFFFF?text=Skincare',
-      rating: 4.8,
-      reviews: 142,
-    },
-  ];
+  const [timeLeft, setTimeLeft] = useState({
+    days: 2,
+    hours: 14,
+    minutes: 36,
+    seconds: 22
+  });
+
+  // Fetch active promotions
+  const { loading: promotionsLoading, error: promotionsError, data: promotionsData } = useQuery(GET_ACTIVE_PROMOTIONS, {
+    variables: { merchantId: 'default-merchant-id' } // In a real app, this would come from context or props
+  });
+
+  // Fetch campaigns
+  const { loading: campaignsLoading, error: campaignsError, data: campaignsData } = useQuery(GET_CAMPAIGNS, {
+    variables: { filter: { merchantId: 'default-merchant-id' } }
+  });
+
+  // Fetch products on sale (for demo purposes, we'll fetch all products)
+  const { loading: productsLoading, error: productsError, data: productsData } = useQuery(GET_PRODUCTS, {
+    variables: { filter: { search: 'sale' } } // This would be adjusted based on actual promotion logic
+  });
+
+  // Countdown timer effect
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        const newSeconds = prev.seconds - 1;
+        if (newSeconds >= 0) {
+          return { ...prev, seconds: newSeconds };
+        }
+        
+        const newMinutes = prev.minutes - 1;
+        if (newMinutes >= 0) {
+          return { ...prev, minutes: newMinutes, seconds: 59 };
+        }
+        
+        const newHours = prev.hours - 1;
+        if (newHours >= 0) {
+          return { ...prev, hours: newHours, minutes: 59, seconds: 59 };
+        }
+        
+        const newDays = prev.days - 1;
+        if (newDays >= 0) {
+          return { days: newDays, hours: 23, minutes: 59, seconds: 59 };
+        }
+        
+        // Reset timer when it reaches zero
+        return { days: 2, hours: 14, minutes: 36, seconds: 22 };
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Format time values to always have two digits
+  const formatTime = (value: number) => value.toString().padStart(2, '0');
+
+  if (promotionsLoading || campaignsLoading || productsLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-gray-900 mb-8">Loading Deals...</h1>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (promotionsError || campaignsError || productsError) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-red-600 mb-8">Error Loading Deals</h1>
+            <p className="text-gray-600">
+              {promotionsError?.message || campaignsError?.message || productsError?.message}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Extract data from GraphQL responses
+  const promotions: Promotion[] = promotionsData?.activePromotions || [];
+  const campaigns: Campaign[] = campaignsData?.campaigns || [];
+  const products: Product[] = productsData?.products || [];
+
+  // For demo purposes, we'll create mock deal products with real data structure
+  // In a real implementation, these would be derived from actual promotions
+  const dealProducts = products.map((product, index) => ({
+    id: product.id,
+    name: product.title,
+    price: product.price,
+    originalPrice: product.price * 1.3, // Mock original price
+    discount: Math.floor(Math.random() * 40) + 10, // Mock discount percentage
+    description: product.description || 'Premium product with great features.',
+    image: product.imageUrl || `https://via.placeholder.com/600x600/3B82F6/FFFFFF?text=Product+${index + 1}`,
+    rating: (Math.random() * 2 + 3).toFixed(1), // Mock rating between 3-5
+    reviews: Math.floor(Math.random() * 500) + 50, // Mock review count
+  }));
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -116,25 +131,65 @@ export default function DealsPage() {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Deal Ends In</h2>
             <div className="flex justify-center space-x-4">
               <div className="flex flex-col items-center">
-                <span className="text-3xl font-bold text-red-600">02</span>
+                <span className="text-3xl font-bold text-red-600">{formatTime(timeLeft.days)}</span>
                 <span className="text-sm text-gray-600">Days</span>
               </div>
               <div className="flex flex-col items-center">
-                <span className="text-3xl font-bold text-red-600">14</span>
+                <span className="text-3xl font-bold text-red-600">{formatTime(timeLeft.hours)}</span>
                 <span className="text-sm text-gray-600">Hours</span>
               </div>
               <div className="flex flex-col items-center">
-                <span className="text-3xl font-bold text-red-600">36</span>
+                <span className="text-3xl font-bold text-red-600">{formatTime(timeLeft.minutes)}</span>
                 <span className="text-sm text-gray-600">Minutes</span>
               </div>
               <div className="flex flex-col items-center">
-                <span className="text-3xl font-bold text-red-600">22</span>
+                <span className="text-3xl font-bold text-red-600">{formatTime(timeLeft.seconds)}</span>
                 <span className="text-sm text-gray-600">Seconds</span>
               </div>
             </div>
           </div>
         </div>
       </section>
+
+      {/* Active Promotions Section */}
+      {promotions.length > 0 && (
+        <section className="py-12 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Current Promotions
+              </h2>
+              <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+                Take advantage of our active deals and save on your favorite products.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {promotions.map((promotion) => (
+                <div key={promotion.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-xl font-bold text-gray-900">{promotion.name}</h3>
+                    {promotion.discountValue && (
+                      <span className="bg-red-100 text-red-800 text-sm font-bold px-2 py-1 rounded">
+                        {promotion.discountType === 'PERCENTAGE' ? `${promotion.discountValue}% OFF` : `$${promotion.discountValue} OFF`}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-gray-600 mb-4">{promotion.description}</p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-500">
+                      Valid: {new Date(promotion.startDate).toLocaleDateString()} - {promotion.endDate ? new Date(promotion.endDate).toLocaleDateString() : 'Ongoing'}
+                    </span>
+                    <button className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
+                      Shop Now
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Deals Grid */}
       <section className="py-12">
@@ -174,6 +229,48 @@ export default function DealsPage() {
           </div>
         </div>
       </section>
+
+      {/* Campaigns Section */}
+      {campaigns.length > 0 && (
+        <section className="py-16 bg-gray-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Special Campaigns
+              </h2>
+              <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+                Discover our featured campaigns with exclusive offers and deals.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {campaigns.map((campaign) => (
+                <div key={campaign.id} className="bg-white rounded-lg p-8 shadow-sm">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4">{campaign.name}</h3>
+                  <p className="text-gray-600 mb-6">{campaign.description}</p>
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <span className="text-sm text-gray-500">Campaign Period:</span>
+                      <p className="font-medium">
+                        {new Date(campaign.startDate).toLocaleDateString()} - {campaign.endDate ? new Date(campaign.endDate).toLocaleDateString() : 'Ongoing'}
+                      </p>
+                    </div>
+                    {campaign.budget && (
+                      <div>
+                        <span className="text-sm text-gray-500">Budget:</span>
+                        <p className="font-medium">${campaign.budget.toLocaleString()}</p>
+                      </div>
+                    )}
+                  </div>
+                  <button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-md font-medium hover:opacity-90 transition">
+                    Explore Campaign
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Additional Deals Section */}
       <section className="py-16 bg-white">

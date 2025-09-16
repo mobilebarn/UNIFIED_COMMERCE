@@ -1,0 +1,233 @@
+version: '3.8'
+
+services:
+  # Identity Service
+  identity:
+    build:
+      context: ./services/identity
+      dockerfile: Dockerfile
+    container_name: unified-commerce-identity
+    environment:
+      - PORT=8001
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/unified_commerce?sslmode=disable
+      - REDIS_URL=redis://:redis@redis:6379/0
+      - JWT_SECRET=your-jwt-secret-key
+      - ENVIRONMENT=development
+    ports:
+      - "8001:8001"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - unified-commerce
+    restart: unless-stopped
+
+  # Merchant Account Service
+  merchant-account:
+    build:
+      context: ./services/merchant-account
+      dockerfile: Dockerfile
+    container_name: unified-commerce-merchant-account
+    environment:
+      - PORT=8008
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/unified_commerce?sslmode=disable
+      - REDIS_URL=redis://:redis@redis:6379/0
+      - JWT_SECRET=your-jwt-secret-key
+      - ENVIRONMENT=development
+    ports:
+      - "8008:8008"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - unified-commerce
+    restart: unless-stopped
+
+  # Product Catalog Service
+  product-catalog:
+    build:
+      context: ./services/product-catalog
+      dockerfile: Dockerfile
+    container_name: unified-commerce-product-catalog
+    environment:
+      - PORT=8006
+      - DATABASE_URL=mongodb://mongodb:mongodb@mongodb:27017/product_catalog?authSource=admin
+      - REDIS_URL=redis://:redis@redis:6379/0
+      - ENVIRONMENT=development
+    ports:
+      - "8006:8006"
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - unified-commerce
+    restart: unless-stopped
+
+  # Inventory Service
+  inventory:
+    build:
+      context: ./services/inventory
+      dockerfile: Dockerfile
+    container_name: unified-commerce-inventory
+    environment:
+      - PORT=8005
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/unified_commerce?sslmode=disable
+      - REDIS_URL=redis://:redis@redis:6379/0
+      - ENVIRONMENT=development
+    ports:
+      - "8005:8005"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - unified-commerce
+    restart: unless-stopped
+
+  # Order Service
+  order:
+    build:
+      context: ./services/order
+      dockerfile: Dockerfile
+    container_name: unified-commerce-order
+    environment:
+      - PORT=8003
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/unified_commerce?sslmode=disable
+      - REDIS_URL=redis://:redis@redis:6379/0
+      - KAFKA_BROKERS=kafka:9092
+      - ENVIRONMENT=development
+    ports:
+      - "8003:8003"
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    networks:
+      - unified-commerce
+    restart: unless-stopped
+
+  # Cart Service
+  cart:
+    build:
+      context: ./services/cart
+      dockerfile: Dockerfile
+    container_name: unified-commerce-cart
+    environment:
+      - PORT=8002
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/unified_commerce?sslmode=disable
+      - REDIS_URL=redis://:redis@redis:6379/0
+      - ENVIRONMENT=development
+    ports:
+      - "8002:8002"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - unified-commerce
+    restart: unless-stopped
+
+  # Payment Service
+  payment:
+    build:
+      context: ./services/payment
+      dockerfile: Dockerfile
+    container_name: unified-commerce-payment
+    environment:
+      - PORT=8004
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/unified_commerce?sslmode=disable
+      - REDIS_URL=redis://:redis@redis:6379/0
+      - KAFKA_BROKERS=kafka:9092
+      - ENVIRONMENT=development
+    ports:
+      - "8004:8004"
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    networks:
+      - unified-commerce
+    restart: unless-stopped
+
+  # Promotions Service
+  promotions:
+    build:
+      context: ./services/promotions
+      dockerfile: Dockerfile
+    container_name: unified-commerce-promotions
+    environment:
+      - PORT=8007
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/unified_commerce?sslmode=disable
+      - REDIS_URL=redis://:redis@redis:6379/0
+      - ENVIRONMENT=development
+    ports:
+      - "8007:8007"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - unified-commerce
+    restart: unless-stopped
+
+  # GraphQL Federation Gateway
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: unified-commerce-gateway
+    environment:
+      - PORT=4000
+      - NODE_ENV=development
+      - JWT_SECRET=your-jwt-secret-key
+    ports:
+      - "4000:4000"
+    depends_on:
+      - identity
+      - cart
+      - order
+      - payment
+      - inventory
+      - product-catalog
+      - promotions
+      - merchant-account
+    networks:
+      - unified-commerce
+    restart: unless-stopped
+
+  # Storefront Application
+  storefront:
+    build:
+      context: ./storefront
+      dockerfile: Dockerfile
+    container_name: unified-commerce-storefront
+    environment:
+      - PORT=3000
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://gateway:4000/graphql
+    ports:
+      - "3000:3000"
+    depends_on:
+      - gateway
+    networks:
+      - unified-commerce
+    restart: unless-stopped
+
+  # Admin Panel Application
+  admin-panel:
+    build:
+      context: ./admin-panel-new
+      dockerfile: Dockerfile
+    container_name: unified-commerce-admin-panel
+    environment:
+      - PORT=3001
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://gateway:4000/graphql
+    ports:
+      - "3001:3001"
+    depends_on:
+      - gateway
+    networks:
+      - unified-commerce
+    restart: unless-stopped
+
+networks:
+  unified-commerce:
+    driver: bridge

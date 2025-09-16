@@ -1,4 +1,4 @@
--- Database initialization script for Unified Commerce Platform
+-- Database initialization script for Retail OS Platform
 -- Creates separate databases for each microservice following the database-per-service pattern
 
 -- Identity Service Database

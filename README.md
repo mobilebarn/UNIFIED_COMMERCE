@@ -1,4 +1,4 @@
-# Unified Commerce Platform
+# Retail OS
 
 A complete, production-ready e-commerce platform built with modern microservices architecture, GraphQL federation, and cutting-edge frontend technologies.
 
@@ -98,7 +98,7 @@ All core components are fully implemented and operational:
 
 ## 📚 Documentation
 
-- [Progress Summary](UNIFIED_COMMERCE_PROGRESS_SUMMARY.md) - Complete status of implementation
+- [Progress Summary](RETAIL_OS_PROGRESS_SUMMARY.md) - Complete status of implementation
 - [GraphQL Federation Guide](docs/GRAPHQL_FEDERATION_GUIDE.md) - Detailed federation implementation
 - [Troubleshooting Guide](docs/TROUBLESHOOTING_GUIDE.md) - Common issues and solutions
 - [Startup Guide](docs/STARTUP_GUIDE.md) - How to start all services
@@ -109,7 +109,7 @@ All core components are fully implemented and operational:
 ### Project Structure
 
 ```
-UNIFIED_COMMERCE/
+RETAIL_OS/
 ├── services/              # Go microservices
 │   ├── identity/
 │   ├── cart/

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
 	"unified-commerce/services/shared/config"
 	"unified-commerce/services/shared/database"
@@ -29,6 +30,7 @@ type BaseService struct {
 	Server       *http.Server
 	HealthChecks []HealthCheck
 	Metrics      *MetricsCollector
+	Tracer       *Tracer
 }
 
 // HealthCheck represents a health check function
@@ -134,6 +136,12 @@ func NewBaseService(opts ServiceOptions) (*BaseService, error) {
 	// Add custom health checks
 	service.HealthChecks = append(service.HealthChecks, opts.HealthChecks...)
 
+	// Initialize OpenTelemetry tracer
+	service.Tracer, err = NewTracer(opts.Name)
+	if err != nil {
+		serviceLogger.WithError(err).Warn("Failed to initialize OpenTelemetry tracer")
+	}
+
 	// Set up HTTP router
 	if cfg.Environment == "production" {
 		gin.SetMode(gin.ReleaseMode)
@@ -146,6 +154,9 @@ func NewBaseService(opts ServiceOptions) (*BaseService, error) {
 	service.Router.Use(middleware.Logger())
 	service.Router.Use(middleware.Recovery())
 	service.Router.Use(middleware.CORS())
+	if service.Tracer != nil {
+		service.Router.Use(otelgin.Middleware(opts.Name))
+	}
 	service.Router.Use(service.Metrics.PrometheusMiddleware())
 
 	// Add common routes
@@ -253,6 +264,15 @@ func (s *BaseService) Start() error {
 		return err
 	}
 
+	// Shutdown OpenTelemetry tracer
+	if s.Tracer != nil {
+		otelCtx, otelCancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer otelCancel()
+		if err := s.Tracer.Shutdown(otelCtx); err != nil {
+			s.Logger.WithError(err).Error("Failed to shutdown OpenTelemetry tracer")
+		}
+	}
+
 	s.Logger.Info("Server exited")
 	return nil
 }
@@ -287,6 +307,15 @@ func (s *BaseService) Stop() error {
 	if s.RedisClient != nil {
 		if err := s.RedisClient.Close(); err != nil {
 			errors = append(errors, fmt.Errorf("failed to close Redis connection: %w", err))
+		}
+	}
+
+	// Shutdown OpenTelemetry tracer
+	if s.Tracer != nil {
+		otelCtx, otelCancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer otelCancel()
+		if err := s.Tracer.Shutdown(otelCtx); err != nil {
+			errors = append(errors, fmt.Errorf("failed to shutdown OpenTelemetry tracer: %w", err))
 		}
 	}
 
