@@ -1,21 +1,15 @@
 {
   "version": 2,
+  "installCommand": "npm install",
   "buildCommand": "npm run build",
-  "outputDirectory": "dist",
+  "devCommand": "npm run dev",
   "env": {
     "NEXT_PUBLIC_APP_NAME": "Retail OS",
     "NEXT_PUBLIC_GRAPHQL_ENDPOINT": "https://retail-os-api.up.railway.app/graphql"
   },
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/$1.html",
-      "status": 200
-    },
-    {
-      "src": "/",
-      "dest": "/index.html",
-      "status": 200
+  "functions": {
+    "src/app/**/*.{js,ts,jsx,tsx}": {
+      "runtime": "@vercel/node@3"
     }
-  ]
+  }
 }
