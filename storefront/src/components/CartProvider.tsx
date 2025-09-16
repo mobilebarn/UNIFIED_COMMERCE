@@ -19,6 +19,7 @@ interface CartContextType {
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
   getCartTotal: () => number;
+  getTotalPrice: () => number;
   getCartCount: () => number;
 }
 
@@ -82,6 +83,11 @@ export function CartProvider({ children }: CartProviderProps) {
     return cart.reduce((total, item) => total + item.price * item.quantity, 0);
   };
 
+  // Alias for getCartTotal (for backwards compatibility)
+  const getTotalPrice = () => {
+    return getCartTotal();
+  };
+
   // Calculate total number of items in cart
   const getCartCount = () => {
     return cart.reduce((count, item) => count + item.quantity, 0);
@@ -97,6 +103,7 @@ export function CartProvider({ children }: CartProviderProps) {
         updateQuantity,
         clearCart,
         getCartTotal,
+        getTotalPrice,
         getCartCount
       }}
     >
