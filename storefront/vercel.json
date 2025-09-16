@@ -3,8 +3,16 @@
   "installCommand": "npm install",
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
   "env": {
     "NEXT_PUBLIC_APP_NAME": "Retail OS",
     "NEXT_PUBLIC_GRAPHQL_ENDPOINT": "https://retail-os-api.up.railway.app/graphql"
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ]
 }

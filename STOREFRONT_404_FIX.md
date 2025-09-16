@@ -120,3 +120,42 @@ Once the build completes (within 2-3 minutes):
 **⏰ Check back in 2-3 minutes** - your storefront should be working perfectly!
 
 **🎉 Once it's working, let me know and we'll complete the remaining deployments to finish Option 1 as requested!**
+
+# Retail OS Storefront - 404 Fix Guide
+
+## 🚨 Current Issue: Vercel 404 Error
+
+**Problem**: The Vercel deployment at `https://unified-commerce.vercel.app` is showing a 404 error.
+
+**Root Cause**: Vercel is likely building from the repository root instead of the `/storefront` subdirectory.
+
+## 🔧 Solutions to Try
+
+### Option 1: Vercel Dashboard Configuration (Recommended)
+1. Go to your Vercel dashboard: https://vercel.com/dashboard
+2. Find the "unified-commerce" project
+3. Go to Settings → General
+4. Set **Root Directory** to: `storefront`
+5. Redeploy the project
+
+### Option 2: Manual Redeploy
+1. Delete the current Vercel project
+2. Create a new project specifically for the storefront subdirectory
+3. Point it to the `/storefront` folder
+
+### Option 3: Separate Repository (Alternative)
+Create a separate repository with just the storefront code for cleaner deployment.
+
+## ✅ Expected Result
+After fixing the root directory, the Retail OS storefront should load properly with:
+- Homepage working
+- All routes functioning
+- GraphQL integration active
+
+## 🔗 Correct URLs After Fix
+- **Storefront**: https://unified-commerce.vercel.app (or new URL)
+- **Admin Panel**: To be deployed separately
+
+---
+**Created**: 2025-09-16 22:10 UTC
+**Status**: Ready to apply fix
