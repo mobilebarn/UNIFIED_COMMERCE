@@ -1,28 +1,23 @@
-import { 
-  initialize, 
-  discoverReaders, 
-  connectBluetoothReader,
-  connectInternetReader,
-  createPaymentIntent,
-  collectPaymentMethod,
-  processPayment,
-  Reader,
-  Terminal,
-  PaymentIntent,
-  DiscoveryConfiguration,
-  ConnectionConfiguration,
-  PaymentIntentParameters,
-  CollectConfiguration
-} from '@stripe/stripe-terminal-react-native';
+// Mock Stripe Terminal Service for development
+// In production, this would be replaced with actual Stripe Terminal SDK integration
 
 export interface PaymentResult {
   success: boolean;
-  paymentIntent?: PaymentIntent;
+  paymentIntent?: any;
   error?: string;
 }
 
 export interface ReaderInfo {
   id: string;
+  label?: string;
+  serialNumber: string;
+  deviceType: string;
+  batteryLevel?: number;
+  isCharging?: boolean;
+}
+
+export interface Reader {
+  id?: string;
   label?: string;
   serialNumber: string;
   deviceType: string;
@@ -43,12 +38,11 @@ class StripeTerminalService {
         return true;
       }
 
-      await initialize({
-        logLevel: 'verbose', // Use 'none' in production
-      });
-
+      // Mock initialization
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       this.isInitialized = true;
-      console.log('Stripe Terminal initialized successfully');
+      console.log('Stripe Terminal initialized successfully (Mock)');
       return true;
     } catch (error) {
       console.error('Failed to initialize Stripe Terminal:', error);
@@ -65,16 +59,30 @@ class StripeTerminalService {
         throw new Error('Stripe Terminal not initialized');
       }
 
-      const config: DiscoveryConfiguration = {
-        discoveryMethod: type === 'bluetooth' ? 'bluetoothScan' : 'internet',
-        simulated: __DEV__, // Use simulated readers in development
-      };
-
-      console.log('Discovering readers...');
-      const { readers } = await discoverReaders(config);
-      console.log(`Found ${readers.length} readers`);
+      // Mock discovery - return simulated readers
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      return readers;
+      const mockReaders: Reader[] = [
+        {
+          id: 'mock_reader_1',
+          label: 'Simulated Card Reader',
+          serialNumber: 'MOCK-12345',
+          deviceType: 'bluetoothLE',
+          batteryLevel: 0.85,
+          isCharging: false,
+        },
+        {
+          id: 'mock_reader_2',
+          label: 'Test Terminal',
+          serialNumber: 'MOCK-67890',
+          deviceType: 'bluetoothLE',
+          batteryLevel: 0.92,
+          isCharging: true,
+        },
+      ];
+
+      console.log(`Found ${mockReaders.length} readers (Mock)`);
+      return mockReaders;
     } catch (error) {
       console.error('Failed to discover readers:', error);
       return [];
@@ -90,20 +98,11 @@ class StripeTerminalService {
         throw new Error('Stripe Terminal not initialized');
       }
 
-      const config: ConnectionConfiguration = {
-        locationId: locationId || 'tml_FakeLocationForDevelopment', // Use real location ID in production
-      };
-
-      let connectedReader: Reader;
-
-      if (reader.deviceType === 'bluetoothLE') {
-        connectedReader = await connectBluetoothReader(reader, config);
-      } else {
-        connectedReader = await connectInternetReader(reader, config);
-      }
-
-      this.connectedReader = connectedReader;
-      console.log('Successfully connected to reader:', connectedReader.serialNumber);
+      // Mock connection
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      this.connectedReader = reader;
+      console.log('Successfully connected to reader (Mock):', reader.serialNumber);
       return true;
     } catch (error) {
       console.error('Failed to connect to reader:', error);
@@ -127,45 +126,29 @@ class StripeTerminalService {
       // Convert amount to cents
       const amountInCents = Math.round(amount * 100);
 
-      // Create payment intent
-      const paymentIntentParams: PaymentIntentParameters = {
+      console.log('Creating payment intent for amount (Mock):', amountInCents);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      console.log('Collecting payment method (Mock)...');
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      console.log('Processing payment (Mock)...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Simulate successful payment
+      const mockPaymentIntent = {
+        id: 'pi_mock_' + Date.now(),
         amount: amountInCents,
         currency: currency.toLowerCase(),
-        paymentMethodTypes: ['card_present'],
-        captureMethod: 'automatic',
+        status: 'succeeded',
+        created: Date.now() / 1000,
       };
 
-      console.log('Creating payment intent for amount:', amountInCents);
-      const { paymentIntent } = await createPaymentIntent(paymentIntentParams);
-
-      // Collect payment method
-      const collectConfig: CollectConfiguration = {
-        skipTipping: true, // Can be configured based on business needs
+      console.log('Payment succeeded (Mock)!');
+      return {
+        success: true,
+        paymentIntent: mockPaymentIntent,
       };
-
-      console.log('Collecting payment method...');
-      const { paymentIntent: collectedPaymentIntent } = await collectPaymentMethod(
-        paymentIntent,
-        collectConfig
-      );
-
-      // Process payment
-      console.log('Processing payment...');
-      const { paymentIntent: processedPaymentIntent } = await processPayment(collectedPaymentIntent);
-
-      if (processedPaymentIntent.status === 'succeeded') {
-        console.log('Payment succeeded!');
-        return {
-          success: true,
-          paymentIntent: processedPaymentIntent,
-        };
-      } else {
-        console.log('Payment failed with status:', processedPaymentIntent.status);
-        return {
-          success: false,
-          error: `Payment failed with status: ${processedPaymentIntent.status}`,
-        };
-      }
     } catch (error) {
       console.error('Payment processing failed:', error);
       return {
@@ -199,9 +182,9 @@ class StripeTerminalService {
   async disconnectReader(): Promise<boolean> {
     try {
       if (this.connectedReader) {
-        // The SDK handles disconnection automatically
+        await new Promise(resolve => setTimeout(resolve, 1000));
         this.connectedReader = null;
-        console.log('Disconnected from reader');
+        console.log('Disconnected from reader (Mock)');
       }
       return true;
     } catch (error) {

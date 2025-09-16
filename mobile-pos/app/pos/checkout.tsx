@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, Modal } from 'react-native';
 import { useMutation, useQuery } from '@apollo/client';
 import { GET_CART_BY_SESSION, CREATE_PAYMENT, CAPTURE_PAYMENT } from '../../graphql';
 import { localStorage } from '../../utils/storage';
+import CardReaderScreen from '../../components/CardReaderScreen';
+import ReceiptGenerator, { ReceiptData } from '../../components/ReceiptGenerator';
+import stripeTerminalService, { ReaderInfo } from '../../services/StripeTerminalService';
+import transactionHistoryService, { Transaction } from '../../services/TransactionHistoryService';
 
 export default function CheckoutScreen() {
   const [paymentMethod, setPaymentMethod] = useState('card');
@@ -11,6 +15,10 @@ export default function CheckoutScreen() {
   const [cvv, setCvv] = useState('');
   const [cashAmount, setCashAmount] = useState('');
   const [processing, setProcessing] = useState(false);
+  const [showCardReader, setShowCardReader] = useState(false);
+  const [connectedReader, setConnectedReader] = useState<ReaderInfo | null>(null);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
 
   // Get cart data
   const sessionId = localStorage.getItem('posSessionId') || 'session_' + Date.now();
@@ -46,7 +54,7 @@ export default function CheckoutScreen() {
   const cartItems = cart?.lineItems || [];
 
   // Calculate subtotal
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotal = cartItems.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
   
   // Calculate tax (assuming 8.5% tax rate)
   const tax = subtotal * 0.085;
@@ -54,59 +62,111 @@ export default function CheckoutScreen() {
   // Calculate total
   const total = subtotal + tax;
 
-  // Handle payment processing
+  // Generate receipt data
+  const generateReceiptData = (paymentMethod: string, transactionId?: string, cashReceived?: number): ReceiptData => {
+    return {
+      id: 'RCP_' + Date.now(),
+      timestamp: new Date(),
+      items: cartItems.map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price
+      })),
+      subtotal,
+      tax,
+      total,
+      paymentMethod,
+      transactionId,
+      cashReceived,
+      change: cashReceived ? cashReceived - total : undefined
+    };
+  };
+
+  // Save transaction and generate receipt
+  const completeTransaction = (paymentMethod: string, transactionId?: string, cashReceived?: number) => {
+    const transaction: Transaction = {
+      id: 'TXN_' + Date.now(),
+      timestamp: new Date(),
+      items: cartItems.map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price
+      })),
+      subtotal,
+      tax,
+      total,
+      paymentMethod,
+      transactionId,
+      cashReceived,
+      change: cashReceived ? cashReceived - total : undefined,
+      status: 'completed'
+    };
+    
+    // Save transaction to history
+    transactionHistoryService.addTransaction(transaction);
+    
+    // Generate receipt
+    const receipt = generateReceiptData(paymentMethod, transactionId, cashReceived);
+    setReceiptData(receipt);
+    setShowReceipt(true);
+  };
+
+  // Handle card payment with Stripe Terminal
+  const handleCardPayment = async () => {
+    if (!connectedReader) {
+      setShowCardReader(true);
+      return;
+    }
+
+    setProcessing(true);
+    try {
+      const result = await stripeTerminalService.processPayment(total);
+      
+      if (result.success) {
+        completeTransaction('Card', result.paymentIntent?.id);
+      } else {
+        Alert.alert('Payment Failed', result.error || 'Card payment failed. Please try again.');
+      }
+    } catch (error) {
+      Alert.alert('Payment Error', 'Failed to process card payment. Please try again.');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // Handle cash payment
+  const handleCashPayment = async () => {
+    const cashAmountValue = parseFloat(cashAmount);
+    if (isNaN(cashAmountValue) || cashAmountValue < total) {
+      Alert.alert('Invalid Amount', 'Please enter a valid cash amount that covers the total.');
+      return;
+    }
+
+    const change = cashAmountValue - total;
+    completeTransaction('Cash', undefined, cashAmountValue);
+  };
+
+  // Handle payment processing based on selected method
   const handlePayment = async () => {
     if (!cart) {
       Alert.alert('Error', 'No cart found');
       return;
     }
 
-    setProcessing(true);
-
-    try {
-      // Create payment record
-      const { data: paymentData } = await createPayment({
-        variables: {
-          input: {
-            merchantId: 'merchant_1', // In a real app, this would come from auth context
-            amount: total,
-            currency: 'USD',
-            paymentMethodId: 'pm_card', // This would be the actual payment method ID
-            description: `POS payment for cart ${cart.id}`
-          }
-        }
-      });
-
-      const paymentId = paymentData.createPayment.id;
-
-      // Capture the payment (in a real app, this would connect to a payment processor)
-      await capturePayment({
-        variables: {
-          id: paymentId,
-          amount: total
-        }
-      });
-
-      // Show success message
-      Alert.alert(
-        'Payment Successful',
-        `Payment processed successfully! Total: $${total.toFixed(2)}`,
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              // Clear cart and navigate to receipt or new transaction
-              // This would be implemented based on your navigation setup
-            }
-          }
-        ]
-      );
-    } catch (error) {
-      Alert.alert('Payment Error', 'Failed to process payment. Please try again.');
-      console.error(error);
-    } finally {
-      setProcessing(false);
+    if (paymentMethod === 'card') {
+      await handleCardPayment();
+    } else if (paymentMethod === 'cash') {
+      await handleCashPayment();
+    } else {
+      Alert.alert('Payment Method', 'Please select a payment method');
     }
+  };
+
+  const onReaderConnected = (readerInfo: ReaderInfo) => {
+    setConnectedReader(readerInfo);
+    setShowCardReader(false);
   };
 
   return (
@@ -116,7 +176,7 @@ export default function CheckoutScreen() {
       {/* Order Summary */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Order Summary</Text>
-        {cartItems.map(item => (
+        {cartItems.map((item: any) => (
           <View key={item.id} style={styles.cartItem}>
             <View style={styles.itemInfo}>
               <Text style={styles.itemName}>{item.name}</Text>
@@ -171,30 +231,26 @@ export default function CheckoutScreen() {
         
         {paymentMethod === 'card' && (
           <View style={styles.cardForm}>
-            <TextInput
-              style={styles.input}
-              placeholder="Card Number"
-              value={cardNumber}
-              onChangeText={setCardNumber}
-              keyboardType="numeric"
-            />
-            <View style={styles.cardDetails}>
-              <TextInput
-                style={[styles.input, styles.halfInput]}
-                placeholder="MM/YY"
-                value={expiryDate}
-                onChangeText={setExpiryDate}
-                keyboardType="numeric"
-              />
-              <TextInput
-                style={[styles.input, styles.halfInput]}
-                placeholder="CVV"
-                value={cvv}
-                onChangeText={setCvv}
-                keyboardType="numeric"
-                secureTextEntry
-              />
-            </View>
+            {connectedReader ? (
+              <View style={styles.readerStatus}>
+                <Text style={styles.readerStatusText}>
+                  ✓ Connected: {connectedReader.label || connectedReader.serialNumber}
+                </Text>
+                <TouchableOpacity 
+                  style={styles.changeReaderButton}
+                  onPress={() => setShowCardReader(true)}
+                >
+                  <Text style={styles.changeReaderText}>Change Reader</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity 
+                style={styles.setupReaderButton}
+                onPress={() => setShowCardReader(true)}
+              >
+                <Text style={styles.setupReaderText}>Set Up Card Reader</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
         
@@ -229,6 +285,45 @@ export default function CheckoutScreen() {
           {processing ? 'Processing...' : `Process Payment - $${total.toFixed(2)}`}
         </Text>
       </TouchableOpacity>
+      
+      {/* Card Reader Modal */}
+      <Modal
+        visible={showCardReader}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowCardReader(false)}
+      >
+        <CardReaderScreen
+          onReaderConnected={onReaderConnected}
+          onClose={() => setShowCardReader(false)}
+        />
+      </Modal>
+      
+      {/* Receipt Modal */}
+      <Modal
+        visible={showReceipt}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowReceipt(false)}
+      >
+        {receiptData && (
+          <ReceiptGenerator
+            receiptData={receiptData}
+            onClose={() => {
+              setShowReceipt(false);
+              setReceiptData(null);
+              // Clear cart and reset session
+              // This would be implemented based on your navigation setup
+            }}
+            onPrint={() => {
+              console.log('Print receipt');
+            }}
+            onShare={() => {
+              console.log('Share receipt');
+            }}
+          />
+        )}
+      </Modal>
     </ScrollView>
   );
 }
@@ -383,6 +478,45 @@ const styles = StyleSheet.create({
   processButtonText: {
     color: '#fff',
     fontSize: 18,
+    fontWeight: 'bold',
+  },
+  readerStatus: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 15,
+    backgroundColor: '#e8f5e9',
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  readerStatusText: {
+    fontSize: 16,
+    color: '#2e7d32',
+    fontWeight: 'bold',
+  },
+  changeReaderButton: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#2e7d32',
+  },
+  changeReaderText: {
+    color: '#2e7d32',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  setupReaderButton: {
+    backgroundColor: '#2e7d32',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  setupReaderText: {
+    color: '#fff',
+    fontSize: 16,
     fontWeight: 'bold',
   },
 });

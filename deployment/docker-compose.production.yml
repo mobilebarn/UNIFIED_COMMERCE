@@ -1,0 +1,298 @@
+version: '3.8'
+
+# Retail OS - Production Docker Compose
+# Use this for quick local/cloud deployment testing
+
+services:
+  # Frontend Applications
+  storefront:
+    build:
+      context: ../storefront
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_GRAPHQL_ENDPOINT=http://gateway:4000/graphql
+      - NEXT_PUBLIC_APP_NAME=Retail OS
+    depends_on:
+      - gateway
+    networks:
+      - retail-os
+
+  admin-panel:
+    build:
+      context: ../admin-panel
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+      - REACT_APP_GRAPHQL_ENDPOINT=http://gateway:4000/graphql
+      - REACT_APP_APP_NAME=Retail OS Admin
+    depends_on:
+      - gateway
+    networks:
+      - retail-os
+
+  mobile-pos:
+    build:
+      context: ../mobile-pos
+      dockerfile: Dockerfile.web
+    ports:
+      - "3002:3000"
+    environment:
+      - NODE_ENV=production
+      - EXPO_PUBLIC_GRAPHQL_ENDPOINT=http://gateway:4000/graphql
+      - EXPO_PUBLIC_APP_NAME=Retail OS POS
+    depends_on:
+      - gateway
+    networks:
+      - retail-os
+
+  # GraphQL Federation Gateway
+  gateway:
+    build:
+      context: ../backend/graphql-federation-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=production
+      - IDENTITY_SERVICE_URL=http://identity-service:8080/graphql
+      - MERCHANT_SERVICE_URL=http://merchant-service:8081/graphql
+      - PRODUCT_SERVICE_URL=http://product-service:8082/graphql
+      - INVENTORY_SERVICE_URL=http://inventory-service:8083/graphql
+      - ORDER_SERVICE_URL=http://order-service:8084/graphql
+      - CART_SERVICE_URL=http://cart-service:8085/graphql
+      - PAYMENT_SERVICE_URL=http://payment-service:8086/graphql
+      - PROMOTION_SERVICE_URL=http://promotion-service:8087/graphql
+      - ANALYTICS_SERVICE_URL=http://analytics-service:8088/graphql
+    depends_on:
+      - identity-service
+      - merchant-service
+      - product-service
+      - inventory-service
+      - order-service
+      - cart-service
+      - payment-service
+      - promotion-service
+      - analytics-service
+    networks:
+      - retail-os
+
+  # Backend Microservices
+  identity-service:
+    build:
+      context: ../backend/identity-service
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/identity_service
+      - JWT_SECRET=your-production-jwt-secret-here
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - retail-os
+
+  merchant-service:
+    build:
+      context: ../backend/merchant-account-service
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/merchant_service
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - retail-os
+
+  product-service:
+    build:
+      context: ../backend/product-catalog-service
+      dockerfile: Dockerfile
+    environment:
+      - MONGODB_URL=mongodb://mongodb:mongodb@mongodb:27017/product_catalog
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - retail-os
+
+  inventory-service:
+    build:
+      context: ../backend/inventory-service
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/inventory_service
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - retail-os
+
+  order-service:
+    build:
+      context: ../backend/order-service
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/order_service
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - retail-os
+
+  cart-service:
+    build:
+      context: ../backend/cart-checkout-service
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/cart_service
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - retail-os
+
+  payment-service:
+    build:
+      context: ../backend/payments-service
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/payment_service
+      - REDIS_URL=redis://redis:6379
+      - STRIPE_SECRET_KEY=sk_test_your_stripe_key_here
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - retail-os
+
+  promotion-service:
+    build:
+      context: ../backend/promotions-service
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/promotion_service
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - retail-os
+
+  analytics-service:
+    build:
+      context: ../backend/analytics-service
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/analytics_service
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - retail-os
+
+  # Infrastructure Services
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: retail_os
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../scripts/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - retail-os
+
+  mongodb:
+    image: mongo:7.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongodb
+      MONGO_INITDB_ROOT_PASSWORD: mongodb
+      MONGO_INITDB_DATABASE: product_catalog
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - retail-os
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --requirepass redis
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - retail-os
+
+  # Monitoring (Optional)
+  prometheus:
+    image: prom/prometheus:latest
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - retail-os
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=admin
+    ports:
+      - "3003:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - retail-os
+
+  # Load Balancer / Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - storefront
+      - admin-panel
+      - mobile-pos
+      - gateway
+    networks:
+      - retail-os
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  retail-os:
+    driver: bridge

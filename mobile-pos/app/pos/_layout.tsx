@@ -1,6 +1,7 @@
 import React from 'react';
-import { Stack, Text, TouchableOpacity } from 'expo-router';
+import { Stack } from 'expo-router';
 import { useRouter } from 'expo-router';
+import { Text, TouchableOpacity, View } from 'react-native';
 
 export default function POSLayout() {
   const router = useRouter();
@@ -20,12 +21,20 @@ export default function POSLayout() {
             fontWeight: 'bold',
           },
           headerRight: () => (
-            <TouchableOpacity 
-              onPress={() => router.push('/pos/checkout')}
-              style={{ padding: 10 }}
-            >
-              <Text style={{ color: '#fff', fontWeight: 'bold' }}>Checkout</Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row' }}>
+              <TouchableOpacity 
+                onPress={() => router.push('/pos/reports')}
+                style={{ padding: 10, marginRight: 10 }}
+              >
+                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Reports</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={() => router.push('/pos/checkout')}
+                style={{ padding: 10 }}
+              >
+                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Checkout</Text>
+              </TouchableOpacity>
+            </View>
           ),
         }} 
       />
@@ -41,7 +50,20 @@ export default function POSLayout() {
           headerTitleStyle: {
             fontWeight: 'bold',
           },
-          headerBackTitleVisible: false,
+        }} 
+      />
+      <Stack.Screen 
+        name="reports" 
+        options={{ 
+          title: 'Reports & Analytics',
+          headerShown: true,
+          headerStyle: {
+            backgroundColor: '#2e7d32',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
         }} 
       />
     </Stack>

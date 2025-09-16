@@ -1,0 +1,24 @@
+{
+  "name": "retail-os-pos",
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "env": {
+    "EXPO_PUBLIC_APP_NAME": "Retail OS POS",
+    "EXPO_PUBLIC_GRAPHQL_ENDPOINT": "https://retail-os-api.up.railway.app/graphql"
+  },
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "buildCommand": "npx expo export -p web"
+}

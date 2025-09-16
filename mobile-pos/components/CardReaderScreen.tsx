@@ -8,10 +8,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import * as StripeTerminal from '@stripe/stripe-terminal-react-native';
-import stripeTerminalService, { ReaderInfo } from '../services/StripeTerminalService';
-
-type StripeReader = StripeTerminal.Reader;
+import stripeTerminalService, { ReaderInfo, Reader } from '../services/StripeTerminalService';
 
 interface CardReaderScreenProps {
   onReaderConnected: (readerInfo: ReaderInfo) => void;
@@ -22,7 +19,7 @@ export default function CardReaderScreen({ onReaderConnected, onClose }: CardRea
   const [isInitializing, setIsInitializing] = useState(false);
   const [isDiscovering, setIsDiscovering] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [readers, setReaders] = useState<any[]>([]);
+  const [readers, setReaders] = useState<Reader[]>([]);
   const [connectedReader, setConnectedReader] = useState<ReaderInfo | null>(null);
 
   useEffect(() => {
@@ -68,7 +65,7 @@ export default function CardReaderScreen({ onReaderConnected, onClose }: CardRea
     }
   };
 
-  const connectToReader = async (reader: any) => {
+  const connectToReader = async (reader: Reader) => {
     setIsConnecting(true);
     try {
       const connected = await stripeTerminalService.connectReader(reader);
@@ -99,7 +96,7 @@ export default function CardReaderScreen({ onReaderConnected, onClose }: CardRea
     }
   };
 
-  const renderReader = ({ item }: { item: any }) => (
+  const renderReader = ({ item }: { item: Reader }) => (
     <TouchableOpacity
       style={styles.readerItem}
       onPress={() => connectToReader(item)}

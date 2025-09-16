@@ -1,0 +1,23 @@
+{
+  "name": "retail-os-admin",
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build"
+      }
+    }
+  ],
+  "env": {
+    "REACT_APP_APP_NAME": "Retail OS Admin",
+    "REACT_APP_GRAPHQL_ENDPOINT": "https://retail-os-api.up.railway.app/graphql"
+  },
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}
