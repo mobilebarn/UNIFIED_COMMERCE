@@ -1,13 +1,13 @@
 'use client';
 
-import { useQuery } from '@apollo/client';
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useQuery } from '@apollo/client';
 import { ProductCard } from '@/components/ProductCard';
 import { GET_PRODUCTS } from '@/graphql/queries';
 import type { Product } from '@/graphql/queries';
 
-export default function SearchResultsPage() {
+function SearchResults() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || '';
@@ -157,5 +157,25 @@ export default function SearchResultsPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+function SearchLoadingFallback() {
+  return (
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gray-900 mb-8">Loading search results...</h1>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function SearchResultsPage() {
+  return (
+    <Suspense fallback={<SearchLoadingFallback />}>
+      <SearchResults />
+    </Suspense>
   );
 }
