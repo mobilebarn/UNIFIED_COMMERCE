@@ -98,7 +98,16 @@ export default function Products() {
   };
 
   const getProductStock = (product: Product) => {
-    return product.variants?.reduce((sum, variant) => sum + (variant.inventory?.quantity || 0), 0) || 0;
+    return product.variants?.reduce((sum, variant) => {
+      if (!variant.inventory) return sum;
+      
+      // Handle both array and object types for inventory
+      if (Array.isArray(variant.inventory)) {
+        return sum + variant.inventory.reduce((total, item) => total + ((item as any).quantity || 0), 0);
+      } else {
+        return sum + ((variant.inventory as any).quantity || 0);
+      }
+    }, 0) || 0;
   }
 
   const getStockStatus = (stockLevel: number) => {

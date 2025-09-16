@@ -34,7 +34,7 @@ const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) 
     console.error(`Network error: ${networkError}`);
     
     // Handle authentication errors
-    if (networkError.statusCode === 401) {
+    if ((networkError as any)?.statusCode === 401) {
       localStorage.removeItem('token');
       window.location.href = '/login';
     }
