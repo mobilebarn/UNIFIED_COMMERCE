@@ -84,6 +84,7 @@ export function CartProvider({ children }: CartProviderProps) {
   };
 
   // Alias for getCartTotal (for backwards compatibility)
+  // This method ensures the cart page can calculate total price
   const getTotalPrice = () => {
     return getCartTotal();
   };
