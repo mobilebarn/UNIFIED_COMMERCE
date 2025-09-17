@@ -1,6 +1,6 @@
 module unified-commerce/services/inventory
 
-go 1.25.0
+go 1.21
 
 replace unified-commerce/services/shared => ../shared
 
