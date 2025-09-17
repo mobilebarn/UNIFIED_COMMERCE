@@ -3,8 +3,8 @@ module retail-os
 go 1.21
 
 require (
-	github.com/99designs/gqlgen v0.17.78
-	github.com/vektah/gqlparser/v2 v2.5.30
+	github.com/99designs/gqlgen v0.17.45
+	github.com/vektah/gqlparser/v2 v2.5.10
 )
 
 require (

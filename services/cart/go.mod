@@ -3,11 +3,11 @@ module unified-commerce/services/cart
 go 1.21
 
 require (
-	github.com/99designs/gqlgen v0.17.78
+	github.com/99designs/gqlgen v0.17.45
 	github.com/gin-gonic/gin v1.10.1
 	github.com/go-playground/validator/v10 v10.20.0
 	github.com/google/uuid v1.6.0
-	github.com/vektah/gqlparser/v2 v2.5.30
+	github.com/vektah/gqlparser/v2 v2.5.10
 	gorm.io/gorm v1.30.2
 	unified-commerce/services/shared v0.0.0
 )

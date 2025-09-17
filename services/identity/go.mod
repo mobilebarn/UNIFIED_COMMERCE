@@ -3,12 +3,12 @@ module unified-commerce/services/identity
 go 1.21
 
 require (
-	github.com/99designs/gqlgen v0.17.78
+	github.com/99designs/gqlgen v0.17.45
 	github.com/gin-gonic/gin v1.10.1
 	github.com/go-playground/validator/v10 v10.27.0
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/stretchr/testify v1.11.1
-	github.com/vektah/gqlparser/v2 v2.5.30
+	github.com/vektah/gqlparser/v2 v2.5.10
 	golang.org/x/crypto v0.41.0
 	gorm.io/gorm v1.30.2
 	unified-commerce/services/shared v0.0.0-00010101000000-000000000000

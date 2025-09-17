@@ -3,9 +3,9 @@ module retail-os/services/analytics
 go 1.21
 
 require (
-	github.com/99designs/gqlgen v0.17.78
+	github.com/99designs/gqlgen v0.17.45
 	github.com/gin-gonic/gin v1.10.1
-	github.com/vektah/gqlparser/v2 v2.5.30
+	github.com/vektah/gqlparser/v2 v2.5.10
 	go.mongodb.org/mongo-driver v1.17.4
 	retail-os/services/shared v0.0.0
 )
