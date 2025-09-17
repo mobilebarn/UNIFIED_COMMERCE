@@ -16,8 +16,8 @@ RUN go mod download
 # Copy source code
 COPY . .
 
-# Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o product-catalog ./services/product-catalog/cmd/server
+# Build the application (corrected path)
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o product-catalog ./cmd/server
 
 # Final stage
 FROM alpine:latest
@@ -29,7 +29,7 @@ RUN apk --no-cache add ca-certificates tzdata
 RUN addgroup -g 1001 -S appgroup && \
     adduser -u 1001 -S appuser -G appgroup
 
-WORKDIR /root/
+WORKDIR /app
 
 # Copy the binary from builder stage
 COPY --from=builder /app/product-catalog .
@@ -38,7 +38,7 @@ COPY --from=builder /app/product-catalog .
 RUN mkdir -p uploads && chown -R appuser:appgroup uploads
 
 # Change ownership to non-root user
-RUN chown -R appuser:appgroup /root/
+RUN chown -R appuser:appgroup /app/
 
 # Switch to non-root user
 USER appuser

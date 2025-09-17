@@ -389,36 +389,6 @@ func (r *transactionResolver) UpdatedAt(ctx context.Context, obj *models.Transac
 	panic(fmt.Errorf("not implemented: UpdatedAt - updatedAt"))
 }
 
-// Kind is the resolver for the kind field.
-func (r *transactionResolver) Kind(ctx context.Context, obj *models.Transaction) (TransactionKind, error) {
-	panic(fmt.Errorf("not implemented: Kind - kind"))
-}
-
-// PaymentMethodID is the resolver for the paymentMethodId field.
-func (r *transactionResolver) PaymentMethodID(ctx context.Context, obj *models.Transaction) (*string, error) {
-	panic(fmt.Errorf("not implemented: PaymentMethodID - paymentMethodId"))
-}
-
-// Street1 is the resolver for the street1 field.
-func (r *addressInputResolver) Street1(ctx context.Context, obj *models.AddressInput, data *string) error {
-	panic(fmt.Errorf("not implemented: Street1 - street1"))
-}
-
-// Street2 is the resolver for the street2 field.
-func (r *addressInputResolver) Street2(ctx context.Context, obj *models.AddressInput, data *string) error {
-	panic(fmt.Errorf("not implemented: Street2 - street2"))
-}
-
-// State is the resolver for the state field.
-func (r *addressInputResolver) State(ctx context.Context, obj *models.AddressInput, data *string) error {
-	panic(fmt.Errorf("not implemented: State - state"))
-}
-
-// PostalCode is the resolver for the postalCode field.
-func (r *addressInputResolver) PostalCode(ctx context.Context, obj *models.AddressInput, data *string) error {
-	panic(fmt.Errorf("not implemented: PostalCode - postalCode"))
-}
-
 // Address returns AddressResolver implementation.
 func (r *Resolver) Address() AddressResolver { return &addressResolver{r} }
 
@@ -440,9 +410,6 @@ func (r *Resolver) Refund() RefundResolver { return &refundResolver{r} }
 // Transaction returns TransactionResolver implementation.
 func (r *Resolver) Transaction() TransactionResolver { return &transactionResolver{r} }
 
-// AddressInput returns AddressInputResolver implementation.
-func (r *Resolver) AddressInput() AddressInputResolver { return &addressInputResolver{r} }
-
 type addressResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type paymentResolver struct{ *Resolver }
@@ -450,7 +417,6 @@ type paymentMethodResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type refundResolver struct{ *Resolver }
 type transactionResolver struct{ *Resolver }
-type addressInputResolver struct{ *Resolver }
 
 // !!! WARNING !!!
 // The code below was going to be deleted when updating resolvers. It has been copied here so you have
@@ -459,7 +425,24 @@ type addressInputResolver struct{ *Resolver }
 //    it when you're done.
 //  - You have helper methods in this file. Move them out to keep these resolver files clean.
 /*
-	func (r *addressResolver) ID(ctx context.Context, obj *models.Address) (string, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	func (r *transactionResolver) Kind(ctx context.Context, obj *models.Transaction) (TransactionKind, error) {
+	panic(fmt.Errorf("not implemented: Kind - kind"))
 }
+func (r *transactionResolver) PaymentMethodID(ctx context.Context, obj *models.Transaction) (*string, error) {
+	panic(fmt.Errorf("not implemented: PaymentMethodID - paymentMethodId"))
+}
+func (r *addressInputResolver) Street1(ctx context.Context, obj *models.AddressInput, data *string) error {
+	panic(fmt.Errorf("not implemented: Street1 - street1"))
+}
+func (r *addressInputResolver) Street2(ctx context.Context, obj *models.AddressInput, data *string) error {
+	panic(fmt.Errorf("not implemented: Street2 - street2"))
+}
+func (r *addressInputResolver) State(ctx context.Context, obj *models.AddressInput, data *string) error {
+	panic(fmt.Errorf("not implemented: State - state"))
+}
+func (r *addressInputResolver) PostalCode(ctx context.Context, obj *models.AddressInput, data *string) error {
+	panic(fmt.Errorf("not implemented: PostalCode - postalCode"))
+}
+func (r *Resolver) AddressInput() AddressInputResolver { return &addressInputResolver{r} }
+type addressInputResolver struct{ *Resolver }
 */

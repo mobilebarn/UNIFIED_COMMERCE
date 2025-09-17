@@ -2,19 +2,44 @@
 
 package models
 
+import (
+	"bytes"
+	"fmt"
+	"io"
+	"strconv"
+)
+
+type Address struct {
+	FirstName  *string  `json:"firstName,omitempty"`
+	LastName   *string  `json:"lastName,omitempty"`
+	Company    *string  `json:"company,omitempty"`
+	Street1    *string  `json:"street1,omitempty"`
+	Street2    *string  `json:"street2,omitempty"`
+	City       *string  `json:"city,omitempty"`
+	State      *string  `json:"state,omitempty"`
+	Country    *string  `json:"country,omitempty"`
+	PostalCode *string  `json:"postalCode,omitempty"`
+	Phone      *string  `json:"phone,omitempty"`
+	Latitude   *float64 `json:"latitude,omitempty"`
+	Longitude  *float64 `json:"longitude,omitempty"`
+	Timezone   *string  `json:"timezone,omitempty"`
+}
+
+func (Address) IsEntity() {}
+
 type AddressInput struct {
-	FirstName *string  `json:"firstName,omitempty"`
-	LastName  *string  `json:"lastName,omitempty"`
-	Company   *string  `json:"company,omitempty"`
-	Address1  *string  `json:"address1,omitempty"`
-	Address2  *string  `json:"address2,omitempty"`
-	City      *string  `json:"city,omitempty"`
-	Province  *string  `json:"province,omitempty"`
-	Country   *string  `json:"country,omitempty"`
-	Zip       *string  `json:"zip,omitempty"`
-	Phone     *string  `json:"phone,omitempty"`
-	Latitude  *float64 `json:"latitude,omitempty"`
-	Longitude *float64 `json:"longitude,omitempty"`
+	FirstName  *string  `json:"firstName,omitempty"`
+	LastName   *string  `json:"lastName,omitempty"`
+	Company    *string  `json:"company,omitempty"`
+	Street1    *string  `json:"street1,omitempty"`
+	Street2    *string  `json:"street2,omitempty"`
+	City       *string  `json:"city,omitempty"`
+	State      *string  `json:"state,omitempty"`
+	Country    *string  `json:"country,omitempty"`
+	PostalCode *string  `json:"postalCode,omitempty"`
+	Phone      *string  `json:"phone,omitempty"`
+	Latitude   *float64 `json:"latitude,omitempty"`
+	Longitude  *float64 `json:"longitude,omitempty"`
 }
 
 type CreatePaymentInput struct {
@@ -79,3 +104,387 @@ type User struct {
 }
 
 func (User) IsEntity() {}
+
+type PaymentMethodType string
+
+const (
+	PaymentMethodTypeCreditCard     PaymentMethodType = "CREDIT_CARD"
+	PaymentMethodTypeDebitCard      PaymentMethodType = "DEBIT_CARD"
+	PaymentMethodTypeBankAccount    PaymentMethodType = "BANK_ACCOUNT"
+	PaymentMethodTypeDigitalWallet  PaymentMethodType = "DIGITAL_WALLET"
+	PaymentMethodTypeCryptocurrency PaymentMethodType = "CRYPTOCURRENCY"
+	PaymentMethodTypeGiftCard       PaymentMethodType = "GIFT_CARD"
+	PaymentMethodTypeStoreCredit    PaymentMethodType = "STORE_CREDIT"
+)
+
+var AllPaymentMethodType = []PaymentMethodType{
+	PaymentMethodTypeCreditCard,
+	PaymentMethodTypeDebitCard,
+	PaymentMethodTypeBankAccount,
+	PaymentMethodTypeDigitalWallet,
+	PaymentMethodTypeCryptocurrency,
+	PaymentMethodTypeGiftCard,
+	PaymentMethodTypeStoreCredit,
+}
+
+func (e PaymentMethodType) IsValid() bool {
+	switch e {
+	case PaymentMethodTypeCreditCard, PaymentMethodTypeDebitCard, PaymentMethodTypeBankAccount, PaymentMethodTypeDigitalWallet, PaymentMethodTypeCryptocurrency, PaymentMethodTypeGiftCard, PaymentMethodTypeStoreCredit:
+		return true
+	}
+	return false
+}
+
+func (e PaymentMethodType) String() string {
+	return string(e)
+}
+
+func (e *PaymentMethodType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = PaymentMethodType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid PaymentMethodType", str)
+	}
+	return nil
+}
+
+func (e PaymentMethodType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *PaymentMethodType) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e PaymentMethodType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type PaymentStatus string
+
+const (
+	PaymentStatusPending           PaymentStatus = "PENDING"
+	PaymentStatusAuthorized        PaymentStatus = "AUTHORIZED"
+	PaymentStatusCaptured          PaymentStatus = "CAPTURED"
+	PaymentStatusFailed            PaymentStatus = "FAILED"
+	PaymentStatusCancelled         PaymentStatus = "CANCELLED"
+	PaymentStatusRefunded          PaymentStatus = "REFUNDED"
+	PaymentStatusPartiallyRefunded PaymentStatus = "PARTIALLY_REFUNDED"
+	PaymentStatusVoided            PaymentStatus = "VOIDED"
+	PaymentStatusPartiallyPaid     PaymentStatus = "PARTIALLY_PAID"
+	PaymentStatusPaid              PaymentStatus = "PAID"
+)
+
+var AllPaymentStatus = []PaymentStatus{
+	PaymentStatusPending,
+	PaymentStatusAuthorized,
+	PaymentStatusCaptured,
+	PaymentStatusFailed,
+	PaymentStatusCancelled,
+	PaymentStatusRefunded,
+	PaymentStatusPartiallyRefunded,
+	PaymentStatusVoided,
+	PaymentStatusPartiallyPaid,
+	PaymentStatusPaid,
+}
+
+func (e PaymentStatus) IsValid() bool {
+	switch e {
+	case PaymentStatusPending, PaymentStatusAuthorized, PaymentStatusCaptured, PaymentStatusFailed, PaymentStatusCancelled, PaymentStatusRefunded, PaymentStatusPartiallyRefunded, PaymentStatusVoided, PaymentStatusPartiallyPaid, PaymentStatusPaid:
+		return true
+	}
+	return false
+}
+
+func (e PaymentStatus) String() string {
+	return string(e)
+}
+
+func (e *PaymentStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = PaymentStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid PaymentStatus", str)
+	}
+	return nil
+}
+
+func (e PaymentStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *PaymentStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e PaymentStatus) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type RefundStatus string
+
+const (
+	RefundStatusPending    RefundStatus = "PENDING"
+	RefundStatusProcessing RefundStatus = "PROCESSING"
+	RefundStatusSuccess    RefundStatus = "SUCCESS"
+	RefundStatusFailed     RefundStatus = "FAILED"
+	RefundStatusCancelled  RefundStatus = "CANCELLED"
+)
+
+var AllRefundStatus = []RefundStatus{
+	RefundStatusPending,
+	RefundStatusProcessing,
+	RefundStatusSuccess,
+	RefundStatusFailed,
+	RefundStatusCancelled,
+}
+
+func (e RefundStatus) IsValid() bool {
+	switch e {
+	case RefundStatusPending, RefundStatusProcessing, RefundStatusSuccess, RefundStatusFailed, RefundStatusCancelled:
+		return true
+	}
+	return false
+}
+
+func (e RefundStatus) String() string {
+	return string(e)
+}
+
+func (e *RefundStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = RefundStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid RefundStatus", str)
+	}
+	return nil
+}
+
+func (e RefundStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *RefundStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e RefundStatus) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type TransactionKind string
+
+const (
+	TransactionKindAuthorization TransactionKind = "AUTHORIZATION"
+	TransactionKindCapture       TransactionKind = "CAPTURE"
+	TransactionKindSale          TransactionKind = "SALE"
+	TransactionKindVoid          TransactionKind = "VOID"
+	TransactionKindRefund        TransactionKind = "REFUND"
+)
+
+var AllTransactionKind = []TransactionKind{
+	TransactionKindAuthorization,
+	TransactionKindCapture,
+	TransactionKindSale,
+	TransactionKindVoid,
+	TransactionKindRefund,
+}
+
+func (e TransactionKind) IsValid() bool {
+	switch e {
+	case TransactionKindAuthorization, TransactionKindCapture, TransactionKindSale, TransactionKindVoid, TransactionKindRefund:
+		return true
+	}
+	return false
+}
+
+func (e TransactionKind) String() string {
+	return string(e)
+}
+
+func (e *TransactionKind) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = TransactionKind(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid TransactionKind", str)
+	}
+	return nil
+}
+
+func (e TransactionKind) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *TransactionKind) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e TransactionKind) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type TransactionStatus string
+
+const (
+	TransactionStatusPending    TransactionStatus = "PENDING"
+	TransactionStatusProcessing TransactionStatus = "PROCESSING"
+	TransactionStatusSuccess    TransactionStatus = "SUCCESS"
+	TransactionStatusFailed     TransactionStatus = "FAILED"
+	TransactionStatusCancelled  TransactionStatus = "CANCELLED"
+	TransactionStatusError      TransactionStatus = "ERROR"
+	TransactionStatusFailure    TransactionStatus = "FAILURE"
+)
+
+var AllTransactionStatus = []TransactionStatus{
+	TransactionStatusPending,
+	TransactionStatusProcessing,
+	TransactionStatusSuccess,
+	TransactionStatusFailed,
+	TransactionStatusCancelled,
+	TransactionStatusError,
+	TransactionStatusFailure,
+}
+
+func (e TransactionStatus) IsValid() bool {
+	switch e {
+	case TransactionStatusPending, TransactionStatusProcessing, TransactionStatusSuccess, TransactionStatusFailed, TransactionStatusCancelled, TransactionStatusError, TransactionStatusFailure:
+		return true
+	}
+	return false
+}
+
+func (e TransactionStatus) String() string {
+	return string(e)
+}
+
+func (e *TransactionStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = TransactionStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid TransactionStatus", str)
+	}
+	return nil
+}
+
+func (e TransactionStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *TransactionStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e TransactionStatus) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type TransactionType string
+
+const (
+	TransactionTypeAuthorization TransactionType = "AUTHORIZATION"
+	TransactionTypeCapture       TransactionType = "CAPTURE"
+	TransactionTypeRefund        TransactionType = "REFUND"
+	TransactionTypeVoid          TransactionType = "VOID"
+	TransactionTypeFee           TransactionType = "FEE"
+)
+
+var AllTransactionType = []TransactionType{
+	TransactionTypeAuthorization,
+	TransactionTypeCapture,
+	TransactionTypeRefund,
+	TransactionTypeVoid,
+	TransactionTypeFee,
+}
+
+func (e TransactionType) IsValid() bool {
+	switch e {
+	case TransactionTypeAuthorization, TransactionTypeCapture, TransactionTypeRefund, TransactionTypeVoid, TransactionTypeFee:
+		return true
+	}
+	return false
+}
+
+func (e TransactionType) String() string {
+	return string(e)
+}
+
+func (e *TransactionType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = TransactionType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid TransactionType", str)
+	}
+	return nil
+}
+
+func (e TransactionType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *TransactionType) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e TransactionType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}

@@ -48,7 +48,6 @@ type ResolverRoot interface {
 	Query() QueryResolver
 	Refund() RefundResolver
 	Transaction() TransactionResolver
-	AddressInput() AddressInputResolver
 }
 
 type DirectiveRoot struct {
@@ -301,17 +300,6 @@ type TransactionResolver interface {
 	ProcessedAt(ctx context.Context, obj *models.Transaction) (*string, error)
 	CreatedAt(ctx context.Context, obj *models.Transaction) (string, error)
 	UpdatedAt(ctx context.Context, obj *models.Transaction) (*string, error)
-	Kind(ctx context.Context, obj *models.Transaction) (TransactionKind, error)
-	PaymentMethodID(ctx context.Context, obj *models.Transaction) (*string, error)
-}
-
-type AddressInputResolver interface {
-	Street1(ctx context.Context, obj *models.AddressInput, data *string) error
-	Street2(ctx context.Context, obj *models.AddressInput, data *string) error
-
-	State(ctx context.Context, obj *models.AddressInput, data *string) error
-
-	PostalCode(ctx context.Context, obj *models.AddressInput, data *string) error
 }
 
 type executableSchema struct {
@@ -1351,7 +1339,7 @@ func sourceData(filename string) string {
 
 var sources = []*ast.Source{
 	{Name: "schema.graphql", Input: sourceData("schema.graphql"), BuiltIn: false},
-	{Name: "federation/directives.graphql", Input: `
+	{Name: "../federation/directives.graphql", Input: `
 	directive @authenticated on FIELD_DEFINITION | OBJECT | INTERFACE | SCALAR | ENUM
 	directive @composeDirective(name: String!) repeatable on SCHEMA
 	directive @extends on OBJECT | INTERFACE
@@ -1402,7 +1390,7 @@ var sources = []*ast.Source{
 	scalar federation__Policy
 	scalar federation__Scope
 `, BuiltIn: true},
-	{Name: "federation/entity.graphql", Input: `
+	{Name: "../federation/entity.graphql", Input: `
 # a union of all types that use the @key directive
 union _Entity = Address | Order | Payment | PaymentMethod | Refund | Transaction | User
 
@@ -7632,7 +7620,7 @@ func (ec *executionContext) _Transaction_kind(ctx context.Context, field graphql
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Transaction().Kind(rctx, obj)
+		return obj.Kind, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7644,17 +7632,17 @@ func (ec *executionContext) _Transaction_kind(ctx context.Context, field graphql
 		}
 		return graphql.Null
 	}
-	res := resTmp.(TransactionKind)
+	res := resTmp.(models.TransactionKind)
 	fc.Result = res
-	return ec.marshalNTransactionKind2unifiedᚑcommerceᚋservicesᚋpaymentᚋgraphqlᚐTransactionKind(ctx, field.Selections, res)
+	return ec.marshalNTransactionKind2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐTransactionKind(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Transaction_kind(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Transaction",
 		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type TransactionKind does not have child fields")
 		},
@@ -7676,7 +7664,7 @@ func (ec *executionContext) _Transaction_paymentMethodId(ctx context.Context, fi
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Transaction().PaymentMethodID(rctx, obj)
+		return obj.PaymentMethodID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7685,17 +7673,17 @@ func (ec *executionContext) _Transaction_paymentMethodId(ctx context.Context, fi
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Transaction_paymentMethodId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Transaction",
 		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
 		},
@@ -9878,18 +9866,14 @@ func (ec *executionContext) unmarshalInputAddressInput(ctx context.Context, obj 
 			if err != nil {
 				return it, err
 			}
-			if err = ec.resolvers.AddressInput().Street1(ctx, &it, data); err != nil {
-				return it, err
-			}
+			it.Street1 = data
 		case "street2":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("street2"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			if err = ec.resolvers.AddressInput().Street2(ctx, &it, data); err != nil {
-				return it, err
-			}
+			it.Street2 = data
 		case "city":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("city"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -9903,9 +9887,7 @@ func (ec *executionContext) unmarshalInputAddressInput(ctx context.Context, obj 
 			if err != nil {
 				return it, err
 			}
-			if err = ec.resolvers.AddressInput().State(ctx, &it, data); err != nil {
-				return it, err
-			}
+			it.State = data
 		case "country":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("country"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -9919,9 +9901,7 @@ func (ec *executionContext) unmarshalInputAddressInput(ctx context.Context, obj 
 			if err != nil {
 				return it, err
 			}
-			if err = ec.resolvers.AddressInput().PostalCode(ctx, &it, data); err != nil {
-				return it, err
-			}
+			it.PostalCode = data
 		case "phone":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("phone"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -13006,74 +12986,12 @@ func (ec *executionContext) _Transaction(ctx context.Context, sel ast.SelectionS
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "kind":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Transaction_kind(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
+			out.Values[i] = ec._Transaction_kind(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
 			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "paymentMethodId":
-			field := field
-
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Transaction_paymentMethodId(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			out.Values[i] = ec._Transaction_paymentMethodId(ctx, field, obj)
 		case "payment":
 			out.Values[i] = ec._Transaction_payment(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -13717,37 +13635,23 @@ func (ec *executionContext) marshalNPaymentMethod2ᚖunifiedᚑcommerceᚋservic
 }
 
 func (ec *executionContext) unmarshalNPaymentMethodType2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐPaymentMethodType(ctx context.Context, v any) (models.PaymentMethodType, error) {
-	tmp, err := graphql.UnmarshalString(v)
-	res := models.PaymentMethodType(tmp)
+	var res models.PaymentMethodType
+	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNPaymentMethodType2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐPaymentMethodType(ctx context.Context, sel ast.SelectionSet, v models.PaymentMethodType) graphql.Marshaler {
-	_ = sel
-	res := graphql.MarshalString(string(v))
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
+	return v
 }
 
 func (ec *executionContext) unmarshalNPaymentStatus2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐPaymentStatus(ctx context.Context, v any) (models.PaymentStatus, error) {
-	tmp, err := graphql.UnmarshalString(v)
-	res := models.PaymentStatus(tmp)
+	var res models.PaymentStatus
+	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNPaymentStatus2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐPaymentStatus(ctx context.Context, sel ast.SelectionSet, v models.PaymentStatus) graphql.Marshaler {
-	_ = sel
-	res := graphql.MarshalString(string(v))
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
+	return v
 }
 
 func (ec *executionContext) marshalNRefund2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐRefund(ctx context.Context, sel ast.SelectionSet, v models.Refund) graphql.Marshaler {
@@ -13814,20 +13718,13 @@ func (ec *executionContext) unmarshalNRefundPaymentInput2unifiedᚑcommerceᚋse
 }
 
 func (ec *executionContext) unmarshalNRefundStatus2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐRefundStatus(ctx context.Context, v any) (models.RefundStatus, error) {
-	tmp, err := graphql.UnmarshalString(v)
-	res := models.RefundStatus(tmp)
+	var res models.RefundStatus
+	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNRefundStatus2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐRefundStatus(ctx context.Context, sel ast.SelectionSet, v models.RefundStatus) graphql.Marshaler {
-	_ = sel
-	res := graphql.MarshalString(string(v))
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
+	return v
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v any) (string, error) {
@@ -13860,48 +13757,34 @@ func (ec *executionContext) marshalNTransaction2ᚖunifiedᚑcommerceᚋservices
 	return ec._Transaction(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNTransactionKind2unifiedᚑcommerceᚋservicesᚋpaymentᚋgraphqlᚐTransactionKind(ctx context.Context, v any) (TransactionKind, error) {
-	var res TransactionKind
+func (ec *executionContext) unmarshalNTransactionKind2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐTransactionKind(ctx context.Context, v any) (models.TransactionKind, error) {
+	var res models.TransactionKind
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNTransactionKind2unifiedᚑcommerceᚋservicesᚋpaymentᚋgraphqlᚐTransactionKind(ctx context.Context, sel ast.SelectionSet, v TransactionKind) graphql.Marshaler {
+func (ec *executionContext) marshalNTransactionKind2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐTransactionKind(ctx context.Context, sel ast.SelectionSet, v models.TransactionKind) graphql.Marshaler {
 	return v
 }
 
 func (ec *executionContext) unmarshalNTransactionStatus2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐTransactionStatus(ctx context.Context, v any) (models.TransactionStatus, error) {
-	tmp, err := graphql.UnmarshalString(v)
-	res := models.TransactionStatus(tmp)
+	var res models.TransactionStatus
+	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNTransactionStatus2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐTransactionStatus(ctx context.Context, sel ast.SelectionSet, v models.TransactionStatus) graphql.Marshaler {
-	_ = sel
-	res := graphql.MarshalString(string(v))
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
+	return v
 }
 
 func (ec *executionContext) unmarshalNTransactionType2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐTransactionType(ctx context.Context, v any) (models.TransactionType, error) {
-	tmp, err := graphql.UnmarshalString(v)
-	res := models.TransactionType(tmp)
+	var res models.TransactionType
+	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNTransactionType2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐTransactionType(ctx context.Context, sel ast.SelectionSet, v models.TransactionType) graphql.Marshaler {
-	_ = sel
-	res := graphql.MarshalString(string(v))
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
+	return v
 }
 
 func (ec *executionContext) unmarshalNUpdatePaymentMethodInput2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐUpdatePaymentMethodInput(ctx context.Context, v any) (models.UpdatePaymentMethodInput, error) {
@@ -14568,19 +14451,16 @@ func (ec *executionContext) unmarshalOPaymentStatus2ᚖunifiedᚑcommerceᚋserv
 	if v == nil {
 		return nil, nil
 	}
-	tmp, err := graphql.UnmarshalString(v)
-	res := models.PaymentStatus(tmp)
-	return &res, graphql.ErrorOnPath(ctx, err)
+	var res = new(models.PaymentStatus)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOPaymentStatus2ᚖunifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐPaymentStatus(ctx context.Context, sel ast.SelectionSet, v *models.PaymentStatus) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	_ = sel
-	_ = ctx
-	res := graphql.MarshalString(string(*v))
-	return res
+	return v
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v any) (string, error) {

@@ -245,6 +245,8 @@ type Transaction struct {
 	FailureReason     string                 `json:"failure_reason"`
 	Metadata          map[string]interface{} `json:"metadata" gorm:"type:jsonb"`
 	Description       string                 `json:"description"`
+	Kind              TransactionKind        `json:"kind" gorm:"not null"`
+	PaymentMethodID   string                 `json:"payment_method_id"`
 	ProcessedAt       *time.Time             `json:"processed_at"`
 	CreatedAt         time.Time              `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt         time.Time              `json:"updated_at" gorm:"autoUpdateTime"`
@@ -278,6 +280,17 @@ const (
 	TransactionStatusCancelled  TransactionStatus = "cancelled"
 	TransactionStatusError      TransactionStatus = "error"
 	TransactionStatusFailure    TransactionStatus = "failure"
+)
+
+// TransactionKind represents the kind of transaction
+type TransactionKind string
+
+const (
+	TransactionKindAuthorization TransactionKind = "authorization"
+	TransactionKindCapture       TransactionKind = "capture"
+	TransactionKindSale          TransactionKind = "sale"
+	TransactionKindVoid          TransactionKind = "void"
+	TransactionKindRefund        TransactionKind = "refund"
 )
 
 // BeforeCreate sets up UUID for new records

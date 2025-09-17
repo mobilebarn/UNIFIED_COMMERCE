@@ -193,7 +193,7 @@ func (ec *executionContext) resolveEntity(
 			if err != nil {
 				return nil, fmt.Errorf(`unmarshalling param 7 for findAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode(): %w`, err)
 			}
-			entity, err := ec.resolvers.Entity().FindAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode(ctx, &id0, &id1, &id2, &id3, &id4, &id5, &id6, &id7)
+			entity, err := ec.resolvers.Entity().FindAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode(ctx, id0, id1, id2, id3, id4, id5, id6, id7)
 			if err != nil {
 				return nil, fmt.Errorf(`resolving Entity "Address": %w`, err)
 			}

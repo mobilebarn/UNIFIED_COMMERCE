@@ -1,0 +1,50 @@
+# Frontend applications (already deployed to Vercel)
+frontend/
+apps/
+
+# Docker and infrastructure
+docker/
+k8s/
+infrastructure/
+
+# CI/CD
+.github/
+
+# Node modules
+**/node_modules/
+**/dist/
+**/build/
+
+# Documentation
+docs/
+README.md
+*.md
+
+# Local development
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Temporary files
+tmp/
+temp/
+
+# Scripts that are not needed for deployment
+deploy-*.ps1
+*.ps1
