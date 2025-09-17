@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Railway Environment Variables Generator - Retail OS</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2563eb;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #6b7280;
+            margin-bottom: 30px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+        .btn {
+            background: #2563eb;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .btn:hover {
+            background: #1d4ed8;
+        }
+        .output {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background: #ecfdf5;
+            border-color: #10b981;
+            color: #065f46;
+        }
+        .copy-btn {
+            background: #10b981;
+            margin-top: 10px;
+        }
+        .copy-btn:hover {
+            background: #059669;
+        }
+        .instructions {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f3f4f6;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Railway Environment Variables Generator</h1>
+        <p class="subtitle">Generate all environment variables for your Retail OS GraphQL Gateway</p>
+
+        <div class="instructions">
+            <strong>📋 Quick Setup Instructions:</strong>
+            <div class="step">1. Go to Railway Dashboard → Click any service → Copy the Public Domain URL</div>
+            <div class="step">2. Paste ONE service URL below (example: https://identity-service-production-abc123.up.railway.app)</div>
+            <div class="step">3. Click "Generate All Variables"</div>
+            <div class="step">4. Copy the output and paste into Railway Gateway → Variables tab</div>
+        </div>
+
+        <div class="input-group">
+            <label for="serviceUrl">🔗 Paste ANY Railway service URL from your project:</label>
+            <input 
+                type="text" 
+                id="serviceUrl" 
+                placeholder="https://identity-service-production-abc123.up.railway.app"
+                value=""
+            >
+            <small style="color: #6b7280; margin-top: 5px; display: block;">
+                Just paste any one of your Railway service URLs. I'll generate all the others automatically.
+            </small>
+        </div>
+
+        <button class="btn" onclick="generateVariables()">🎯 Generate All Variables</button>
+
+        <div class="output" id="output" style="display: none;">
+            <!-- Generated variables will appear here -->
+        </div>
+
+        <button class="btn copy-btn" id="copyBtn" style="display: none;" onclick="copyToClipboard()">
+            📋 Copy All Variables
+        </button>
+    </div>
+
+    <script>
+        function generateVariables() {
+            const serviceUrl = document.getElementById('serviceUrl').value.trim();
+            
+            if (!serviceUrl) {
+                alert('Please paste a Railway service URL first!');
+                return;
+            }
+
+            if (!serviceUrl.includes('railway.app')) {
+                alert('Please paste a valid Railway URL (should contain "railway.app")');
+                return;
+            }
+
+            try {
+                // Extract the base pattern from the URL
+                const url = new URL(serviceUrl);
+                const hostname = url.hostname;
+                
+                // Remove the service name part to get the base pattern
+                const parts = hostname.split('-');
+                let basePattern = '';
+                
+                if (parts.length >= 3) {
+                    // Remove the first part (service name) and reconstruct
+                    const baseParts = parts.slice(1); // Remove service name
+                    basePattern = baseParts.join('-');
+                } else {
+                    basePattern = hostname;
+                }
+
+                // Generate all service URLs
+                const services = [
+                    'identity-service',
+                    'cart-service', 
+                    'order-service',
+                    'payment-service',
+                    'inventory-service',
+                    'product-catalog-service',
+                    'promotions-service',
+                    'merchant-account-service'
+                ];
+
+                let envVars = '# === RAILWAY ENVIRONMENT VARIABLES FOR RETAIL OS ===\n';
+                envVars += '# Generated automatically - Copy these to Railway Gateway Variables tab\n\n';
+                
+                envVars += '# === BACKEND SERVICE URLS ===\n';
+                services.forEach(service => {
+                    const serviceUrlGenerated = `https://${service}-${basePattern}/graphql`;
+                    const envVarName = service.toUpperCase().replace('-', '_') + '_URL';
+                    envVars += `${envVarName}=${serviceUrlGenerated}\n`;
+                });
+
+                envVars += '\n# === FRONTEND CORS ORIGINS ===\n';
+                envVars += 'CORS_ORIGINS=https://storefront-eta-six.vercel.app,https://admin-panel-tau-eight.vercel.app\n\n';
+                
+                envVars += '# === ENVIRONMENT ===\n';
+                envVars += 'NODE_ENV=production\n\n';
+                
+                envVars += '# === SECURITY ===\n';
+                envVars += 'JWT_SECRET=retail-os-production-jwt-secret-2024\n\n';
+                
+                envVars += '# === GENERATED FROM ===\n';
+                envVars += `# Source URL: ${serviceUrl}\n`;
+                envVars += `# Generated: ${new Date().toISOString()}\n\n`;
+                
+                envVars += '# 🚀 DEPLOYMENT STEPS:\n';
+                envVars += '# 1. Copy all variables above\n';
+                envVars += '# 2. Go to Railway Dashboard → GraphQL Gateway → Variables\n';
+                envVars += '# 3. Paste each variable (name=value)\n';
+                envVars += '# 4. Deploy the gateway service\n';
+                envVars += '# 5. Check logs for successful connections!';
+
+                const outputDiv = document.getElementById('output');
+                outputDiv.textContent = envVars;
+                outputDiv.style.display = 'block';
+                outputDiv.className = 'output success';
+                
+                document.getElementById('copyBtn').style.display = 'block';
+                
+                // Store for copying
+                window.generatedVars = envVars;
+
+            } catch (error) {
+                alert('Error parsing URL. Please check the URL format and try again.');
+                console.error(error);
+            }
+        }
+
+        function copyToClipboard() {
+            if (window.generatedVars) {
+                navigator.clipboard.writeText(window.generatedVars).then(() => {
+                    const btn = document.getElementById('copyBtn');
+                    const originalText = btn.textContent;
+                    btn.textContent = '✅ Copied!';
+                    btn.style.background = '#059669';
+                    
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.style.background = '#10b981';
+                    }, 2000);
+                }).catch(() => {
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = window.generatedVars;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    alert('Variables copied to clipboard!');
+                });
+            }
+        }
+
+        // Auto-focus the input
+        document.getElementById('serviceUrl').focus();
+    </script>
+</body>
+</html>

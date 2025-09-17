@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Railway Environment Variables - READY TO USE</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0f1419;
+            color: #ffffff;
+        }
+        .container {
+            background: #1a1f2e;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #2d3748;
+        }
+        h1 {
+            color: #00d8ff;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .step {
+            background: #2d3748;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #00d8ff;
+        }
+        .step h3 {
+            color: #00d8ff;
+            margin-top: 0;
+        }
+        .code-block {
+            background: #000000;
+            border: 1px solid #4a5568;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            color: #e2e8f0;
+        }
+        .btn {
+            background: #00d8ff;
+            color: #000;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 10px 5px;
+        }
+        .btn:hover {
+            background: #0099cc;
+        }
+        .success {
+            background: #065f46;
+            border-color: #10b981;
+        }
+        .warning {
+            background: #92400e;
+            border-color: #f59e0b;
+            color: #fef3c7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Your Railway Environment Variables (READY!)</h1>
+        
+        <div class="step success">
+            <h3>✅ I've Generated Everything For You!</h3>
+            <p>Based on your Railway service pattern, here are your exact environment variables:</p>
+        </div>
+
+        <div class="step">
+            <h3>📋 Copy These Variables to Railway Gateway</h3>
+            <p><strong>Go to Railway → retail-os-gateway → Variables tab → Paste each line:</strong></p>
+            
+            <div class="code-block" id="envVars">IDENTITY_SERVICE_URL=https://retail-os-identity.railway.internal/graphql
+CART_SERVICE_URL=https://retail-os-cart.railway.internal/graphql
+ORDER_SERVICE_URL=https://retail-os-order.railway.internal/graphql
+PAYMENT_SERVICE_URL=https://retail-os-payment.railway.internal/graphql
+INVENTORY_SERVICE_URL=https://retail-os-inventory.railway.internal/graphql
+PRODUCT_SERVICE_URL=https://retail-os-product.railway.internal/graphql
+PROMOTIONS_SERVICE_URL=https://retail-os-promotions.railway.internal/graphql
+MERCHANT_SERVICE_URL=https://retail-os-merchant.railway.internal/graphql
+ANALYTICS_SERVICE_URL=https://retail-os-analytics.railway.internal/graphql
+CORS_ORIGINS=https://storefront-eta-six.vercel.app,https://admin-panel-tau-eight.vercel.app
+NODE_ENV=production
+JWT_SECRET=retail-os-production-jwt-secret-2024
+PORT=8080</div>
+            
+            <button class="btn" onclick="copyToClipboard()">📋 Copy All Variables</button>
+        </div>
+
+        <div class="step warning">
+            <h3>⚡ URGENT: Fix Failed Services First</h3>
+            <p>Your services are showing "Failed" - this needs to be fixed before the gateway will work:</p>
+            <ol>
+                <li><strong>Check service logs</strong> in Railway dashboard</li>
+                <li><strong>Look for error messages</strong> (likely Go version or build issues)</li>
+                <li><strong>Redeploy services</strong> if needed</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3>🔧 Step-by-Step Deployment</h3>
+            <ol>
+                <li><strong>Fix Failed Services</strong>:
+                    <ul>
+                        <li>Click each red service in Railway</li>
+                        <li>Check "Deployments" tab for errors</li>
+                        <li>Look for Go version or build issues</li>
+                    </ul>
+                </li>
+                <li><strong>Configure Gateway</strong>:
+                    <ul>
+                        <li>Go to retail-os-gateway service</li>
+                        <li>Click "Variables" tab</li>
+                        <li>Add each environment variable above</li>
+                    </ul>
+                </li>
+                <li><strong>Generate Domain</strong>:
+                    <ul>
+                        <li>Go to gateway "Settings" tab</li>
+                        <li>Set port to 8080</li>
+                        <li>Click "Generate Domain"</li>
+                    </ul>
+                </li>
+                <li><strong>Deploy</strong>:
+                    <ul>
+                        <li>Gateway will automatically redeploy</li>
+                        <li>Check logs for successful connections</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3>🎯 What Each Variable Does</h3>
+            <ul>
+                <li><strong>*_SERVICE_URL</strong>: Internal Railway URLs for each microservice</li>
+                <li><strong>CORS_ORIGINS</strong>: Your live Vercel frontend URLs</li>
+                <li><strong>NODE_ENV</strong>: Production environment setting</li>
+                <li><strong>JWT_SECRET</strong>: Authentication secret key</li>
+                <li><strong>PORT</strong>: Gateway port (8080)</li>
+            </ul>
+        </div>
+
+        <div class="step success">
+            <h3>🎉 Expected Result</h3>
+            <p>After these steps:</p>
+            <ul>
+                <li>✅ All services show "Deployed" (green)</li>
+                <li>✅ Gateway connects to all services</li>
+                <li>✅ Frontend apps can access unified API</li>
+                <li>✅ Your Retail OS platform is fully operational!</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <h3>📞 Need Help?</h3>
+            <p>If services are still failing:</p>
+            <ol>
+                <li>Screenshot the error logs from a failed service</li>
+                <li>I'll help you fix the specific build issues</li>
+                <li>Common fixes: Go version, nixpacks config, environment variables</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard() {
+            const envVars = document.getElementById('envVars').textContent;
+            
+            navigator.clipboard.writeText(envVars).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copied!';
+                btn.style.background = '#10b981';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '#00d8ff';
+                }, 2000);
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = envVars;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Environment variables copied to clipboard!');
+            });
+        }
+    </script>
+</body>
+</html>

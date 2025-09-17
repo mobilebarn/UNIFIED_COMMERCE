@@ -16,7 +16,6 @@ COPY . .
 # Final stage
 FROM node:18-alpine
 
-# Set working directory
 WORKDIR /app
 
 # Copy dependencies from builder stage
@@ -41,3 +40,23 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 # Command to run
 CMD ["node", "index.js"]
+
+# Use Node.js for the GraphQL Gateway
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy source code
+COPY . .
+
+# Expose port
+EXPOSE 8080
+
+# Start the application
+CMD ["npm", "start"]
