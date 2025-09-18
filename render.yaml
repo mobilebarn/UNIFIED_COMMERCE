@@ -22,13 +22,13 @@ services:
     rootDir: services/identity
     envVars:
       - key: PORT
-        value: 8001
+        value: "8001"
       - key: ENVIRONMENT
         value: production
       - key: LOG_LEVEL
         value: info
       - key: SERVICE_NAME
-        value: Identity Service
+        value: "Identity Service"
           
   - type: web
     name: unified-commerce-product-catalog
@@ -39,13 +39,13 @@ services:
     rootDir: services/product-catalog
     envVars:
       - key: PORT
-        value: 8006
+        value: "8006"
       - key: ENVIRONMENT
         value: production
       - key: LOG_LEVEL
         value: info
       - key: SERVICE_NAME
-        value: Product Catalog
+        value: "Product Catalog"
           
   - type: web
     name: unified-commerce-inventory
@@ -56,13 +56,13 @@ services:
     rootDir: services/inventory
     envVars:
       - key: PORT
-        value: 8005
+        value: "8005"
       - key: ENVIRONMENT
         value: production
       - key: LOG_LEVEL
         value: info
       - key: SERVICE_NAME
-        value: Inventory Service
+        value: "Inventory Service"
           
   - type: web
     name: unified-commerce-cart
@@ -73,13 +73,13 @@ services:
     rootDir: services/cart
     envVars:
       - key: PORT
-        value: 8002
+        value: "8002"
       - key: ENVIRONMENT
         value: production
       - key: LOG_LEVEL
         value: info
       - key: SERVICE_NAME
-        value: Cart Service
+        value: "Cart Service"
           
   - type: web
     name: unified-commerce-order
@@ -90,13 +90,13 @@ services:
     rootDir: services/order
     envVars:
       - key: PORT
-        value: 8003
+        value: "8003"
       - key: ENVIRONMENT
         value: production
       - key: LOG_LEVEL
         value: info
       - key: SERVICE_NAME
-        value: Order Service
+        value: "Order Service"
           
   - type: web
     name: unified-commerce-payment
@@ -107,13 +107,13 @@ services:
     rootDir: services/payment
     envVars:
       - key: PORT
-        value: 8004
+        value: "8004"
       - key: ENVIRONMENT
         value: production
       - key: LOG_LEVEL
         value: info
       - key: SERVICE_NAME
-        value: Payment Service
+        value: "Payment Service"
           
   - type: web
     name: unified-commerce-promotions
@@ -124,13 +124,13 @@ services:
     rootDir: services/promotions
     envVars:
       - key: PORT
-        value: 8007
+        value: "8007"
       - key: ENVIRONMENT
         value: production
       - key: LOG_LEVEL
         value: info
       - key: SERVICE_NAME
-        value: Promotions Service
+        value: "Promotions Service"
           
   - type: web
     name: unified-commerce-merchant-account
@@ -141,13 +141,13 @@ services:
     rootDir: services/merchant-account
     envVars:
       - key: PORT
-        value: 8008
+        value: "8008"
       - key: ENVIRONMENT
         value: production
       - key: LOG_LEVEL
         value: info
       - key: SERVICE_NAME
-        value: Merchant Account
+        value: "Merchant Account"
           
   - type: web
     name: unified-commerce-analytics
@@ -158,13 +158,13 @@ services:
     rootDir: services/analytics
     envVars:
       - key: PORT
-        value: 8009
+        value: "8009"
       - key: ENVIRONMENT
         value: production
       - key: LOG_LEVEL
         value: info
       - key: SERVICE_NAME
-        value: Analytics Service
+        value: "Analytics Service"
           
   - type: web
     name: unified-commerce-gateway
@@ -175,8 +175,8 @@ services:
     rootDir: gateway
     envVars:
       - key: PORT
-        value: 4000
+        value: "4000"
       - key: NODE_ENV
         value: production
       - key: SERVICE_NAME
-        value: GraphQL Gateway
+        value: "GraphQL Gateway"
