@@ -169,7 +169,7 @@ type MerchantMember struct {
 	Role        string     `json:"role" gorm:"not null"`           // "owner", "admin", "manager", "staff", "viewer"
 	Status      string     `json:"status" gorm:"default:'active'"` // "active", "invited", "suspended"
 	Permissions []string   `json:"permissions" gorm:"type:jsonb"`
-	InvitedBy   string     `json:"invited_by"` // UserID who sent invitation
+	InvitedBy   string     `json:"invited_by"` // UserID who sent invitation (no FK constraint)
 	InvitedAt   *time.Time `json:"invited_at"`
 	JoinedAt    *time.Time `json:"joined_at"`
 	CreatedAt   time.Time  `json:"created_at"`

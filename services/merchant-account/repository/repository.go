@@ -355,6 +355,8 @@ func NewRepository(db *database.PostgresDB) *Repository {
 
 // Migrate runs database migrations for all models
 func (r *Repository) Migrate() error {
+	// For PostgreSQL, we need to handle this differently
+	// Let's just use AutoMigrate but with explicit model configuration
 	return r.Merchant.db.DB.AutoMigrate(
 		&models.Merchant{},
 		&models.MerchantAddress{},
