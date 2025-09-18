@@ -1,8 +1,4 @@
-# Render Blueprint for Unified Commerce OS
-# This file automatically deploys all services when you connect it to Render
-
 services:
-  # Databases
   - type: pserv
     name: unified-commerce-postgres
     plan: free
@@ -12,7 +8,6 @@ services:
     plan: free
     ipAllowList: []
     
-  # Microservices
   - type: web
     name: unified-commerce-identity
     runtime: go
@@ -23,13 +18,7 @@ services:
     envVars:
       - key: PORT
         value: "8001"
-      - key: ENVIRONMENT
-        value: production
-      - key: LOG_LEVEL
-        value: info
-      - key: SERVICE_NAME
-        value: "Identity Service"
-          
+        
   - type: web
     name: unified-commerce-product-catalog
     runtime: go
@@ -40,13 +29,7 @@ services:
     envVars:
       - key: PORT
         value: "8006"
-      - key: ENVIRONMENT
-        value: production
-      - key: LOG_LEVEL
-        value: info
-      - key: SERVICE_NAME
-        value: "Product Catalog"
-          
+        
   - type: web
     name: unified-commerce-inventory
     runtime: go
@@ -57,13 +40,7 @@ services:
     envVars:
       - key: PORT
         value: "8005"
-      - key: ENVIRONMENT
-        value: production
-      - key: LOG_LEVEL
-        value: info
-      - key: SERVICE_NAME
-        value: "Inventory Service"
-          
+        
   - type: web
     name: unified-commerce-cart
     runtime: go
@@ -74,13 +51,7 @@ services:
     envVars:
       - key: PORT
         value: "8002"
-      - key: ENVIRONMENT
-        value: production
-      - key: LOG_LEVEL
-        value: info
-      - key: SERVICE_NAME
-        value: "Cart Service"
-          
+        
   - type: web
     name: unified-commerce-order
     runtime: go
@@ -91,13 +62,7 @@ services:
     envVars:
       - key: PORT
         value: "8003"
-      - key: ENVIRONMENT
-        value: production
-      - key: LOG_LEVEL
-        value: info
-      - key: SERVICE_NAME
-        value: "Order Service"
-          
+        
   - type: web
     name: unified-commerce-payment
     runtime: go
@@ -108,13 +73,7 @@ services:
     envVars:
       - key: PORT
         value: "8004"
-      - key: ENVIRONMENT
-        value: production
-      - key: LOG_LEVEL
-        value: info
-      - key: SERVICE_NAME
-        value: "Payment Service"
-          
+        
   - type: web
     name: unified-commerce-promotions
     runtime: go
@@ -125,13 +84,7 @@ services:
     envVars:
       - key: PORT
         value: "8007"
-      - key: ENVIRONMENT
-        value: production
-      - key: LOG_LEVEL
-        value: info
-      - key: SERVICE_NAME
-        value: "Promotions Service"
-          
+        
   - type: web
     name: unified-commerce-merchant-account
     runtime: go
@@ -142,13 +95,7 @@ services:
     envVars:
       - key: PORT
         value: "8008"
-      - key: ENVIRONMENT
-        value: production
-      - key: LOG_LEVEL
-        value: info
-      - key: SERVICE_NAME
-        value: "Merchant Account"
-          
+        
   - type: web
     name: unified-commerce-analytics
     runtime: go
@@ -159,13 +106,7 @@ services:
     envVars:
       - key: PORT
         value: "8009"
-      - key: ENVIRONMENT
-        value: production
-      - key: LOG_LEVEL
-        value: info
-      - key: SERVICE_NAME
-        value: "Analytics Service"
-          
+        
   - type: web
     name: unified-commerce-gateway
     runtime: node
@@ -176,7 +117,3 @@ services:
     envVars:
       - key: PORT
         value: "4000"
-      - key: NODE_ENV
-        value: production
-      - key: SERVICE_NAME
-        value: "GraphQL Gateway"
