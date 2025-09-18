@@ -2,8 +2,8 @@ package graphql
 
 import (
 	"context"
-	"retail-os/services/analytics/internal/service"
-	"retail-os/services/shared/logger"
+	"unified-commerce/services/analytics/internal/service"
+	"unified-commerce/services/shared/logger"
 )
 
 // Resolver provides resolution context for GraphQL resolvers.

@@ -57,6 +57,39 @@ func main() {
 		})
 	})
 
+	// GraphQL endpoint for federation
+	router.POST("/graphql", func(c *gin.Context) {
+		// Handle GraphQL introspection for federation
+		var request map[string]interface{}
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "Invalid JSON"})
+			return
+		}
+
+		query, ok := request["query"].(string)
+		if !ok {
+			c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "Query required"})
+			return
+		}
+
+		// Respond to federation service discovery
+		if query == "query{_service{sdl}}" {
+			c.JSON(http.StatusOK, map[string]interface{}{
+				"data": map[string]interface{}{
+					"_service": map[string]interface{}{
+						"sdl": "# Analytics Service GraphQL Schema\ntype Query { _service: _Service }\ntype _Service { sdl: String }",
+					},
+				},
+			})
+			return
+		}
+
+		// Default empty response for other queries
+		c.JSON(http.StatusOK, map[string]interface{}{
+			"data": map[string]interface{}{},
+		})
+	})
+
 	// Start REST server
 	srv := &http.Server{
 		Addr:         ":" + cfg.ServicePort,
