@@ -165,7 +165,7 @@ type Store struct {
 type MerchantMember struct {
 	ID          string     `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	MerchantID  string     `json:"merchant_id" gorm:"not null;index"`
-	UserID      string     `json:"user_id" gorm:"not null;index"`  // References Identity Service
+	UserID      string     `json:"user_id" gorm:"not null;index"`  // References Identity Service (no FK constraint)
 	Role        string     `json:"role" gorm:"not null"`           // "owner", "admin", "manager", "staff", "viewer"
 	Status      string     `json:"status" gorm:"default:'active'"` // "active", "invited", "suspended"
 	Permissions []string   `json:"permissions" gorm:"type:jsonb"`
@@ -175,8 +175,9 @@ type MerchantMember struct {
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
 
-	// Relationships
+	// Relationships (internal to this service only)
 	Merchant Merchant `json:"merchant" gorm:"foreignKey:MerchantID"`
+	// Note: No User relationship as it's in a different service/database
 }
 
 // Invoice represents billing invoices for merchants
