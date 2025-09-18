@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -62,34 +63,60 @@ func main() {
 		// Handle GraphQL introspection for federation
 		var request map[string]interface{}
 		if err := c.ShouldBindJSON(&request); err != nil {
+			log.WithError(err).Error("Failed to parse JSON request")
 			c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "Invalid JSON"})
 			return
 		}
 
 		query, ok := request["query"].(string)
 		if !ok {
+			log.Error("No query field in request")
 			c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "Query required"})
 			return
 		}
 
-		// Debug: log the incoming query
-		log.WithFields(map[string]interface{}{"query": query}).Info("Received GraphQL query")
+		// Debug: log the incoming query and full request
+		log.WithFields(map[string]interface{}{
+			"query": query,
+			"fullRequest": request,
+		}).Info("Received GraphQL query")
 
-		// Respond to federation service discovery
-		if query == "query{_service{sdl}}" || query == "query { _service { sdl } }" {
-			c.JSON(http.StatusOK, map[string]interface{}{
+		// Check for federation service discovery queries (more flexible matching)
+		if strings.Contains(query, "_service") && strings.Contains(query, "sdl") {
+			log.Info("Responding to federation service discovery query")
+			response := map[string]interface{}{
 				"data": map[string]interface{}{
 					"_service": map[string]interface{}{
-						"sdl": "extend type Query { _empty: String }",
+						"sdl": "extend type Query { analytics: String }",
+					},
+				},
+			}
+			log.WithFields(map[string]interface{}{"response": response}).Info("Sending federation SDL response")
+			c.JSON(http.StatusOK, response)
+			return
+		}
+
+		// Handle introspection queries
+		if strings.Contains(query, "__schema") || strings.Contains(query, "__type") {
+			log.Info("Responding to GraphQL introspection query")
+			c.JSON(http.StatusOK, map[string]interface{}{
+				"data": map[string]interface{}{
+					"__schema": map[string]interface{}{
+						"queryType": map[string]interface{}{
+							"name": "Query",
+						},
 					},
 				},
 			})
 			return
 		}
 
-		// Default empty response for other queries
+		// Default response for other queries
+		log.WithFields(map[string]interface{}{"query": query}).Info("Responding to regular GraphQL query")
 		c.JSON(http.StatusOK, map[string]interface{}{
-			"data": map[string]interface{}{},
+			"data": map[string]interface{}{
+				"analytics": "Analytics service is operational",
+			},
 		})
 	})
 
