@@ -78,6 +78,8 @@ func NewBaseService(opts ServiceOptions) (*BaseService, error) {
 			cfg.DatabasePassword,
 			cfg.DatabaseName,
 		)
+		// Set the full DATABASE_URL if available
+		postgresConfig.DatabaseURL = cfg.DatabaseURL
 
 		service.PostgresDB, err = database.NewPostgresConnection(postgresConfig)
 		if err != nil {

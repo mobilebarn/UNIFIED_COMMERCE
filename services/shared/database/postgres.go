@@ -22,6 +22,7 @@ type PostgresDB struct {
 
 // PostgresConfig holds PostgreSQL configuration
 type PostgresConfig struct {
+	DatabaseURL     string // Full database connection URL (for cloud providers)
 	Host            string
 	Port            string
 	User            string
@@ -36,14 +37,22 @@ type PostgresConfig struct {
 
 // NewPostgresConnection creates a new PostgreSQL connection using GORM
 func NewPostgresConnection(config *PostgresConfig) (*PostgresDB, error) {
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		config.Host,
-		config.Port,
-		config.User,
-		config.Password,
-		config.DatabaseName,
-		config.SSLMode,
-	)
+	var dsn string
+	
+	// Check if we have a full database URL (for cloud providers like Render)
+	if config.DatabaseURL != "" {
+		dsn = config.DatabaseURL
+	} else {
+		// Build DSN from individual components
+		dsn = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+			config.Host,
+			config.Port,
+			config.User,
+			config.Password,
+			config.DatabaseName,
+			config.SSLMode,
+		)
+	}
 
 	// Configure GORM logger
 	gormConfig := &gorm.Config{

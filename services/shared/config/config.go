@@ -122,13 +122,18 @@ func LoadConfig(serviceName string) (*Config, error) {
 	}
 
 	// Build database URL
-	config.DatabaseURL = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		config.DatabaseHost,
-		config.DatabasePort,
-		config.DatabaseUser,
-		config.DatabasePassword,
-		config.DatabaseName,
-	)
+	// Check if DATABASE_URL is provided directly (for Render, Railway, etc.)
+	if envDatabaseURL := os.Getenv("DATABASE_URL"); envDatabaseURL != "" {
+		config.DatabaseURL = envDatabaseURL
+	} else {
+		config.DatabaseURL = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+			config.DatabaseHost,
+			config.DatabasePort,
+			config.DatabaseUser,
+			config.DatabasePassword,
+			config.DatabaseName,
+		)
+	}
 
 	return config, nil
 }
