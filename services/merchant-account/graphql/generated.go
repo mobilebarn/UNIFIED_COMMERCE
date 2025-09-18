@@ -96,6 +96,7 @@ type MerchantResolver interface {
 	ContactPhone(ctx context.Context, obj *models.Merchant) (*string, error)
 	Website(ctx context.Context, obj *models.Merchant) (*string, error)
 
+	IsActive(ctx context.Context, obj *models.Merchant) (bool, error)
 	Settings(ctx context.Context, obj *models.Merchant) (*string, error)
 	VerificationStatus(ctx context.Context, obj *models.Merchant) (string, error)
 	CreatedAt(ctx context.Context, obj *models.Merchant) (string, error)
@@ -1054,7 +1055,7 @@ func (ec *executionContext) _Merchant_isActive(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.IsActive(), nil
+		return ec.resolvers.Merchant().IsActive(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1076,7 +1077,7 @@ func (ec *executionContext) fieldContext_Merchant_isActive(ctx context.Context, 
 		Object:     "Merchant",
 		Field:      field,
 		IsMethod:   true,
-		IsResolver: false,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
 		},
@@ -4058,10 +4059,41 @@ func (ec *executionContext) _Merchant(ctx context.Context, sel ast.SelectionSet,
 		case "description":
 			out.Values[i] = ec._Merchant_description(ctx, field, obj)
 		case "isActive":
-			out.Values[i] = ec._Merchant_isActive(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Merchant_isActive(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
 			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "settings":
 			field := field
 

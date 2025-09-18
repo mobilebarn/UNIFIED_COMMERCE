@@ -23,7 +23,7 @@ resolver:
   dir: .
   package: graphql
 
-# Optional: turn on use ` + "`" + `gqlgen:"fieldName"` + "`" + ` tags in your models
+# Optional: turn on use `gqlgen:"fieldName"` tags in your models
 # struct_tag: json
 
 # Optional: turn on to use []Thing instead of []*Thing
@@ -50,6 +50,10 @@ autobind:
 # modelgen, the others will be allowed when binding to fields. Configure them to
 # your liking
 models:
+  Merchant:
+    fields:
+      isActive:
+        resolver: true
   ID:
     model:
       - github.com/99designs/gqlgen/graphql.ID

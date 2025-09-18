@@ -6,43 +6,65 @@ package graphql
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"time"
 	"unified-commerce/services/merchant-account/models"
 )
 
 // ContactEmail is the resolver for the contactEmail field.
 func (r *merchantResolver) ContactEmail(ctx context.Context, obj *models.Merchant) (string, error) {
-	panic(fmt.Errorf("not implemented: ContactEmail - contactEmail"))
+	return obj.PrimaryEmail, nil
 }
 
 // ContactPhone is the resolver for the contactPhone field.
 func (r *merchantResolver) ContactPhone(ctx context.Context, obj *models.Merchant) (*string, error) {
-	panic(fmt.Errorf("not implemented: ContactPhone - contactPhone"))
+	if obj.PrimaryPhone == "" {
+		return nil, nil
+	}
+	return &obj.PrimaryPhone, nil
 }
 
 // Website is the resolver for the website field.
 func (r *merchantResolver) Website(ctx context.Context, obj *models.Merchant) (*string, error) {
-	panic(fmt.Errorf("not implemented: Website - website"))
+	if obj.WebsiteURL == "" {
+		return nil, nil
+	}
+	return &obj.WebsiteURL, nil
+}
+
+// IsActive is the resolver for the isActive field.
+func (r *merchantResolver) IsActive(ctx context.Context, obj *models.Merchant) (bool, error) {
+	return obj.Status == "active", nil
 }
 
 // Settings is the resolver for the settings field.
 func (r *merchantResolver) Settings(ctx context.Context, obj *models.Merchant) (*string, error) {
-	panic(fmt.Errorf("not implemented: Settings - settings"))
+	// Convert settings to JSON string
+	settingsBytes, err := json.Marshal(obj.Settings)
+	if err != nil {
+		return nil, err
+	}
+	settingsStr := string(settingsBytes)
+	return &settingsStr, nil
 }
 
 // VerificationStatus is the resolver for the verificationStatus field.
 func (r *merchantResolver) VerificationStatus(ctx context.Context, obj *models.Merchant) (string, error) {
-	panic(fmt.Errorf("not implemented: VerificationStatus - verificationStatus"))
+	if obj.IsVerified {
+		return "verified", nil
+	}
+	return "pending", nil
 }
 
 // CreatedAt is the resolver for the createdAt field.
 func (r *merchantResolver) CreatedAt(ctx context.Context, obj *models.Merchant) (string, error) {
-	panic(fmt.Errorf("not implemented: CreatedAt - createdAt"))
+	return obj.CreatedAt.Format(time.RFC3339), nil
 }
 
 // UpdatedAt is the resolver for the updatedAt field.
 func (r *merchantResolver) UpdatedAt(ctx context.Context, obj *models.Merchant) (string, error) {
-	panic(fmt.Errorf("not implemented: UpdatedAt - updatedAt"))
+	return obj.UpdatedAt.Format(time.RFC3339), nil
 }
 
 // CreateMerchant is the resolver for the createMerchant field.
@@ -62,12 +84,14 @@ func (r *mutationResolver) DeleteMerchant(ctx context.Context, id string) (bool,
 
 // Merchant is the resolver for the merchant field.
 func (r *queryResolver) Merchant(ctx context.Context, id string) (*models.Merchant, error) {
-	panic(fmt.Errorf("not implemented: Merchant - merchant"))
+	return r.MerchantService.GetMerchantByID(ctx, id)
 }
 
 // Merchants is the resolver for the merchants field.
 func (r *queryResolver) Merchants(ctx context.Context) ([]*models.Merchant, error) {
-	panic(fmt.Errorf("not implemented: Merchants - merchants"))
+	// For now, return empty array - this would typically require authentication
+	// to get merchants for the authenticated user
+	return []*models.Merchant{}, nil
 }
 
 // Merchant returns MerchantResolver implementation.
