@@ -3,6 +3,9 @@ package database
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -163,11 +166,68 @@ func DefaultRedisConfig() *RedisConfig {
 }
 
 // NewRedisConfigFromEnv creates Redis config from environment variables
-func NewRedisConfigFromEnv(address, password string, db int) *RedisConfig {
+// If redisURL is a full Redis URL (redis://...), it will be parsed
+// Otherwise, it will be treated as a simple address
+func NewRedisConfigFromEnv(redisURL, password string, db int) *RedisConfig {
 	config := DefaultRedisConfig()
-	config.Address = address
-	config.Password = password
-	config.DB = db
+	
+	// Parse Redis URL if it starts with redis://
+	if strings.HasPrefix(redisURL, "redis://") {
+		// Parse the URL to extract components
+		if parsed, err := parseRedisURL(redisURL); err == nil {
+			config.Address = parsed.Address
+			config.Password = parsed.Password
+			if parsed.DB >= 0 {
+				config.DB = parsed.DB
+			}
+		} else {
+			// Fallback to using the URL as address (for backwards compatibility)
+			config.Address = strings.TrimPrefix(redisURL, "redis://")
+		}
+	} else {
+		// Simple address format
+		config.Address = redisURL
+		config.Password = password
+		config.DB = db
+	}
 
 	return config
+}
+
+// parsedRedisConfig holds parsed Redis URL components
+type parsedRedisConfig struct {
+	Address  string
+	Password string
+	DB       int
+}
+
+// parseRedisURL parses a Redis URL and extracts connection components
+// Format: redis://[:password@]host:port[/db]
+func parseRedisURL(redisURL string) (*parsedRedisConfig, error) {
+	parsed, err := url.Parse(redisURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse Redis URL: %w", err)
+	}
+
+	config := &parsedRedisConfig{
+		Address: parsed.Host,
+		DB:      0, // default
+	}
+
+	// Extract password from user info
+	if parsed.User != nil {
+		if password, hasPassword := parsed.User.Password(); hasPassword {
+			config.Password = password
+		}
+	}
+
+	// Extract database number from path
+	if parsed.Path != "" && parsed.Path != "/" {
+		dbStr := strings.TrimPrefix(parsed.Path, "/")
+		if db, err := strconv.Atoi(dbStr); err == nil {
+			config.DB = db
+		}
+	}
+
+	return config, nil
 }
