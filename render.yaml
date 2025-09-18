@@ -9,11 +9,143 @@ services:
     envVars:
       - key: PORT
         value: "8001"
+      - key: SERVICE_PORT
+        value: "8001"
       - key: DATABASE_URL
         fromDatabase:
           name: unified-commerce-postgres
           property: connectionString
 
+  - type: web
+    name: unified-commerce-product-catalog
+    runtime: go
+    plan: free
+    buildCommand: go build -o app ./cmd/server
+    startCommand: ./app
+    rootDir: services/product-catalog
+    envVars:
+      - key: PORT
+        value: "8002"
+      - key: SERVICE_PORT
+        value: "8002"
+      - key: MONGO_URL
+        fromDatabase:
+          name: unified-commerce-mongodb
+          property: connectionString
+      - key: MONGO_DATABASE
+        value: "product_catalog"
+
+  - type: web
+    name: unified-commerce-order
+    runtime: go
+    plan: free
+    buildCommand: go build -o app ./cmd/server
+    startCommand: ./app
+    rootDir: services/order
+    envVars:
+      - key: PORT
+        value: "8003"
+      - key: SERVICE_PORT
+        value: "8003"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: unified-commerce-postgres
+          property: connectionString
+
+  - type: web
+    name: unified-commerce-payment
+    runtime: go
+    plan: free
+    buildCommand: go build -o app ./cmd/server
+    startCommand: ./app
+    rootDir: services/payment
+    envVars:
+      - key: PORT
+        value: "8004"
+      - key: SERVICE_PORT
+        value: "8004"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: unified-commerce-postgres
+          property: connectionString
+
+  - type: web
+    name: unified-commerce-inventory
+    runtime: go
+    plan: free
+    buildCommand: go build -o app ./cmd/server
+    startCommand: ./app
+    rootDir: services/inventory
+    envVars:
+      - key: PORT
+        value: "8005"
+      - key: SERVICE_PORT
+        value: "8005"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: unified-commerce-postgres
+          property: connectionString
+
+  - type: web
+    name: unified-commerce-merchant-account
+    runtime: go
+    plan: free
+    buildCommand: go build -o app ./cmd/server
+    startCommand: ./app
+    rootDir: services/merchant-account
+    envVars:
+      - key: PORT
+        value: "8006"
+      - key: SERVICE_PORT
+        value: "8006"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: unified-commerce-postgres
+          property: connectionString
+
+  - type: web
+    name: unified-commerce-gateway
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    rootDir: gateway
+    envVars:
+      - key: PORT
+        value: "4000"
+      - key: IDENTITY_SERVICE_URL
+        fromService:
+          type: web
+          name: unified-commerce-identity
+          property: host
+      - key: PRODUCT_CATALOG_SERVICE_URL
+        fromService:
+          type: web
+          name: unified-commerce-product-catalog
+          property: host
+      - key: ORDER_SERVICE_URL
+        fromService:
+          type: web
+          name: unified-commerce-order
+          property: host
+      - key: PAYMENT_SERVICE_URL
+        fromService:
+          type: web
+          name: unified-commerce-payment
+          property: host
+      - key: INVENTORY_SERVICE_URL
+        fromService:
+          type: web
+          name: unified-commerce-inventory
+          property: host
+      - key: MERCHANT_ACCOUNT_SERVICE_URL
+        fromService:
+          type: web
+          name: unified-commerce-merchant-account
+          property: host
+
 databases:
   - name: unified-commerce-postgres
+    plan: free
+  - name: unified-commerce-mongodb
     plan: free
