@@ -49,8 +49,8 @@ export const Login: React.FC = () => {
     setError(null);
 
     try {
-      console.log('Making login request to:', 'http://localhost:8001/graphql');
-      const response = await fetch('http://localhost:8001/graphql', {
+      console.log('Making login request to:', 'https://unified-commerce-gateway.onrender.com/graphql');
+      const response = await fetch('https://unified-commerce-gateway.onrender.com/graphql', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
