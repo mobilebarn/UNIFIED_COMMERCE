@@ -142,8 +142,10 @@ async function startGateway() {
     const server = new ApolloServer({
       gateway,
       context: getGraphQLContext,
-      // Enable introspection and playground in development
-      introspection: process.env.NODE_ENV !== 'production',
+      // Enable introspection for federation to work (required for service discovery)
+      introspection: true,
+      // Enable playground in non-production for easier testing
+      // Note: Federation requires introspection to discover services
       plugins: [
         // Custom plugin for logging
         {
