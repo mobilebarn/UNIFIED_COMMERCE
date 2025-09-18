@@ -1,5 +1,5 @@
-﻿# Use Go 1.21 for Railway compatibility
-FROM golang:1.21-alpine AS builder
+﻿# Use Go 1.23 for module compatibility
+FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
 

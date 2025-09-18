@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Retail OS - Alternative Deployment Options</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; padding: 20px;
+        }
+        .container { 
+            max-width: 1200px; margin: 0 auto; 
+            background: white; border-radius: 20px; 
+            padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        }
+        .header { 
+            text-align: center; margin-bottom: 40px; 
+            padding: 30px; background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            border-radius: 15px; color: white;
+        }
+        .option-card { 
+            background: #f8f9fa; padding: 25px; margin: 20px 0; 
+            border-radius: 15px; border-left: 5px solid #28a745;
+        }
+        .option-card h3 { color: #28a745; margin-bottom: 15px; }
+        .deploy-button { 
+            display: inline-block; padding: 15px 30px; 
+            background: linear-gradient(135deg, #28a745, #20c997); 
+            color: white; text-decoration: none; border-radius: 8px; 
+            font-weight: bold; margin: 10px 5px;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+        .deploy-button:hover { transform: translateY(-2px); }
+        .deploy-button.vercel { 
+            background: linear-gradient(135deg, #000, #333);
+        }
+        .deploy-button.heroku { 
+            background: linear-gradient(135deg, #6f42c1, #e83e8c);
+        }
+        .deploy-button.railway { 
+            background: linear-gradient(135deg, #007bff, #0056b3);
+        }
+        .success { background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .warning { background: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .error { background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .code-block { 
+            background: #f1f3f4; padding: 20px; border-radius: 8px; 
+            font-family: monospace; margin: 15px 0; font-size: 14px;
+        }
+        .pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .pros, .cons { padding: 15px; border-radius: 8px; }
+        .pros { background: #d4edda; color: #155724; }
+        .cons { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Retail OS - Alternative Deployment Solutions</h1>
+            <p>Multiple paths to get your Retail OS deployed successfully!</p>
+        </div>
+
+        <div class="error">
+            <h3>🔄 Current Situation</h3>
+            <p>Both Railway and Render have presented challenges. Let's try alternative approaches that are more reliable.</p>
+        </div>
+
+        <div class="option-card">
+            <h3>🎯 Option 1: Automated PowerShell Script (Render CLI)</h3>
+            <p>I've created <code>render-deploy.ps1</code> that automates the entire Render deployment:</p>
+            
+            <div class="code-block">
+# Run this in PowerShell from your project directory:
+cd "c:\Users\dane\OneDrive\Desktop\UNIFIED_COMMERCE"
+.\render-deploy.ps1
+            </div>
+            
+            <div class="pros-cons">
+                <div class="pros">
+                    <h4>✅ Pros:</h4>
+                    <ul>
+                        <li>Fully automated deployment</li>
+                        <li>Installs Render CLI automatically</li>
+                        <li>Creates all configurations</li>
+                        <li>Deploys all 10 services</li>
+                        <li>Uses official Render CLI</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <h4>❌ Cons:</h4>
+                    <ul>
+                        <li>Requires PowerShell execution</li>
+                        <li>CLI learning curve</li>
+                        <li>Still uses Render platform</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <a href="#" class="deploy-button" onclick="runPowerShellScript()">🚀 Run PowerShell Deployment</a>
+        </div>
+
+        <div class="option-card">
+            <h3>🌟 Option 2: Vercel for Backend (Experimental)</h3>
+            <p>Deploy Go services directly to Vercel using serverless functions:</p>
+            
+            <div class="code-block">
+# Install Vercel CLI and deploy each service:
+npm i -g vercel
+cd services/identity && vercel --prod
+cd ../cart && vercel --prod
+# ... repeat for each service
+            </div>
+            
+            <div class="pros-cons">
+                <div class="pros">
+                    <h4>✅ Pros:</h4>
+                    <ul>
+                        <li>Same platform as frontend</li>
+                        <li>Excellent reliability</li>
+                        <li>Zero-config deployments</li>
+                        <li>Built-in CDN</li>
+                        <li>You already have account</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <h4>❌ Cons:</h4>
+                    <ul>
+                        <li>Go support is experimental</li>
+                        <li>Serverless limitations</li>
+                        <li>Database connections tricky</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <a href="https://vercel.com/docs/functions/serverless-functions/runtimes/go" target="_blank" class="deploy-button vercel">📖 Vercel Go Docs</a>
+        </div>
+
+        <div class="option-card">
+            <h3>🚀 Option 3: Heroku (Classic & Reliable)</h3>
+            <p>Deploy to Heroku using Git-based deployment:</p>
+            
+            <div class="code-block">
+# Create Heroku apps for each service:
+heroku create retail-os-identity
+heroku create retail-os-cart
+# ... etc
+
+# Deploy each service:
+git subtree push --prefix=services/identity heroku-identity main
+git subtree push --prefix=services/cart heroku-cart main
+            </div>
+            
+            <div class="pros-cons">
+                <div class="pros">
+                    <h4>✅ Pros:</h4>
+                    <ul>
+                        <li>Mature platform</li>
+                        <li>Excellent Go support</li>
+                        <li>Simple git-based deployment</li>
+                        <li>Great documentation</li>
+                        <li>Built-in PostgreSQL/Redis</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <h4>❌ Cons:</h4>
+                    <ul>
+                        <li>More expensive</li>
+                        <li>Apps sleep on free tier</li>
+                        <li>Multiple git remotes</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <a href="https://devcenter.heroku.com/articles/getting-started-with-go" target="_blank" class="deploy-button heroku">🚀 Deploy to Heroku</a>
+        </div>
+
+        <div class="option-card">
+            <h3>🔧 Option 4: DigitalOcean App Platform</h3>
+            <p>Simple, reliable deployment with GitHub integration:</p>
+            
+            <div class="pros-cons">
+                <div class="pros">
+                    <h4>✅ Pros:</h4>
+                    <ul>
+                        <li>Excellent Go support</li>
+                        <li>GitHub auto-deployment</li>
+                        <li>Competitive pricing</li>
+                        <li>Built-in databases</li>
+                        <li>Simple configuration</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <h4>❌ Cons:</h4>
+                    <ul>
+                        <li>Newer platform</li>
+                        <li>Requires new account</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <a href="https://www.digitalocean.com/products/app-platform" target="_blank" class="deploy-button">🌊 DigitalOcean Apps</a>
+        </div>
+
+        <div class="success">
+            <h3>🎯 My Recommendation: Try Option 1 First</h3>
+            <p>The PowerShell script (<code>render-deploy.ps1</code>) should work around the Render dashboard issues by using their official CLI. If that fails, Heroku (Option 3) is the most reliable fallback.</p>
+            
+            <div class="code-block">
+# Quick start:
+cd "c:\Users\dane\OneDrive\Desktop\UNIFIED_COMMERCE"
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+.\render-deploy.ps1
+            </div>
+        </div>
+
+        <div class="warning">
+            <h3>💡 Backup Plan: Local Development</h3>
+            <p>If all cloud deployments fail, we can set up local development with Docker containers and ngrok for external access. This would let you test and demo immediately while we sort out deployment.</p>
+        </div>
+    </div>
+
+    <script>
+        function runPowerShellScript() {
+            alert('To run the PowerShell script:\n\n1. Open PowerShell as Administrator\n2. Navigate to your project: cd "c:\\Users\\dane\\OneDrive\\Desktop\\UNIFIED_COMMERCE"\n3. Allow script execution: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser\n4. Run the script: .\\render-deploy.ps1\n\nThe script will handle everything automatically!');
+        }
+    </script>
+</body>
+</html>

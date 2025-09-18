@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Retail OS - Step-by-Step Deployment Guide</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; padding: 20px;
+        }
+        .container { 
+            max-width: 1000px; margin: 0 auto; 
+            background: white; border-radius: 20px; 
+            padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        }
+        .header { 
+            text-align: center; margin-bottom: 40px; 
+            padding: 30px; background: linear-gradient(135deg, #28a745, #20c997);
+            border-radius: 15px; color: white;
+        }
+        .step { 
+            background: #f8f9fa; padding: 25px; margin: 20px 0; 
+            border-radius: 12px; border-left: 5px solid #007bff;
+            position: relative;
+        }
+        .step.completed { border-left-color: #28a745; background: #d4edda; }
+        .step.current { border-left-color: #ffc107; background: #fff3cd; }
+        .step h3 { color: #007bff; margin-bottom: 15px; }
+        .step.completed h3 { color: #28a745; }
+        .step.current h3 { color: #856404; }
+        .command-box { 
+            background: #2d3748; color: #e2e8f0; padding: 20px; 
+            border-radius: 8px; font-family: 'Courier New', monospace; 
+            margin: 15px 0; position: relative;
+        }
+        .copy-btn { 
+            position: absolute; top: 10px; right: 10px; 
+            background: #4299e1; color: white; border: none; 
+            padding: 8px 12px; border-radius: 4px; cursor: pointer;
+            font-size: 12px;
+        }
+        .copy-btn:hover { background: #3182ce; }
+        .complete-btn { 
+            background: linear-gradient(135deg, #28a745, #20c997); 
+            color: white; padding: 12px 24px; border: none; 
+            border-radius: 8px; font-weight: bold; cursor: pointer;
+            margin: 15px 0;
+        }
+        .complete-btn:hover { transform: translateY(-1px); }
+        .complete-btn:disabled { background: #6c757d; cursor: not-allowed; }
+        .progress-bar { 
+            width: 100%; height: 8px; background: #e9ecef; 
+            border-radius: 4px; overflow: hidden; margin: 20px 0;
+        }
+        .progress-fill { 
+            height: 100%; background: linear-gradient(90deg, #28a745, #20c997); 
+            width: 0%; transition: width 0.5s ease;
+        }
+        .warning { background: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .success { background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .error { background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .step-number { 
+            position: absolute; top: -10px; left: 20px; 
+            background: #007bff; color: white; border-radius: 50%; 
+            width: 30px; height: 30px; display: flex; align-items: center; 
+            justify-content: center; font-weight: bold;
+        }
+        .step.completed .step-number { background: #28a745; }
+        .step.current .step-number { background: #ffc107; color: #000; }
+        .database-urls { 
+            background: #e3f2fd; padding: 20px; border-radius: 8px; 
+            margin: 15px 0; border: 2px solid #2196f3;
+        }
+        .url-input { 
+            width: 100%; padding: 12px; border: 2px solid #ddd; 
+            border-radius: 6px; margin: 8px 0; font-family: monospace;
+        }
+        .validate-btn { 
+            background: #2196f3; color: white; padding: 10px 20px; 
+            border: none; border-radius: 6px; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Retail OS - Automated Deployment</h1>
+            <p>Let's get your Retail OS deployed in 5 simple steps!</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+            <p>Progress: <span id="progress-text">0/5 steps completed</span></p>
+        </div>
+
+        <div class="step current" id="step1">
+            <div class="step-number">1</div>
+            <h3>📋 Get Your Database URLs</h3>
+            <p>From your Render dashboard, copy the database connection URLs:</p>
+            
+            <div class="database-urls">
+                <h4>📊 Database Connection URLs:</h4>
+                <label>PostgreSQL External Database URL:</label>
+                <input type="text" class="url-input" id="postgres-url" placeholder="postgresql://user:password@hostname:port/database">
+                
+                <label>Redis External URL:</label>
+                <input type="text" class="url-input" id="redis-url" placeholder="redis://user:password@hostname:port">
+                
+                <button class="validate-btn" onclick="validateUrls()">✅ Validate URLs</button>
+            </div>
+            
+            <div class="warning">
+                <h4>📋 How to find these URLs:</h4>
+                <ol>
+                    <li>Go to your Render dashboard</li>
+                    <li>Click on your <strong>"Postgres"</strong> service</li>
+                    <li>Go to <strong>"Connect"</strong> tab</li>
+                    <li>Copy the <strong>"External Database URL"</strong></li>
+                    <li>Repeat for <strong>"Redis"</strong> service</li>
+                </ol>
+            </div>
+            
+            <button class="complete-btn" onclick="completeStep(1)" disabled id="step1-btn">Continue to PowerShell Setup</button>
+        </div>
+
+        <div class="step" id="step2">
+            <div class="step-number">2</div>
+            <h3>💻 Open PowerShell as Administrator</h3>
+            <p>Press <strong>Windows + X</strong> and select <strong>"Windows PowerShell (Admin)"</strong></p>
+            
+            <div class="command-box">
+# Press Windows + X, then click "Windows PowerShell (Admin)"
+# Or search "PowerShell" in Start Menu → Right-click → "Run as administrator"
+                <button class="copy-btn" onclick="copyToClipboard('Windows + X → PowerShell (Admin)')">📋 Copy</button>
+            </div>
+            
+            <div class="warning">
+                <strong>Important:</strong> You must run PowerShell as Administrator for the script to install the Render CLI.
+            </div>
+            
+            <button class="complete-btn" onclick="completeStep(2)" disabled>PowerShell is Open</button>
+        </div>
+
+        <div class="step" id="step3">
+            <div class="step-number">3</div>
+            <h3>📁 Navigate to Your Project</h3>
+            <p>In PowerShell, navigate to your Retail OS project directory:</p>
+            
+            <div class="command-box">
+cd "c:\Users\dane\OneDrive\Desktop\UNIFIED_COMMERCE"
+                <button class="copy-btn" onclick="copyToClipboard('cd &quot;c:\\Users\\dane\\OneDrive\\Desktop\\UNIFIED_COMMERCE&quot;')">📋 Copy</button>
+            </div>
+            
+            <p>Press Enter to execute the command.</p>
+            
+            <button class="complete-btn" onclick="completeStep(3)" disabled>I am in the Project Directory</button>
+        </div>
+
+        <div class="step" id="step4">
+            <div class="step-number">4</div>
+            <h3>🔓 Allow Script Execution</h3>
+            <p>Enable PowerShell to run the deployment script:</p>
+            
+            <div class="command-box">
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+                <button class="copy-btn" onclick="copyToClipboard('Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser')">📋 Copy</button>
+            </div>
+            
+            <p>When prompted, type <strong>Y</strong> and press Enter.</p>
+            
+            <div class="warning">
+                This command allows PowerShell to run signed scripts. It's safe and only affects your user account.
+            </div>
+            
+            <button class="complete-btn" onclick="completeStep(4)" disabled>Execution Policy Set</button>
+        </div>
+
+        <div class="step" id="step5">
+            <div class="step-number">5</div>
+            <h3>🚀 Run the Deployment Script</h3>
+            <p>Execute the automated deployment script:</p>
+            
+            <div class="command-box">
+.\render-deploy.ps1
+                <button class="copy-btn" onclick="copyToClipboard('.\\render-deploy.ps1')">📋 Copy</button>
+            </div>
+            
+            <div class="success">
+                <h4>🎯 What the script will do:</h4>
+                <ul>
+                    <li>✅ Install Render CLI automatically</li>
+                    <li>✅ Open browser for Render authentication</li>
+                    <li>✅ Ask for your database URLs (paste what you copied in Step 1)</li>
+                    <li>✅ Deploy all 10 Retail OS services automatically</li>
+                    <li>✅ Provide you with all service URLs</li>
+                </ul>
+            </div>
+            
+            <div class="database-urls">
+                <h4>📋 Your Database URLs (for copy/paste):</h4>
+                <div id="saved-postgres" style="font-family: monospace; background: #f8f9fa; padding: 10px; border-radius: 4px; margin: 5px 0;">PostgreSQL URL will appear here</div>
+                <div id="saved-redis" style="font-family: monospace; background: #f8f9fa; padding: 10px; border-radius: 4px; margin: 5px 0;">Redis URL will appear here</div>
+            </div>
+            
+            <button class="complete-btn" onclick="completeStep(5)" disabled>🎉 Deployment Started!</button>
+        </div>
+
+        <div class="success" id="completion" style="display: none;">
+            <h3>🎉 Deployment Complete!</h3>
+            <p>Your Retail OS services should now be deployed and running on Render!</p>
+            <ul>
+                <li>✅ Check your Render dashboard for deployment status</li>
+                <li>✅ All services will have URLs like: https://retail-os-[service].onrender.com</li>
+                <li>✅ Update your Vercel frontend to use the new Gateway URL</li>
+                <li>✅ Test your GraphQL Gateway at: https://retail-os-gateway.onrender.com/graphql</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let totalSteps = 5;
+
+        function updateProgress() {
+            const progress = ((currentStep - 1) / totalSteps) * 100;
+            document.getElementById('progress').style.width = progress + '%';
+            document.getElementById('progress-text').textContent = `${currentStep - 1}/${totalSteps} steps completed`;
+        }
+
+        function validateUrls() {
+            const postgresUrl = document.getElementById('postgres-url').value;
+            const redisUrl = document.getElementById('redis-url').value;
+            
+            if (postgresUrl.startsWith('postgresql://') && redisUrl.startsWith('redis://')) {
+                document.getElementById('step1-btn').disabled = false;
+                document.getElementById('saved-postgres').textContent = postgresUrl;
+                document.getElementById('saved-redis').textContent = redisUrl;
+                alert('✅ URLs validated! Click "Continue to PowerShell Setup"');
+            } else {
+                alert('❌ Please enter valid PostgreSQL and Redis URLs');
+            }
+        }
+
+        function completeStep(stepNumber) {
+            // Mark current step as completed
+            const currentStepEl = document.getElementById(`step${stepNumber}`);
+            currentStepEl.classList.remove('current');
+            currentStepEl.classList.add('completed');
+            
+            // Enable next step
+            if (stepNumber < totalSteps) {
+                const nextStepEl = document.getElementById(`step${stepNumber + 1}`);
+                nextStepEl.classList.add('current');
+                nextStepEl.querySelector('.complete-btn').disabled = false;
+                currentStep = stepNumber + 1;
+            } else {
+                // All steps completed
+                document.getElementById('completion').style.display = 'block';
+                currentStep = totalSteps + 1;
+            }
+            
+            updateProgress();
+        }
+
+        function copyToClipboard(command) {
+            navigator.clipboard.writeText(command).then(() => {
+                event.target.textContent = '✅ Copied!';
+                setTimeout(() => {
+                    event.target.textContent = '📋 Copy';
+                }, 2000);
+            });
+        }
+
+        // Initialize
+        updateProgress();
+    </script>
+</body>
+</html>

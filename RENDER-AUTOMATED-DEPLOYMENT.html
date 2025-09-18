@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 Retail OS - Automated Render Deployment</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; padding: 20px;
+        }
+        .container { 
+            max-width: 1400px; margin: 0 auto; 
+            background: white; border-radius: 20px; 
+            padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        }
+        .header { 
+            text-align: center; margin-bottom: 40px; 
+            padding: 30px; background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            border-radius: 15px; color: white;
+        }
+        .automation-section { 
+            background: linear-gradient(135deg, #28a745, #20c997); 
+            color: white; padding: 25px; border-radius: 15px; margin: 30px 0;
+            text-align: center;
+        }
+        .step { 
+            background: #f8f9fa; padding: 25px; margin: 20px 0; 
+            border-radius: 12px; border-left: 5px solid #007bff;
+        }
+        .step h3 { color: #007bff; margin-bottom: 15px; }
+        .deploy-form { 
+            background: #fff; padding: 25px; border-radius: 12px; 
+            border: 2px solid #28a745; margin: 20px 0;
+        }
+        .form-group { margin: 15px 0; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
+        .form-group input, .form-group select { 
+            width: 100%; padding: 12px; border: 2px solid #e9ecef; 
+            border-radius: 6px; font-size: 14px;
+        }
+        .form-group input:focus { border-color: #28a745; outline: none; }
+        .generate-btn { 
+            background: linear-gradient(135deg, #28a745, #20c997); 
+            color: white; padding: 15px 30px; border: none; 
+            border-radius: 8px; font-weight: bold; cursor: pointer;
+            margin: 10px 5px; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+        .generate-btn:hover { transform: translateY(-2px); }
+        .output-section { 
+            background: #f1f3f4; padding: 20px; border-radius: 8px; 
+            margin: 20px 0; display: none;
+        }
+        .service-grid { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); 
+            gap: 20px; margin: 20px 0;
+        }
+        .service-card { 
+            background: white; padding: 20px; border-radius: 10px; 
+            border: 2px solid #e9ecef; position: relative;
+        }
+        .service-card h4 { color: #495057; margin-bottom: 15px; }
+        .deploy-link { 
+            display: block; background: linear-gradient(135deg, #007bff, #0056b3); 
+            color: white; text-decoration: none; padding: 12px 20px; 
+            border-radius: 6px; text-align: center; font-weight: bold;
+            margin: 10px 0;
+        }
+        .deploy-link:hover { transform: translateY(-1px); }
+        .copy-btn { 
+            background: #6c757d; color: white; border: none; 
+            padding: 8px 12px; border-radius: 4px; cursor: pointer;
+            margin: 5px 0; font-size: 12px;
+        }
+        .copy-btn:hover { background: #5a6268; }
+        .env-config { 
+            background: #f8f9fa; padding: 15px; border-radius: 6px; 
+            font-family: monospace; font-size: 12px; margin: 10px 0;
+            border: 1px solid #dee2e6;
+        }
+        .success { background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .warning { background: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .progress-bar { 
+            width: 100%; height: 8px; background: #e9ecef; 
+            border-radius: 4px; overflow: hidden; margin: 20px 0;
+        }
+        .progress-fill { 
+            height: 100%; background: linear-gradient(90deg, #28a745, #20c997); 
+            width: 0%; transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Retail OS - Automated Render Deployment</h1>
+            <p>Smart deployment automation for your Retail OS platform</p>
+        </div>
+
+        <div class="automation-section">
+            <h2>🚀 Deployment Automation Generator</h2>
+            <p>Generate pre-configured deployment links and environment variables automatically!</p>
+        </div>
+
+        <div class="step">
+            <h3>Step 1: Configure Your Deployment</h3>
+            <div class="deploy-form">
+                <div class="form-group">
+                    <label for="github-repo">GitHub Repository URL:</label>
+                    <input type="text" id="github-repo" value="https://github.com/mobilebarn/UNIFIED_COMMERCE" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label for="postgres-url">PostgreSQL Database URL (from your Render dashboard):</label>
+                    <input type="text" id="postgres-url" placeholder="postgresql://user:password@hostname:port/database">
+                    <button class="copy-btn" onclick="pasteFromClipboard('postgres-url')">📋 Paste</button>
+                </div>
+                
+                <div class="form-group">
+                    <label for="redis-url">Redis URL (from your Render dashboard):</label>
+                    <input type="text" id="redis-url" placeholder="redis://user:password@hostname:port">
+                    <button class="copy-btn" onclick="pasteFromClipboard('redis-url')">📋 Paste</button>
+                </div>
+                
+                <div class="form-group">
+                    <label for="project-name">Project Name Prefix:</label>
+                    <input type="text" id="project-name" value="retail-os">
+                </div>
+                
+                <button class="generate-btn" onclick="generateDeployment()">🚀 Generate Automated Deployment</button>
+            </div>
+        </div>
+
+        <div class="output-section" id="deployment-output">
+            <h3>📋 Your Automated Deployment Plan</h3>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+            <p>Progress: <span id="progress-text">0/10 services configured</span></p>
+            
+            <div class="service-grid" id="services-grid">
+                <!-- Services will be generated here -->
+            </div>
+            
+            <div class="success">
+                <h4>✅ Next Steps:</h4>
+                <ol>
+                    <li>Click each "Deploy on Render" button below in order</li>
+                    <li>For each deployment, copy the environment variables and paste them</li>
+                    <li>Services will auto-configure and connect to your databases</li>
+                    <li>Monitor deployment progress in your Render dashboard</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>Step 2: Database Connection Helpers</h3>
+            <div class="warning">
+                <h4>📋 How to Get Database URLs:</h4>
+                <ol>
+                    <li>In your Render dashboard, click on <strong>"Postgres"</strong> service</li>
+                    <li>Go to the <strong>"Connect"</strong> tab</li>
+                    <li>Copy the <strong>"External Database URL"</strong></li>
+                    <li>Repeat for <strong>"Redis"</strong> service</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>Step 3: Deployment Order & Monitoring</h3>
+            <div class="env-config">
+Recommended Deployment Order:
+1. Identity Service (authentication core)
+2. Product Catalog (product data)
+3. Inventory Service (stock management)
+4. Cart Service (shopping functionality)
+5. Order Service (order processing)
+6. Payment Service (payment processing)
+7. Promotions Service (discounts & offers)
+8. Merchant Account (business management)
+9. Analytics Service (reporting & insights)
+10. GraphQL Gateway (API unification)
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const services = [
+            { name: 'Identity', path: 'services/identity', port: 8001, icon: '🔐' },
+            { name: 'Product Catalog', path: 'services/product-catalog', port: 8008, icon: '🛍️' },
+            { name: 'Inventory', path: 'services/inventory', port: 8004, icon: '📦' },
+            { name: 'Cart', path: 'services/cart', port: 8002, icon: '🛒' },
+            { name: 'Order', path: 'services/order', port: 8005, icon: '📋' },
+            { name: 'Payment', path: 'services/payment', port: 8006, icon: '💳' },
+            { name: 'Promotions', path: 'services/promotions', port: 8007, icon: '🎯' },
+            { name: 'Merchant Account', path: 'services/merchant-account', port: 8003, icon: '🏪' },
+            { name: 'Analytics', path: 'services/analytics', port: 8009, icon: '📊' },
+            { name: 'GraphQL Gateway', path: 'gateway', port: 4000, icon: '🌐' }
+        ];
+
+        async function pasteFromClipboard(inputId) {
+            try {
+                const text = await navigator.clipboard.readText();
+                document.getElementById(inputId).value = text;
+            } catch (err) {
+                console.error('Failed to read clipboard:', err);
+                alert('Please paste the URL manually');
+            }
+        }
+
+        function generateDeployment() {
+            const repoUrl = document.getElementById('github-repo').value;
+            const postgresUrl = document.getElementById('postgres-url').value;
+            const redisUrl = document.getElementById('redis-url').value;
+            const projectName = document.getElementById('project-name').value;
+
+            if (!postgresUrl || !redisUrl) {
+                alert('Please enter both PostgreSQL and Redis URLs from your Render dashboard');
+                return;
+            }
+
+            const outputSection = document.getElementById('deployment-output');
+            const servicesGrid = document.getElementById('services-grid');
+            
+            outputSection.style.display = 'block';
+            servicesGrid.innerHTML = '';
+
+            services.forEach((service, index) => {
+                const serviceCard = createServiceCard(service, repoUrl, postgresUrl, redisUrl, projectName, index);
+                servicesGrid.appendChild(serviceCard);
+            });
+
+            updateProgress(0);
+            animateProgress();
+        }
+
+        function createServiceCard(service, repoUrl, postgresUrl, redisUrl, projectName, index) {
+            const card = document.createElement('div');
+            card.className = 'service-card';
+            
+            const serviceName = `${projectName}-${service.name.toLowerCase().replace(/\s+/g, '-')}`;
+            const deployUrl = `https://dashboard.render.com/create?type=web`;
+            
+            const envVars = `PORT=${service.port}
+ENVIRONMENT=production
+LOG_LEVEL=info
+DATABASE_URL=${postgresUrl}
+REDIS_URL=${redisUrl}
+SERVICE_NAME=${service.name}
+SERVICE_PORT=${service.port}`;
+
+            card.innerHTML = `
+                <h4>${service.icon} ${service.name} Service</h4>
+                <p><strong>Service Name:</strong> ${serviceName}</p>
+                <p><strong>Root Directory:</strong> ${service.path}</p>
+                <p><strong>Port:</strong> ${service.port}</p>
+                
+                <a href="${deployUrl}" target="_blank" class="deploy-link" onclick="markDeployed(${index})">
+                    🚀 Deploy ${service.name} on Render
+                </a>
+                
+                <div class="env-config">
+                    <strong>Environment Variables (copy these):</strong><br>
+                    ${envVars.replace(/\n/g, '<br>')}
+                    <br><br>
+                    <button class="copy-btn" onclick="copyEnvVars('${envVars.replace(/'/g, "\\'")}')">📋 Copy All Env Vars</button>
+                </div>
+                
+                <div class="env-config">
+                    <strong>Build Settings:</strong><br>
+                    Build Command: go build -o app ./cmd/server<br>
+                    Start Command: ./app<br>
+                    <button class="copy-btn" onclick="copyToClipboard('go build -o app ./cmd/server')">📋 Copy Build Cmd</button>
+                    <button class="copy-btn" onclick="copyToClipboard('./app')">📋 Copy Start Cmd</button>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        function copyEnvVars(envVars) {
+            copyToClipboard(envVars);
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // Visual feedback
+                event.target.style.background = '#28a745';
+                setTimeout(() => {
+                    event.target.style.background = '#6c757d';
+                }, 1000);
+            });
+        }
+
+        let deployedCount = 0;
+
+        function markDeployed(index) {
+            deployedCount++;
+            updateProgress(deployedCount);
+        }
+
+        function updateProgress(count) {
+            const progress = (count / services.length) * 100;
+            document.getElementById('progress').style.width = progress + '%';
+            document.getElementById('progress-text').textContent = `${count}/${services.length} services configured`;
+        }
+
+        function animateProgress() {
+            let count = 0;
+            const interval = setInterval(() => {
+                if (count <= services.length) {
+                    updateProgress(count);
+                    count++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, 200);
+        }
+    </script>
+</body>
+</html>
