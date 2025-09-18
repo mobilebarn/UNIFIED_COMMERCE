@@ -6,7 +6,6 @@ services:
   - type: pserv
     name: unified-commerce-postgres
     plan: free
-    databaseName: unified_commerce
     
   - type: redis
     name: unified-commerce-redis
