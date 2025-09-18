@@ -65,23 +65,29 @@ async function startGateway() {
     }));
 
     // Create Apollo Gateway with service definitions
-    // NOTE: Use environment variables for Railway deployment or fallback to localhost
-    const getServiceUrl = (serviceName, defaultPort) => {
-      const envVar = `${serviceName.toUpperCase()}_SERVICE_URL`;
-      return process.env[envVar] || `http://localhost:${defaultPort}/graphql`;
+    // Use environment variables from Render deployment
+    const getServiceUrl = (envVarName, fallbackPort) => {
+      const baseUrl = process.env[envVarName];
+      if (baseUrl) {
+        // Render provides the host URL, append /graphql path
+        return `${baseUrl}/graphql`;
+      }
+      // Fallback for local development
+      return `http://localhost:${fallbackPort}/graphql`;
     };
 
     const gateway = new ApolloGateway({
       supergraphSdl: new IntrospectAndCompose({
         subgraphs: [
-          { name: 'identity', url: getServiceUrl('identity', 8001) },
-          { name: 'cart', url: getServiceUrl('cart', 8002) },
-          { name: 'order', url: getServiceUrl('order', 8003) },
-          { name: 'payment', url: getServiceUrl('payment', 8004) },
-          { name: 'inventory', url: getServiceUrl('inventory', 8005) },
-          { name: 'product', url: getServiceUrl('product', 8006) },
-          { name: 'promotions', url: getServiceUrl('promotions', 8007) },
-          { name: 'merchant', url: getServiceUrl('merchant', 8008) }
+          { name: 'identity', url: getServiceUrl('IDENTITY_SERVICE_URL', 8001) },
+          { name: 'product-catalog', url: getServiceUrl('PRODUCT_CATALOG_SERVICE_URL', 8002) },
+          { name: 'order', url: getServiceUrl('ORDER_SERVICE_URL', 8003) },
+          { name: 'payment', url: getServiceUrl('PAYMENT_SERVICE_URL', 8004) },
+          { name: 'inventory', url: getServiceUrl('INVENTORY_SERVICE_URL', 8005) },
+          { name: 'merchant-account', url: getServiceUrl('MERCHANT_ACCOUNT_SERVICE_URL', 8006) },
+          { name: 'cart', url: getServiceUrl('CART_SERVICE_URL', 8007) },
+          { name: 'promotions', url: getServiceUrl('PROMOTIONS_SERVICE_URL', 8008) },
+          { name: 'analytics', url: getServiceUrl('ANALYTICS_SERVICE_URL', 8009) }
         ],
       })
     });
@@ -119,18 +125,19 @@ async function startGateway() {
         status: 'healthy',
         time: new Date().toISOString(),
         federation: {
-          subgraphs: 8, // All 8 services
+          subgraphs: 9, // All 9 services including analytics
           active: true
         },
         services: {
-          identity: getServiceUrl('identity', 8001),
-          cart: getServiceUrl('cart', 8002),
-          order: getServiceUrl('order', 8003),
-          payment: getServiceUrl('payment', 8004),
-          inventory: getServiceUrl('inventory', 8005),
-          product: getServiceUrl('product', 8006),
-          promotions: getServiceUrl('promotions', 8007),
-          merchant: getServiceUrl('merchant', 8008)
+          identity: getServiceUrl('IDENTITY_SERVICE_URL', 8001),
+          'product-catalog': getServiceUrl('PRODUCT_CATALOG_SERVICE_URL', 8002),
+          order: getServiceUrl('ORDER_SERVICE_URL', 8003),
+          payment: getServiceUrl('PAYMENT_SERVICE_URL', 8004),
+          inventory: getServiceUrl('INVENTORY_SERVICE_URL', 8005),
+          'merchant-account': getServiceUrl('MERCHANT_ACCOUNT_SERVICE_URL', 8006),
+          cart: getServiceUrl('CART_SERVICE_URL', 8007),
+          promotions: getServiceUrl('PROMOTIONS_SERVICE_URL', 8008),
+          analytics: getServiceUrl('ANALYTICS_SERVICE_URL', 8009)
         }
       });
     });
@@ -155,15 +162,16 @@ async function startGateway() {
       console.log(`🎮 GraphQL Playground available at http://localhost:${PORT}/graphql`);
       console.log(`🔍 Health check available at http://localhost:${PORT}/health`);
       console.log('\n📊 Federated Services:');
-      console.log(`  ✅ Identity Service: ${getServiceUrl('identity', 8001)}`);
-      console.log(`  ✅ Cart Service: ${getServiceUrl('cart', 8002)}`);
-      console.log(`  ✅ Order Service: ${getServiceUrl('order', 8003)}`);
-      console.log(`  ✅ Payment Service: ${getServiceUrl('payment', 8004)}`);
-      console.log(`  ✅ Inventory Service: ${getServiceUrl('inventory', 8005)}`);
-      console.log(`  ✅ Product Catalog Service: ${getServiceUrl('product', 8006)}`);
-      console.log(`  ✅ Promotions Service: ${getServiceUrl('promotions', 8007)}`);
-      console.log(`  ✅ Merchant Account Service: ${getServiceUrl('merchant', 8008)}`);
-      console.log('\n🎉 All 8 services are now connected to the GraphQL Federation Gateway!');
+      console.log(`  ✅ Identity Service: ${getServiceUrl('IDENTITY_SERVICE_URL', 8001)}`);
+      console.log(`  ✅ Product Catalog Service: ${getServiceUrl('PRODUCT_CATALOG_SERVICE_URL', 8002)}`);
+      console.log(`  ✅ Order Service: ${getServiceUrl('ORDER_SERVICE_URL', 8003)}`);
+      console.log(`  ✅ Payment Service: ${getServiceUrl('PAYMENT_SERVICE_URL', 8004)}`);
+      console.log(`  ✅ Inventory Service: ${getServiceUrl('INVENTORY_SERVICE_URL', 8005)}`);
+      console.log(`  ✅ Merchant Account Service: ${getServiceUrl('MERCHANT_ACCOUNT_SERVICE_URL', 8006)}`);
+      console.log(`  ✅ Cart Service: ${getServiceUrl('CART_SERVICE_URL', 8007)}`);
+      console.log(`  ✅ Promotions Service: ${getServiceUrl('PROMOTIONS_SERVICE_URL', 8008)}`);
+      console.log(`  ✅ Analytics Service: ${getServiceUrl('ANALYTICS_SERVICE_URL', 8009)}`);
+      console.log('\n🎉 All 9 services are now connected to the GraphQL Federation Gateway!');
       console.log('\n🔧 Next Steps:');
       console.log('  1. Test unified GraphQL queries across all connected services');
       console.log('  2. Verify cross-service relationships and federated queries');
