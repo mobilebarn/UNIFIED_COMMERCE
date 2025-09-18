@@ -1,13 +1,4 @@
 services:
-  - type: pserv
-    name: unified-commerce-postgres
-    plan: free
-    
-  - type: redis
-    name: unified-commerce-redis
-    plan: free
-    ipAllowList: []
-    
   - type: web
     name: unified-commerce-identity
     runtime: go
@@ -20,94 +11,6 @@ services:
         value: "8001"
         
   - type: web
-    name: unified-commerce-product-catalog
-    runtime: go
-    plan: free
-    buildCommand: go build -o app ./cmd/server
-    startCommand: ./app
-    rootDir: services/product-catalog
-    envVars:
-      - key: PORT
-        value: "8006"
-        
-  - type: web
-    name: unified-commerce-inventory
-    runtime: go
-    plan: free
-    buildCommand: go build -o app ./cmd/server
-    startCommand: ./app
-    rootDir: services/inventory
-    envVars:
-      - key: PORT
-        value: "8005"
-        
-  - type: web
-    name: unified-commerce-cart
-    runtime: go
-    plan: free
-    buildCommand: go build -o app ./cmd/server
-    startCommand: ./app
-    rootDir: services/cart
-    envVars:
-      - key: PORT
-        value: "8002"
-        
-  - type: web
-    name: unified-commerce-order
-    runtime: go
-    plan: free
-    buildCommand: go build -o app ./cmd/server
-    startCommand: ./app
-    rootDir: services/order
-    envVars:
-      - key: PORT
-        value: "8003"
-        
-  - type: web
-    name: unified-commerce-payment
-    runtime: go
-    plan: free
-    buildCommand: go build -o app ./cmd/server
-    startCommand: ./app
-    rootDir: services/payment
-    envVars:
-      - key: PORT
-        value: "8004"
-        
-  - type: web
-    name: unified-commerce-promotions
-    runtime: go
-    plan: free
-    buildCommand: go build -o app ./cmd/server
-    startCommand: ./app
-    rootDir: services/promotions
-    envVars:
-      - key: PORT
-        value: "8007"
-        
-  - type: web
-    name: unified-commerce-merchant-account
-    runtime: go
-    plan: free
-    buildCommand: go build -o app ./cmd/server
-    startCommand: ./app
-    rootDir: services/merchant-account
-    envVars:
-      - key: PORT
-        value: "8008"
-        
-  - type: web
-    name: unified-commerce-analytics
-    runtime: go
-    plan: free
-    buildCommand: go build -o app ./cmd/server
-    startCommand: ./app
-    rootDir: services/analytics
-    envVars:
-      - key: PORT
-        value: "8009"
-        
-  - type: web
     name: unified-commerce-gateway
     runtime: node
     plan: free
@@ -117,3 +20,12 @@ services:
     envVars:
       - key: PORT
         value: "4000"
+        
+  - type: pserv
+    name: unified-commerce-postgres
+    plan: free
+    
+  - type: redis
+    name: unified-commerce-redis
+    plan: free
+    ipAllowList: []
