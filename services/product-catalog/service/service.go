@@ -102,6 +102,11 @@ type ProductListFilters struct {
 
 // CreateProduct creates a new product
 func (s *ProductService) CreateProduct(ctx context.Context, req *CreateProductRequest) (*models.Product, error) {
+	// Check if repository is available
+	if s.repo.Product == nil {
+		return nil, fmt.Errorf("product catalog service is running in degraded mode - database unavailable")
+	}
+	
 	// Generate SKU if not provided
 	if req.SKU == "" {
 		req.SKU = s.generateSKU(req.Name)
@@ -212,6 +217,11 @@ func (s *ProductService) CreateProduct(ctx context.Context, req *CreateProductRe
 
 // GetProduct retrieves a product by ID
 func (s *ProductService) GetProduct(ctx context.Context, productID, merchantID string) (*models.Product, error) {
+	// Check if repository is available
+	if s.repo.Product == nil {
+		return nil, fmt.Errorf("product catalog service is running in degraded mode - database unavailable")
+	}
+	
 	product, err := s.repo.Product.GetByID(ctx, productID)
 	if err != nil {
 		return nil, ErrProductNotFound
@@ -227,6 +237,11 @@ func (s *ProductService) GetProduct(ctx context.Context, productID, merchantID s
 
 // GetProductBySlug retrieves a product by slug (public access)
 func (s *ProductService) GetProductBySlug(ctx context.Context, merchantID, slug string) (*models.Product, error) {
+	// Check if repository is available
+	if s.repo.Product == nil {
+		return nil, fmt.Errorf("product catalog service is running in degraded mode - database unavailable")
+	}
+	
 	product, err := s.repo.Product.GetBySlug(ctx, merchantID, slug)
 	if err != nil {
 		return nil, ErrProductNotFound
@@ -334,6 +349,11 @@ func (s *ProductService) UpdateProduct(ctx context.Context, productID, merchantI
 
 // ListProducts retrieves products with filtering and pagination
 func (s *ProductService) ListProducts(ctx context.Context, filters ProductListFilters, offset, limit int) ([]models.Product, int64, error) {
+	// Check if repository is available
+	if s.repo.Product == nil {
+		return nil, 0, fmt.Errorf("product catalog service is running in degraded mode - database unavailable")
+	}
+	
 	filterMap := map[string]interface{}{
 		"merchant_id": filters.MerchantID,
 	}

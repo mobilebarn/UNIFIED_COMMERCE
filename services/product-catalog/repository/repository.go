@@ -473,6 +473,15 @@ type Repository struct {
 
 // NewRepository creates a new repository with all sub-repositories
 func NewRepository(db *database.MongoDB) *Repository {
+	if db == nil {
+		// Return a repository with nil sub-repositories for graceful degradation
+		return &Repository{
+			Product:    nil,
+			Category:   nil,
+			Collection: nil,
+		}
+	}
+	
 	return &Repository{
 		Product:    NewProductRepository(db),
 		Category:   NewCategoryRepository(db),

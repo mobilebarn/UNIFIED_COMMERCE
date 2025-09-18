@@ -41,9 +41,11 @@ func main() {
 	)
 	mongoDB, err := database.NewMongoConnection(mongoConfig)
 	if err != nil {
-		log.WithError(err).Fatal("Failed to connect to MongoDB")
+		log.WithError(err).Warn("Failed to connect to MongoDB, running in degraded mode")
+		// Continue without MongoDB - service will run in read-only mode
+	} else {
+		defer mongoDB.Close(context.Background())
 	}
-	defer mongoDB.Close(context.Background())
 
 	// Initialize repositories
 	repo := repository.NewRepository(mongoDB)
@@ -68,9 +70,13 @@ func main() {
 
 	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {
-		mongoStatus := "healthy"
-		if err := mongoDB.Health(context.Background()); err != nil {
-			mongoStatus = "unhealthy"
+		mongoStatus := "unavailable"
+		if mongoDB != nil {
+			if err := mongoDB.Health(context.Background()); err != nil {
+				mongoStatus = "unhealthy"
+			} else {
+				mongoStatus = "healthy"
+			}
 		}
 
 		health := map[string]interface{}{
