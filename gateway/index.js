@@ -67,14 +67,50 @@ async function startGateway() {
     // Create Apollo Gateway with service definitions
     // Use environment variables from Render deployment
     const getServiceUrl = (envVarName, fallbackPort) => {
-      const baseUrl = process.env[envVarName];
-      if (baseUrl) {
-        // Render provides the host URL, append /graphql path
-        return `${baseUrl}/graphql`;
+      const serviceHost = process.env[envVarName];
+      if (serviceHost) {
+        // Handle different URL formats that Render might provide
+        let fullUrl;
+        
+        if (serviceHost.startsWith('http://') || serviceHost.startsWith('https://')) {
+          // Full URL provided
+          fullUrl = `${serviceHost}/graphql`;
+        } else if (serviceHost.includes('.onrender.com')) {
+          // Render domain without protocol
+          fullUrl = `https://${serviceHost}/graphql`;
+        } else {
+          // Service name only - construct full Render URL
+          // Render's fromService property might give us just the service name
+          fullUrl = `https://${serviceHost}.onrender.com/graphql`;
+        }
+        
+        console.log(`🔗 ${envVarName}: '${serviceHost}' -> '${fullUrl}'`);
+        return fullUrl;
       }
+      
       // Fallback for local development
-      return `http://localhost:${fallbackPort}/graphql`;
+      const fallbackUrl = `http://localhost:${fallbackPort}/graphql`;
+      console.log(`🔗 ${envVarName} (LOCAL FALLBACK): ${fallbackUrl}`);
+      return fallbackUrl;
     };
+
+    // Log all environment variables for debugging
+    console.log('🔍 Environment Variables Debug:');
+    console.log('PORT:', process.env.PORT);
+    console.log('NODE_ENV:', process.env.NODE_ENV);
+    
+    const serviceEnvVars = Object.keys(process.env).filter(key => key.includes('SERVICE_URL'));
+    console.log('Found SERVICE_URL environment variables:', serviceEnvVars);
+    
+    serviceEnvVars.forEach(envVar => {
+      console.log(`${envVar}:`, `'${process.env[envVar]}'`);
+    });
+    
+    // Also check if services might be available with different naming
+    console.log('\nAll environment variables containing "commerce":');
+    Object.keys(process.env).filter(key => key.toLowerCase().includes('commerce')).forEach(key => {
+      console.log(`${key}: '${process.env[key]}'`);
+    });
 
     const gateway = new ApolloGateway({
       supergraphSdl: new IntrospectAndCompose({
@@ -89,7 +125,17 @@ async function startGateway() {
           { name: 'promotions', url: getServiceUrl('PROMOTIONS_SERVICE_URL', 8008) },
           { name: 'analytics', url: getServiceUrl('ANALYTICS_SERVICE_URL', 8009) }
         ],
-      })
+        pollIntervalInMs: 10000, // Poll every 10 seconds for service updates
+        introspectionHeaders: {
+          'User-Agent': 'GraphQL-Federation-Gateway/1.0.0'
+        }
+      }),
+      
+      // Service health check and retry logic
+      serviceHealthCheck: true,
+      
+      // Experimental: more lenient service loading
+      experimental_autoFragmentization: true
     });
 
     // Create Apollo Server with the gateway
