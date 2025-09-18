@@ -1,11 +1,23 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite",
-  "rewrites": [
+  "name": "unified-commerce-admin-panel",
+  "version": 2,
+  "builds": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "env": {
+    "REACT_APP_GRAPHQL_ENDPOINT": "https://unified-commerce-gateway.onrender.com/graphql",
+    "REACT_APP_APP_NAME": "Unified Commerce Admin"
+  },
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
