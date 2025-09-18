@@ -42,6 +42,8 @@ func main() {
 		cfg.DatabasePassword,
 		cfg.DatabaseName,
 	)
+	// Set the full DATABASE_URL if available (for cloud providers like Render)
+	postgresConfig.DatabaseURL = cfg.DatabaseURL
 	db, err := database.NewPostgresConnection(postgresConfig)
 	if err != nil {
 		log.WithError(err).Fatal("Failed to connect to PostgreSQL")
