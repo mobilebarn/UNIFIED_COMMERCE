@@ -43,10 +43,6 @@ type Query {
   # Brand queries
   brand(id: ID!): Brand
   brands(merchantId: ID): [Brand!]!
-  
-  # Federation service discovery
-  _service: _Service!
-  _entities(representations: [_Any!]!): [_Entity]!
 }
 
 type Mutation {
@@ -508,10 +504,3 @@ input UpdateBrandInput {
 
 # Scalar for JSON data
 scalar JSON
-
-# Federation types
-scalar _Any
-union _Entity = Product | ProductVariant | Category | Collection | Brand
-type _Service {
-  sdl: String
-}
