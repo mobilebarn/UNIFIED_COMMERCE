@@ -124,15 +124,17 @@ func NewBaseService(opts ServiceOptions) (*BaseService, error) {
 
 		service.RedisClient, err = database.NewRedisConnection(redisConfig)
 		if err != nil {
-			return nil, fmt.Errorf("failed to connect to Redis: %w", err)
+			serviceLogger.WithError(err).Warn("Failed to connect to Redis, continuing without Redis support")
+			// Don't fail the service, continue without Redis
+			service.RedisClient = nil
+		} else {
+			service.HealthChecks = append(service.HealthChecks, HealthCheck{
+				Name: "redis",
+				Check: func(ctx context.Context) error {
+					return service.RedisClient.Health(ctx)
+				},
+			})
 		}
-
-		service.HealthChecks = append(service.HealthChecks, HealthCheck{
-			Name: "redis",
-			Check: func(ctx context.Context) error {
-				return service.RedisClient.Health(ctx)
-			},
-		})
 	}
 
 	// Add custom health checks
