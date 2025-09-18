@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: unified-commerce-identity
+    name: test-web-service
     runtime: go
     plan: free
     buildCommand: go build -o app ./cmd/server
@@ -8,5 +8,5 @@ services:
     rootDir: services/identity
     
   - type: pserv
-    name: unified-commerce-postgres
+    name: test-postgres
     plan: free
