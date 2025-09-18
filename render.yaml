@@ -10,11 +10,12 @@ services:
   - type: redis
     name: unified-commerce-redis
     plan: free
+    ipAllowList: []
     
   # Microservices
   - type: web
     name: unified-commerce-identity
-    env: go
+    runtime: go
     plan: free
     buildCommand: go build -o app ./cmd/server
     startCommand: ./app
@@ -31,7 +32,7 @@ services:
           
   - type: web
     name: unified-commerce-product-catalog
-    env: go
+    runtime: go
     plan: free
     buildCommand: go build -o app ./cmd/server
     startCommand: ./app
@@ -48,7 +49,7 @@ services:
           
   - type: web
     name: unified-commerce-inventory
-    env: go
+    runtime: go
     plan: free
     buildCommand: go build -o app ./cmd/server
     startCommand: ./app
@@ -65,7 +66,7 @@ services:
           
   - type: web
     name: unified-commerce-cart
-    env: go
+    runtime: go
     plan: free
     buildCommand: go build -o app ./cmd/server
     startCommand: ./app
@@ -82,7 +83,7 @@ services:
           
   - type: web
     name: unified-commerce-order
-    env: go
+    runtime: go
     plan: free
     buildCommand: go build -o app ./cmd/server
     startCommand: ./app
@@ -99,7 +100,7 @@ services:
           
   - type: web
     name: unified-commerce-payment
-    env: go
+    runtime: go
     plan: free
     buildCommand: go build -o app ./cmd/server
     startCommand: ./app
@@ -116,7 +117,7 @@ services:
           
   - type: web
     name: unified-commerce-promotions
-    env: go
+    runtime: go
     plan: free
     buildCommand: go build -o app ./cmd/server
     startCommand: ./app
@@ -133,7 +134,7 @@ services:
           
   - type: web
     name: unified-commerce-merchant-account
-    env: go
+    runtime: go
     plan: free
     buildCommand: go build -o app ./cmd/server
     startCommand: ./app
@@ -150,7 +151,7 @@ services:
           
   - type: web
     name: unified-commerce-analytics
-    env: go
+    runtime: go
     plan: free
     buildCommand: go build -o app ./cmd/server
     startCommand: ./app
@@ -167,7 +168,7 @@ services:
           
   - type: web
     name: unified-commerce-gateway
-    env: node
+    runtime: node
     plan: free
     buildCommand: npm install
     startCommand: npm start
