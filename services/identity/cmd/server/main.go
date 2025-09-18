@@ -24,7 +24,7 @@ func main() {
 	baseService, err = service.NewBaseService(service.ServiceOptions{
 		Name:        "identity",
 		UsePostgres: true,
-		UseRedis:    false,
+		UseRedis:    true,  // Enable Redis for session management and caching
 		UseMongoDB:  false,
 	})
 	if err != nil {

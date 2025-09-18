@@ -15,6 +15,10 @@ services:
         fromDatabase:
           name: unified-commerce-postgres
           property: connectionString
+      - key: REDIS_URL
+        fromDatabase:
+          name: unified-commerce-redis
+          property: connectionString
 
   - type: web
     name: unified-commerce-product-catalog
@@ -210,4 +214,6 @@ databases:
   - name: unified-commerce-postgres
     plan: free
   - name: unified-commerce-mongodb
+    plan: free
+  - name: unified-commerce-redis
     plan: free
