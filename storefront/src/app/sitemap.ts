@@ -26,94 +26,52 @@ const GET_CATEGORIES = gql`
 // Base URLs that should always be included
 const BASE_URLS: MetadataRoute.Sitemap = [
   {
-    url: 'http://localhost:3000',
+    url: 'https://unified-commerce.vercel.app',
     lastModified: new Date(),
     changeFrequency: 'yearly',
     priority: 1.0,
   },
   {
-    url: 'http://localhost:3000/products',
+    url: 'https://unified-commerce.vercel.app/products',
     lastModified: new Date(),
     changeFrequency: 'daily',
     priority: 0.9,
   },
   {
-    url: 'http://localhost:3000/categories',
+    url: 'https://unified-commerce.vercel.app/categories',
     lastModified: new Date(),
     changeFrequency: 'weekly',
     priority: 0.8,
   },
   {
-    url: 'http://localhost:3000/deals',
+    url: 'https://unified-commerce.vercel.app/deals',
     lastModified: new Date(),
     changeFrequency: 'daily',
     priority: 0.9,
   },
   {
-    url: 'http://localhost:3000/search',
+    url: 'https://unified-commerce.vercel.app/search',
     lastModified: new Date(),
     changeFrequency: 'yearly',
     priority: 0.7,
   },
   {
-    url: 'http://localhost:3000/login',
+    url: 'https://unified-commerce.vercel.app/login',
     lastModified: new Date(),
     changeFrequency: 'yearly',
     priority: 0.6,
   },
   {
-    url: 'http://localhost:3000/register',
+    url: 'https://unified-commerce.vercel.app/register',
     lastModified: new Date(),
     changeFrequency: 'yearly',
     priority: 0.6,
   },
   {
-    url: 'http://localhost:3000/account',
+    url: 'https://unified-commerce.vercel.app/account',
     lastModified: new Date(),
     changeFrequency: 'weekly',
     priority: 0.7,
-  },
-  {
-    url: 'http://localhost:3000/account/orders',
-    lastModified: new Date(),
-    changeFrequency: 'weekly',
-    priority: 0.6,
-  },
-  {
-    url: 'http://localhost:3000/account/wishlist',
-    lastModified: new Date(),
-    changeFrequency: 'weekly',
-    priority: 0.6,
-  },
-  {
-    url: 'http://localhost:3000/account/addresses',
-    lastModified: new Date(),
-    changeFrequency: 'monthly',
-    priority: 0.5,
-  },
-  {
-    url: 'http://localhost:3000/account/payment-methods',
-    lastModified: new Date(),
-    changeFrequency: 'monthly',
-    priority: 0.5,
-  },
-  {
-    url: 'http://localhost:3000/cart',
-    lastModified: new Date(),
-    changeFrequency: 'daily',
-    priority: 0.4,
-  },
-  {
-    url: 'http://localhost:3000/checkout',
-    lastModified: new Date(),
-    changeFrequency: 'daily',
-    priority: 0.3,
-  },
-  {
-    url: 'http://localhost:3000/order-confirmation',
-    lastModified: new Date(),
-    changeFrequency: 'yearly',
-    priority: 0.2,
   },
 ];
 
@@ -127,9 +85,9 @@ async function generateProductUrls(): Promise<MetadataRoute.Sitemap> {
     });
 
     return data.products.map((product: any) => ({
-      url: `http://localhost:3000/products/${product.handle || product.id}`,
+      url: `https://unified-commerce.vercel.app/products/${product.handle || product.id}`,
       lastModified: new Date(product.updatedAt),
-      changeFrequency: 'weekly',
+      changeFrequency: 'weekly' as const,
       priority: 0.8,
     }));
   } catch (error) {
@@ -148,9 +106,9 @@ async function generateCategoryUrls(): Promise<MetadataRoute.Sitemap> {
     });
 
     return data.categories.map((category: any) => ({
-      url: `http://localhost:3000/categories/${category.handle || category.id}`,
+      url: `https://unified-commerce.vercel.app/categories/${category.handle || category.id}`,
       lastModified: new Date(category.updatedAt),
-      changeFrequency: 'weekly',
+      changeFrequency: 'weekly' as const,
       priority: 0.7,
     }));
   } catch (error) {
