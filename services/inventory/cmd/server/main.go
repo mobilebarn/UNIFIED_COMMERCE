@@ -75,7 +75,9 @@ func main() {
 	}
 	consumer, err := messaging.NewEventConsumer(consumerConfig)
 	if err != nil {
-		log.WithError(err).Fatal("Failed to create event consumer")
+		log.WithError(err).Warn("Failed to create event consumer, using no-op consumer for graceful degradation")
+		// Create a no-op consumer to allow service to continue without Kafka
+		consumer = messaging.NewNoOpConsumer(consumerConfig.Topics)
 	}
 	defer consumer.Close()
 
@@ -188,9 +190,11 @@ func checkPostgreSQL(db *database.PostgresDB) string {
 // startEventConsumption handles event consumption from the messaging system
 func startEventConsumption(consumer messaging.EventConsumer, handler *eventhandlers.OrderEventHandler, log *logger.Logger) {
 	if err := consumer.Subscribe([]string{"orders.placed"}); err != nil {
-		log.WithError(err).Fatal("Failed to subscribe to topics")
+		log.WithError(err).Error("Failed to subscribe to topics, event consumption disabled")
+		return
 	}
 
+	log.Info("Starting event consumption for inventory service")
 	for {
 		msg, err := consumer.ReadMessage()
 		if err != nil {
@@ -203,6 +207,7 @@ func startEventConsumption(consumer messaging.EventConsumer, handler *eventhandl
 		if err := handler.HandleOrderPlacedEvent(msg.Value); err != nil {
 			log.WithError(err).Error("Failed to handle order placed event")
 		} else {
+			log.Info("Successfully processed order placed event")
 			if err := consumer.CommitMessage(msg); err != nil {
 				log.WithError(err).Error("Failed to commit message")
 			}

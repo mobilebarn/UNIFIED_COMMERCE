@@ -27,8 +27,13 @@ func NewEventProducer(config ProducerConfig) (EventProducer, error) {
 
 // NewEventConsumer creates an appropriate consumer based on configuration
 func NewEventConsumer(config ConsumerConfig) (EventConsumer, error) {
-	// Always use pure Go implementation for now to avoid CGO issues
-	return NewSaramaConsumer(config.Brokers, config.GroupID, config.Topics)
+	// Try to create Sarama consumer first
+	consumer, err := NewSaramaConsumer(config.Brokers, config.GroupID, config.Topics)
+	if err != nil {
+		// If Kafka is not available, return a no-op consumer for graceful degradation
+		return NewNoOpConsumer(config.Topics), nil
+	}
+	return consumer, nil
 }
 
 // DetectEnvironment tries to detect if we're running in a Docker/CGO-friendly environment
