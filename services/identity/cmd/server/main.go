@@ -55,6 +55,11 @@ func main() {
 
 // setupRoutes configures the HTTP routes for the identity service
 func setupRoutes(router *gin.Engine, baseService *service.BaseService) {
+	// Add a simple ping endpoint that doesn't require database
+	router.GET("/ping", func(c *gin.Context) {
+		c.JSON(200, gin.H{"message": "pong", "service": "identity", "status": "ok"})
+	})
+
 	// Create repository
 	repo := repository.NewRepository(baseService.PostgresDB)
 
