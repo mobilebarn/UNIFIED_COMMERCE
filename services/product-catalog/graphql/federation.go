@@ -5,9 +5,7 @@ package graphql
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
-	"sync"
 
 	"github.com/99designs/gqlgen/plugin/federation/fedruntime"
 )
@@ -36,217 +34,77 @@ func (ec *executionContext) __resolve__service(ctx context.Context) (fedruntime.
 	}, nil
 }
 
-func (ec *executionContext) __resolve_entities(ctx context.Context, representations []map[string]interface{}) []fedruntime.Entity {
-	list := make([]fedruntime.Entity, len(representations))
-
-	repsMap := map[string]struct {
-		i []int
-		r []map[string]interface{}
-	}{}
-
-	// We group entities by typename so that we can parallelize their resolution.
-	// This is particularly helpful when there are entity groups in multi mode.
-	buildRepresentationGroups := func(reps []map[string]interface{}) {
-		for i, rep := range reps {
-			typeName, ok := rep["__typename"].(string)
-			if !ok {
-				// If there is no __typename, we just skip the representation;
-				// we just won't be resolving these unknown types.
-				ec.Error(ctx, errors.New("__typename must be an existing string"))
-				continue
-			}
-
-			_r := repsMap[typeName]
-			_r.i = append(_r.i, i)
-			_r.r = append(_r.r, rep)
-			repsMap[typeName] = _r
-		}
-	}
-
-	isMulti := func(typeName string) bool {
+func (ec *executionContext) __resolve_entities(ctx context.Context, representations []map[string]interface{}) ([]fedruntime.Entity, error) {
+	list := []fedruntime.Entity{}
+	for _, repr := range representations {
+		typeName := repr["__typename"].(string)
 		switch typeName {
-		default:
-			return false
-		}
-	}
-
-	resolveEntity := func(ctx context.Context, typeName string, rep map[string]interface{}, idx []int, i int) (err error) {
-		// we need to do our own panic handling, because we may be called in a
-		// goroutine, where the usual panic handling can't catch us
-		defer func() {
-			if r := recover(); r != nil {
-				err = ec.Recover(ctx, r)
-			}
-		}()
-
-		switch typeName {
-		case "Brand":
-			resolverName, err := entityResolverNameForBrand(ctx, rep)
-			if err != nil {
-				return fmt.Errorf(`finding resolver for Entity "Brand": %w`, err)
-			}
-			switch resolverName {
-
-			case "findBrandByID":
-				id0, err := ec.unmarshalNID2string(ctx, rep["id"])
-				if err != nil {
-					return fmt.Errorf(`unmarshalling param 0 for findBrandByID(): %w`, err)
-				}
-				entity, err := ec.resolvers.Entity().FindBrandByID(ctx, id0)
-				if err != nil {
-					return fmt.Errorf(`resolving Entity "Brand": %w`, err)
-				}
-
-				list[idx[i]] = entity
-				return nil
-			}
-		case "Category":
-			resolverName, err := entityResolverNameForCategory(ctx, rep)
-			if err != nil {
-				return fmt.Errorf(`finding resolver for Entity "Category": %w`, err)
-			}
-			switch resolverName {
-
-			case "findCategoryByID":
-				id0, err := ec.unmarshalNID2string(ctx, rep["id"])
-				if err != nil {
-					return fmt.Errorf(`unmarshalling param 0 for findCategoryByID(): %w`, err)
-				}
-				entity, err := ec.resolvers.Entity().FindCategoryByID(ctx, id0)
-				if err != nil {
-					return fmt.Errorf(`resolving Entity "Category": %w`, err)
-				}
-
-				list[idx[i]] = entity
-				return nil
-			}
-		case "Collection":
-			resolverName, err := entityResolverNameForCollection(ctx, rep)
-			if err != nil {
-				return fmt.Errorf(`finding resolver for Entity "Collection": %w`, err)
-			}
-			switch resolverName {
-
-			case "findCollectionByID":
-				id0, err := ec.unmarshalNID2string(ctx, rep["id"])
-				if err != nil {
-					return fmt.Errorf(`unmarshalling param 0 for findCollectionByID(): %w`, err)
-				}
-				entity, err := ec.resolvers.Entity().FindCollectionByID(ctx, id0)
-				if err != nil {
-					return fmt.Errorf(`resolving Entity "Collection": %w`, err)
-				}
-
-				list[idx[i]] = entity
-				return nil
-			}
 		case "Product":
-			resolverName, err := entityResolverNameForProduct(ctx, rep)
-			if err != nil {
-				return fmt.Errorf(`finding resolver for Entity "Product": %w`, err)
+			id := repr["id"].(string)
+			entity := ec.resolveProductByKey(ctx, id)
+			if entity == nil {
+				return nil, errors.New("entity not found")
 			}
-			switch resolverName {
-
-			case "findProductByID":
-				id0, err := ec.unmarshalNID2string(ctx, rep["id"])
-				if err != nil {
-					return fmt.Errorf(`unmarshalling param 0 for findProductByID(): %w`, err)
-				}
-				entity, err := ec.resolvers.Entity().FindProductByID(ctx, id0)
-				if err != nil {
-					return fmt.Errorf(`resolving Entity "Product": %w`, err)
-				}
-
-				list[idx[i]] = entity
-				return nil
-			}
+			list = append(list, entity)
 		case "ProductVariant":
-			resolverName, err := entityResolverNameForProductVariant(ctx, rep)
-			if err != nil {
-				return fmt.Errorf(`finding resolver for Entity "ProductVariant": %w`, err)
+			id := repr["id"].(string)
+			entity := ec.resolveProductVariantByKey(ctx, id)
+			if entity == nil {
+				return nil, errors.New("entity not found")
 			}
-			switch resolverName {
-
-			case "findProductVariantByID":
-				id0, err := ec.unmarshalNID2string(ctx, rep["id"])
-				if err != nil {
-					return fmt.Errorf(`unmarshalling param 0 for findProductVariantByID(): %w`, err)
-				}
-				entity, err := ec.resolvers.Entity().FindProductVariantByID(ctx, id0)
-				if err != nil {
-					return fmt.Errorf(`resolving Entity "ProductVariant": %w`, err)
-				}
-
-				list[idx[i]] = entity
-				return nil
+			list = append(list, entity)
+		case "Category":
+			id := repr["id"].(string)
+			entity := ec.resolveCategoryByKey(ctx, id)
+			if entity == nil {
+				return nil, errors.New("entity not found")
 			}
-
-		}
-		return fmt.Errorf("%w: %s", ErrUnknownType, typeName)
-	}
-
-	resolveManyEntities := func(ctx context.Context, typeName string, reps []map[string]interface{}, idx []int) (err error) {
-		// we need to do our own panic handling, because we may be called in a
-		// goroutine, where the usual panic handling can't catch us
-		defer func() {
-			if r := recover(); r != nil {
-				err = ec.Recover(ctx, r)
+			list = append(list, entity)
+		case "Collection":
+			id := repr["id"].(string)
+			entity := ec.resolveCollectionByKey(ctx, id)
+			if entity == nil {
+				return nil, errors.New("entity not found")
 			}
-		}()
-
-		switch typeName {
-
+			list = append(list, entity)
+		case "Brand":
+			id := repr["id"].(string)
+			entity := ec.resolveBrandByKey(ctx, id)
+			if entity == nil {
+				return nil, errors.New("entity not found")
+			}
+			list = append(list, entity)
 		default:
-			return errors.New("unknown type: " + typeName)
+			return nil, errors.New("unknown entity type")
 		}
 	}
+	return list, nil
+}
 
-	resolveEntityGroup := func(typeName string, reps []map[string]interface{}, idx []int) {
-		if isMulti(typeName) {
-			err := resolveManyEntities(ctx, typeName, reps, idx)
-			if err != nil {
-				ec.Error(ctx, err)
-			}
-		} else {
-			// if there are multiple entities to resolve, parallelize (similar to
-			// graphql.FieldSet.Dispatch)
-			var e sync.WaitGroup
-			e.Add(len(reps))
-			for i, rep := range reps {
-				i, rep := i, rep
-				go func(i int, rep map[string]interface{}) {
-					err := resolveEntity(ctx, typeName, rep, idx, i)
-					if err != nil {
-						ec.Error(ctx, err)
-					}
-					e.Done()
-				}(i, rep)
-			}
-			e.Wait()
-		}
-	}
-	buildRepresentationGroups(representations)
+// Entity resolver functions - these would need to be implemented based on your resolvers
+func (ec *executionContext) resolveProductByKey(ctx context.Context, id string) interface{} {
+	// This should call your actual product resolver
+	return nil // Placeholder
+}
 
-	switch len(repsMap) {
-	case 0:
-		return list
-	case 1:
-		for typeName, reps := range repsMap {
-			resolveEntityGroup(typeName, reps.r, reps.i)
-		}
-		return list
-	default:
-		var g sync.WaitGroup
-		g.Add(len(repsMap))
-		for typeName, reps := range repsMap {
-			go func(typeName string, reps []map[string]interface{}, idx []int) {
-				resolveEntityGroup(typeName, reps, idx)
-				g.Done()
-			}(typeName, reps.r, reps.i)
-		}
-		g.Wait()
-		return list
-	}
+func (ec *executionContext) resolveProductVariantByKey(ctx context.Context, id string) interface{} {
+	// This should call your actual product variant resolver
+	return nil // Placeholder
+}
+
+func (ec *executionContext) resolveCategoryByKey(ctx context.Context, id string) interface{} {
+	// This should call your actual category resolver
+	return nil // Placeholder
+}
+
+func (ec *executionContext) resolveCollectionByKey(ctx context.Context, id string) interface{} {
+	// This should call your actual collection resolver
+	return nil // Placeholder
+}
+
+func (ec *executionContext) resolveBrandByKey(ctx context.Context, id string) interface{} {
+	// This should call your actual brand resolver
+	return nil // Placeholder
 }
 
 func entityResolverNameForBrand(ctx context.Context, rep map[string]interface{}) (string, error) {

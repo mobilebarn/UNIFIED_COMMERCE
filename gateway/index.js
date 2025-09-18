@@ -139,9 +139,10 @@ async function startGateway() {
     const gateway = new ApolloGateway({
       supergraphSdl: new IntrospectAndCompose({
         subgraphs: [
-          // Start with minimal essential services only
-          { name: 'identity', url: getServiceUrl('IDENTITY_SERVICE_URL', 8001) }
-          // Other services will be added dynamically as they become available
+          // Start with Identity service
+          { name: 'identity', url: getServiceUrl('IDENTITY_SERVICE_URL', 8001) },
+          // Add Product Catalog service since it's now working
+          { name: 'product-catalog', url: getServiceUrl('PRODUCT_CATALOG_SERVICE_URL', 8002) }
         ],
         pollIntervalInMs: 60000, // Poll every 60 seconds - more conservative
         introspectionHeaders: {
