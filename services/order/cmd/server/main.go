@@ -58,7 +58,9 @@ func main() {
 	}
 	producer, err := messaging.NewEventProducer(producerConfig)
 	if err != nil {
-		log.WithError(err).Fatal("Failed to create event producer")
+		log.WithError(err).Warn("Failed to create event producer, using no-op producer for graceful degradation")
+		// Create a no-op producer to allow service to continue without Kafka
+		producer = messaging.NewNoOpProducer()
 	}
 	defer producer.Close()
 

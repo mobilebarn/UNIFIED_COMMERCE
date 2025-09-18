@@ -16,8 +16,13 @@ type ConsumerConfig struct {
 
 // NewEventProducer creates an appropriate producer based on configuration
 func NewEventProducer(config ProducerConfig) (EventProducer, error) {
-	// Always use pure Go implementation for now to avoid CGO issues
-	return NewSaramaProducer(config.Brokers)
+	// Try to create Sarama producer first
+	producer, err := NewSaramaProducer(config.Brokers)
+	if err != nil {
+		// If Kafka is not available, return a no-op producer for graceful degradation
+		return NewNoOpProducer(), nil
+	}
+	return producer, nil
 }
 
 // NewEventConsumer creates an appropriate consumer based on configuration
