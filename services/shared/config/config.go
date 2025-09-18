@@ -81,7 +81,7 @@ func LoadConfig(serviceName string) (*Config, error) {
 
 	config := &Config{
 		ServiceName: serviceName,
-		ServicePort: getEnv("SERVICE_PORT", "8080"),
+		ServicePort: getEnvAny([]string{"PORT", "SERVICE_PORT"}, "8080"), // PORT takes precedence for cloud deployment
 		Environment: getEnv("ENVIRONMENT", "development"),
 
 		// Database
@@ -125,6 +125,7 @@ func LoadConfig(serviceName string) (*Config, error) {
 	// Check if DATABASE_URL is provided directly (for Render, Railway, etc.)
 	if envDatabaseURL := os.Getenv("DATABASE_URL"); envDatabaseURL != "" {
 		config.DatabaseURL = envDatabaseURL
+		fmt.Printf("Using DATABASE_URL from environment: %s\n", envDatabaseURL[:min(50, len(envDatabaseURL))])
 	} else {
 		config.DatabaseURL = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 			config.DatabaseHost,
@@ -133,6 +134,8 @@ func LoadConfig(serviceName string) (*Config, error) {
 			config.DatabasePassword,
 			config.DatabaseName,
 		)
+		fmt.Printf("Built DATABASE_URL from components: host=%s port=%s user=%s dbname=%s\n",
+			config.DatabaseHost, config.DatabasePort, config.DatabaseUser, config.DatabaseName)
 	}
 
 	return config, nil
@@ -217,4 +220,12 @@ func getEnvAsBool(key string, defaultValue bool) bool {
 		}
 	}
 	return defaultValue
+}
+
+// min returns the minimum of two integers
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

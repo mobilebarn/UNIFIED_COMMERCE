@@ -165,11 +165,11 @@ type Store struct {
 type MerchantMember struct {
 	ID          string     `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	MerchantID  string     `json:"merchant_id" gorm:"not null;index"`
-	UserID      string     `json:"user_id" gorm:"not null;index;constraint:-"`  // References Identity Service (no FK constraint)
+	UserID      string     `json:"user_id" gorm:"type:text;not null;index;constraint:-;foreignKey:false"`  // References Identity Service (no FK constraint)
 	Role        string     `json:"role" gorm:"not null"`           // "owner", "admin", "manager", "staff", "viewer"
 	Status      string     `json:"status" gorm:"default:'active'"` // "active", "invited", "suspended"
 	Permissions []string   `json:"permissions" gorm:"type:jsonb"`
-	InvitedBy   string     `json:"invited_by" gorm:"constraint:-"` // UserID who sent invitation (no FK constraint)
+	InvitedBy   string     `json:"invited_by" gorm:"type:text;constraint:-;foreignKey:false"` // UserID who sent invitation (no FK constraint)
 	InvitedAt   *time.Time `json:"invited_at"`
 	JoinedAt    *time.Time `json:"joined_at"`
 	CreatedAt   time.Time  `json:"created_at"`
@@ -178,6 +178,11 @@ type MerchantMember struct {
 	// Relationships (internal to this service only)
 	Merchant Merchant `json:"merchant" gorm:"foreignKey:MerchantID"`
 	// Note: No User relationship as it's in a different service/database
+}
+
+// TableName returns the table name for MerchantMember
+func (MerchantMember) TableName() string {
+	return "merchant_members"
 }
 
 // Invoice represents billing invoices for merchants

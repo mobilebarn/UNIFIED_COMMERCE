@@ -18,6 +18,7 @@ import (
 	"unified-commerce/services/shared/config"
 	"unified-commerce/services/shared/database"
 	"unified-commerce/services/shared/logger"
+	"unified-commerce/services/promotions/models"
 	"unified-commerce/services/shared/middleware"
 )
 
@@ -33,6 +34,11 @@ func main() {
 	loggerConfig.Level = cfg.LogLevel
 	log := logger.NewLogger(loggerConfig)
 
+	// Log environment variable status for debugging
+	databaseURL := os.Getenv("DATABASE_URL")
+	log.WithField("has_database_url", databaseURL != "").Info("Environment check")
+	log.WithField("config_database_url_empty", cfg.DatabaseURL == "").Info("Config check")
+
 	// Connect to PostgreSQL
 	postgresConfig := database.NewPostgresConfigFromEnv(
 		cfg.DatabaseHost,
@@ -41,6 +47,17 @@ func main() {
 		cfg.DatabasePassword,
 		cfg.DatabaseName,
 	)
+	// Use DATABASE_URL if provided (for cloud deployment)
+	if cfg.DatabaseURL != "" {
+		postgresConfig.DatabaseURL = cfg.DatabaseURL
+		log.WithField("database_url_set", "true").Info("Using DATABASE_URL from environment")
+	} else {
+		log.WithField("host", cfg.DatabaseHost).
+			WithField("port", cfg.DatabasePort).
+			WithField("user", cfg.DatabaseUser).
+			WithField("db_name", cfg.DatabaseName).
+			Info("Using individual database parameters")
+	}
 	postgresDB, err := database.NewPostgresConnection(postgresConfig)
 	if err != nil {
 		log.WithError(err).Fatal("Failed to connect to PostgreSQL")
@@ -139,5 +156,15 @@ func main() {
 // runMigrations runs database migrations
 func runMigrations(db *gorm.DB) error {
 	// Add all promotions models here for migration
-	return db.AutoMigrate()
+	return db.AutoMigrate(
+		&models.Promotion{},
+		&models.DiscountCode{},
+		&models.CodeUsage{},
+		&models.GiftCard{},
+		&models.GiftCardTransaction{},
+		&models.LoyaltyProgram{},
+		&models.LoyaltyMember{},
+		&models.LoyaltyTier{},
+		&models.LoyaltyActivity{},
+	)
 }

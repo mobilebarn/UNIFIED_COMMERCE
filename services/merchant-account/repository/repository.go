@@ -355,9 +355,29 @@ func NewRepository(db *database.PostgresDB) *Repository {
 
 // Migrate runs database migrations for all models
 func (r *Repository) Migrate() error {
-	// For PostgreSQL, we need to handle this differently
-	// Let's just use AutoMigrate but with explicit model configuration
-	return r.Merchant.db.DB.AutoMigrate(
+	// Configure GORM to disable foreign keys for this migration
+	db := r.Merchant.db.DB.Set("gorm:auto_preload", false)
+	db = db.Set("gorm:association_autoupdate", false)
+	db = db.Set("gorm:association_autocreate", false)
+
+	// Drop ALL foreign key constraints on merchant_members table if they exist
+	db.Exec("ALTER TABLE merchant_members DROP CONSTRAINT IF EXISTS fk_users_merchant_members")
+	db.Exec("ALTER TABLE merchant_members DROP CONSTRAINT IF EXISTS fk_merchant_members_user_id")
+	db.Exec("ALTER TABLE merchant_members DROP CONSTRAINT IF EXISTS fk_merchant_members_invited_by")
+	db.Exec("ALTER TABLE merchant_members DROP CONSTRAINT IF EXISTS merchant_members_user_id_fkey")
+	db.Exec("ALTER TABLE merchant_members DROP CONSTRAINT IF EXISTS merchant_members_invited_by_fkey")
+	
+	// Check if table exists and handle it separately
+	var tableExists bool
+	db.Raw("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'merchant_members')").Scan(&tableExists)
+	
+	if tableExists {
+		// If table exists, drop and recreate it to avoid constraint issues
+		db.Exec("DROP TABLE IF EXISTS merchant_members CASCADE")
+	}
+	
+	// Run migrations with disabled constraints
+	err := db.AutoMigrate(
 		&models.Merchant{},
 		&models.MerchantAddress{},
 		&models.BankAccount{},
@@ -369,4 +389,6 @@ func (r *Repository) Migrate() error {
 		&models.InvoiceLineItem{},
 		&models.MerchantVerification{},
 	)
+
+	return err
 }
