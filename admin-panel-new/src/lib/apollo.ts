@@ -2,9 +2,9 @@ import { ApolloClient, InMemoryCache, createHttpLink, from } from '@apollo/clien
 import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
 
-// GraphQL Federation Gateway endpoint
+// GraphQL Federation Gateway endpoint (production deployment)
 const httpLink = createHttpLink({
-  uri: 'http://localhost:4000/graphql',
+  uri: 'https://unified-commerce-gateway.onrender.com/graphql',
 });
 
 // Authentication link to include JWT token in headers

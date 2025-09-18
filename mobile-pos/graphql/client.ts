@@ -19,7 +19,7 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
 
 // HTTP link to GraphQL Federation Gateway
 const httpLink = new HttpLink({
-  uri: 'http://localhost:4000/graphql', // GraphQL Federation Gateway endpoint
+  uri: 'https://unified-commerce-gateway.onrender.com/graphql', // Production GraphQL Federation Gateway
   credentials: 'include', // Include cookies/session tokens
 });
 
