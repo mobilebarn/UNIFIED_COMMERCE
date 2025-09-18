@@ -3,7 +3,6 @@
 package graphql
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"strconv"
@@ -174,12 +173,18 @@ func (User) IsEntity() {}
 type DiscountType string
 
 const (
+	DiscountTypeManual       DiscountType = "MANUAL"
+	DiscountTypeCode         DiscountType = "CODE"
+	DiscountTypeAutomatic    DiscountType = "AUTOMATIC"
 	DiscountTypePercentage   DiscountType = "PERCENTAGE"
 	DiscountTypeFixedAmount  DiscountType = "FIXED_AMOUNT"
 	DiscountTypeFreeShipping DiscountType = "FREE_SHIPPING"
 )
 
 var AllDiscountType = []DiscountType{
+	DiscountTypeManual,
+	DiscountTypeCode,
+	DiscountTypeAutomatic,
 	DiscountTypePercentage,
 	DiscountTypeFixedAmount,
 	DiscountTypeFreeShipping,
@@ -187,7 +192,7 @@ var AllDiscountType = []DiscountType{
 
 func (e DiscountType) IsValid() bool {
 	switch e {
-	case DiscountTypePercentage, DiscountTypeFixedAmount, DiscountTypeFreeShipping:
+	case DiscountTypeManual, DiscountTypeCode, DiscountTypeAutomatic, DiscountTypePercentage, DiscountTypeFixedAmount, DiscountTypeFreeShipping:
 		return true
 	}
 	return false
@@ -197,7 +202,7 @@ func (e DiscountType) String() string {
 	return string(e)
 }
 
-func (e *DiscountType) UnmarshalGQL(v any) error {
+func (e *DiscountType) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -212,20 +217,6 @@ func (e *DiscountType) UnmarshalGQL(v any) error {
 
 func (e DiscountType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-func (e *DiscountType) UnmarshalJSON(b []byte) error {
-	s, err := strconv.Unquote(string(b))
-	if err != nil {
-		return err
-	}
-	return e.UnmarshalGQL(s)
-}
-
-func (e DiscountType) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	e.MarshalGQL(&buf)
-	return buf.Bytes(), nil
 }
 
 type PromotionStatus string
@@ -258,7 +249,7 @@ func (e PromotionStatus) String() string {
 	return string(e)
 }
 
-func (e *PromotionStatus) UnmarshalGQL(v any) error {
+func (e *PromotionStatus) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -273,20 +264,6 @@ func (e *PromotionStatus) UnmarshalGQL(v any) error {
 
 func (e PromotionStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-func (e *PromotionStatus) UnmarshalJSON(b []byte) error {
-	s, err := strconv.Unquote(string(b))
-	if err != nil {
-		return err
-	}
-	return e.UnmarshalGQL(s)
-}
-
-func (e PromotionStatus) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	e.MarshalGQL(&buf)
-	return buf.Bytes(), nil
 }
 
 type PromotionType string
@@ -319,7 +296,7 @@ func (e PromotionType) String() string {
 	return string(e)
 }
 
-func (e *PromotionType) UnmarshalGQL(v any) error {
+func (e *PromotionType) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -334,18 +311,4 @@ func (e *PromotionType) UnmarshalGQL(v any) error {
 
 func (e PromotionType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-func (e *PromotionType) UnmarshalJSON(b []byte) error {
-	s, err := strconv.Unquote(string(b))
-	if err != nil {
-		return err
-	}
-	return e.UnmarshalGQL(s)
-}
-
-func (e PromotionType) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	e.MarshalGQL(&buf)
-	return buf.Bytes(), nil
 }

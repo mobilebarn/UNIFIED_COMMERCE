@@ -3,7 +3,6 @@
 package graphql
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"strconv"
@@ -216,7 +215,7 @@ func (e CollectionRulesMatch) String() string {
 	return string(e)
 }
 
-func (e *CollectionRulesMatch) UnmarshalGQL(v any) error {
+func (e *CollectionRulesMatch) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -231,20 +230,6 @@ func (e *CollectionRulesMatch) UnmarshalGQL(v any) error {
 
 func (e CollectionRulesMatch) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-func (e *CollectionRulesMatch) UnmarshalJSON(b []byte) error {
-	s, err := strconv.Unquote(string(b))
-	if err != nil {
-		return err
-	}
-	return e.UnmarshalGQL(s)
-}
-
-func (e CollectionRulesMatch) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	e.MarshalGQL(&buf)
-	return buf.Bytes(), nil
 }
 
 type CollectionSortOrder string
@@ -283,7 +268,7 @@ func (e CollectionSortOrder) String() string {
 	return string(e)
 }
 
-func (e *CollectionSortOrder) UnmarshalGQL(v any) error {
+func (e *CollectionSortOrder) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -298,20 +283,6 @@ func (e *CollectionSortOrder) UnmarshalGQL(v any) error {
 
 func (e CollectionSortOrder) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-func (e *CollectionSortOrder) UnmarshalJSON(b []byte) error {
-	s, err := strconv.Unquote(string(b))
-	if err != nil {
-		return err
-	}
-	return e.UnmarshalGQL(s)
-}
-
-func (e CollectionSortOrder) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	e.MarshalGQL(&buf)
-	return buf.Bytes(), nil
 }
 
 type InventoryPolicy string
@@ -338,7 +309,7 @@ func (e InventoryPolicy) String() string {
 	return string(e)
 }
 
-func (e *InventoryPolicy) UnmarshalGQL(v any) error {
+func (e *InventoryPolicy) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -353,20 +324,6 @@ func (e *InventoryPolicy) UnmarshalGQL(v any) error {
 
 func (e InventoryPolicy) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-func (e *InventoryPolicy) UnmarshalJSON(b []byte) error {
-	s, err := strconv.Unquote(string(b))
-	if err != nil {
-		return err
-	}
-	return e.UnmarshalGQL(s)
-}
-
-func (e InventoryPolicy) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	e.MarshalGQL(&buf)
-	return buf.Bytes(), nil
 }
 
 type ProductStatus string
@@ -395,7 +352,7 @@ func (e ProductStatus) String() string {
 	return string(e)
 }
 
-func (e *ProductStatus) UnmarshalGQL(v any) error {
+func (e *ProductStatus) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -410,20 +367,6 @@ func (e *ProductStatus) UnmarshalGQL(v any) error {
 
 func (e ProductStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-func (e *ProductStatus) UnmarshalJSON(b []byte) error {
-	s, err := strconv.Unquote(string(b))
-	if err != nil {
-		return err
-	}
-	return e.UnmarshalGQL(s)
-}
-
-func (e ProductStatus) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	e.MarshalGQL(&buf)
-	return buf.Bytes(), nil
 }
 
 type PublishedScope string
@@ -452,7 +395,7 @@ func (e PublishedScope) String() string {
 	return string(e)
 }
 
-func (e *PublishedScope) UnmarshalGQL(v any) error {
+func (e *PublishedScope) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -469,16 +412,45 @@ func (e PublishedScope) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-func (e *PublishedScope) UnmarshalJSON(b []byte) error {
-	s, err := strconv.Unquote(string(b))
-	if err != nil {
-		return err
-	}
-	return e.UnmarshalGQL(s)
+type SearchSuggestionType string
+
+const (
+	SearchSuggestionTypeProduct  SearchSuggestionType = "PRODUCT"
+	SearchSuggestionTypeCategory SearchSuggestionType = "CATEGORY"
+	SearchSuggestionTypeBrand    SearchSuggestionType = "BRAND"
+)
+
+var AllSearchSuggestionType = []SearchSuggestionType{
+	SearchSuggestionTypeProduct,
+	SearchSuggestionTypeCategory,
+	SearchSuggestionTypeBrand,
 }
 
-func (e PublishedScope) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	e.MarshalGQL(&buf)
-	return buf.Bytes(), nil
+func (e SearchSuggestionType) IsValid() bool {
+	switch e {
+	case SearchSuggestionTypeProduct, SearchSuggestionTypeCategory, SearchSuggestionTypeBrand:
+		return true
+	}
+	return false
+}
+
+func (e SearchSuggestionType) String() string {
+	return string(e)
+}
+
+func (e *SearchSuggestionType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SearchSuggestionType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SearchSuggestionType", str)
+	}
+	return nil
+}
+
+func (e SearchSuggestionType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }
