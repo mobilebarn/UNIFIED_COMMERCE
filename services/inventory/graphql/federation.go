@@ -36,487 +36,319 @@ func (ec *executionContext) __resolve__service(ctx context.Context) (fedruntime.
 	}, nil
 }
 
-func (ec *executionContext) __resolve_entities(ctx context.Context, representations []map[string]any) []fedruntime.Entity {
+func (ec *executionContext) __resolve_entities(ctx context.Context, representations []map[string]interface{}) []fedruntime.Entity {
 	list := make([]fedruntime.Entity, len(representations))
 
-	repsMap := ec.buildRepresentationGroups(ctx, representations)
+	repsMap := map[string]struct {
+		i []int
+		r []map[string]interface{}
+	}{}
+
+	// We group entities by typename so that we can parallelize their resolution.
+	// This is particularly helpful when there are entity groups in multi mode.
+	buildRepresentationGroups := func(reps []map[string]interface{}) {
+		for i, rep := range reps {
+			typeName, ok := rep["__typename"].(string)
+			if !ok {
+				// If there is no __typename, we just skip the representation;
+				// we just won't be resolving these unknown types.
+				ec.Error(ctx, errors.New("__typename must be an existing string"))
+				continue
+			}
+
+			_r := repsMap[typeName]
+			_r.i = append(_r.i, i)
+			_r.r = append(_r.r, rep)
+			repsMap[typeName] = _r
+		}
+	}
+
+	isMulti := func(typeName string) bool {
+		switch typeName {
+		default:
+			return false
+		}
+	}
+
+	resolveEntity := func(ctx context.Context, typeName string, rep map[string]interface{}, idx []int, i int) (err error) {
+		// we need to do our own panic handling, because we may be called in a
+		// goroutine, where the usual panic handling can't catch us
+		defer func() {
+			if r := recover(); r != nil {
+				err = ec.Recover(ctx, r)
+			}
+		}()
+
+		switch typeName {
+		case "Address":
+			resolverName, err := entityResolverNameForAddress(ctx, rep)
+			if err != nil {
+				return fmt.Errorf(`finding resolver for Entity "Address": %w`, err)
+			}
+			switch resolverName {
+
+			case "findAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode":
+				id0, err := ec.unmarshalOString2string(ctx, rep["firstName"])
+				if err != nil {
+					return fmt.Errorf(`unmarshalling param 0 for findAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode(): %w`, err)
+				}
+				id1, err := ec.unmarshalOString2string(ctx, rep["lastName"])
+				if err != nil {
+					return fmt.Errorf(`unmarshalling param 1 for findAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode(): %w`, err)
+				}
+				id2, err := ec.unmarshalOString2string(ctx, rep["street1"])
+				if err != nil {
+					return fmt.Errorf(`unmarshalling param 2 for findAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode(): %w`, err)
+				}
+				id3, err := ec.unmarshalOString2string(ctx, rep["street2"])
+				if err != nil {
+					return fmt.Errorf(`unmarshalling param 3 for findAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode(): %w`, err)
+				}
+				id4, err := ec.unmarshalOString2string(ctx, rep["city"])
+				if err != nil {
+					return fmt.Errorf(`unmarshalling param 4 for findAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode(): %w`, err)
+				}
+				id5, err := ec.unmarshalOString2string(ctx, rep["state"])
+				if err != nil {
+					return fmt.Errorf(`unmarshalling param 5 for findAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode(): %w`, err)
+				}
+				id6, err := ec.unmarshalOString2string(ctx, rep["country"])
+				if err != nil {
+					return fmt.Errorf(`unmarshalling param 6 for findAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode(): %w`, err)
+				}
+				id7, err := ec.unmarshalOString2string(ctx, rep["postalCode"])
+				if err != nil {
+					return fmt.Errorf(`unmarshalling param 7 for findAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode(): %w`, err)
+				}
+				entity, err := ec.resolvers.Entity().FindAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode(ctx, id0, id1, id2, id3, id4, id5, id6, id7)
+				if err != nil {
+					return fmt.Errorf(`resolving Entity "Address": %w`, err)
+				}
+
+				list[idx[i]] = entity
+				return nil
+			}
+		case "InventoryItem":
+			resolverName, err := entityResolverNameForInventoryItem(ctx, rep)
+			if err != nil {
+				return fmt.Errorf(`finding resolver for Entity "InventoryItem": %w`, err)
+			}
+			switch resolverName {
+
+			case "findInventoryItemByID":
+				id0, err := ec.unmarshalNID2string(ctx, rep["id"])
+				if err != nil {
+					return fmt.Errorf(`unmarshalling param 0 for findInventoryItemByID(): %w`, err)
+				}
+				entity, err := ec.resolvers.Entity().FindInventoryItemByID(ctx, id0)
+				if err != nil {
+					return fmt.Errorf(`resolving Entity "InventoryItem": %w`, err)
+				}
+
+				list[idx[i]] = entity
+				return nil
+			}
+		case "Location":
+			resolverName, err := entityResolverNameForLocation(ctx, rep)
+			if err != nil {
+				return fmt.Errorf(`finding resolver for Entity "Location": %w`, err)
+			}
+			switch resolverName {
+
+			case "findLocationByID":
+				id0, err := ec.unmarshalNID2string(ctx, rep["id"])
+				if err != nil {
+					return fmt.Errorf(`unmarshalling param 0 for findLocationByID(): %w`, err)
+				}
+				entity, err := ec.resolvers.Entity().FindLocationByID(ctx, id0)
+				if err != nil {
+					return fmt.Errorf(`resolving Entity "Location": %w`, err)
+				}
+
+				list[idx[i]] = entity
+				return nil
+			}
+		case "StockMovement":
+			resolverName, err := entityResolverNameForStockMovement(ctx, rep)
+			if err != nil {
+				return fmt.Errorf(`finding resolver for Entity "StockMovement": %w`, err)
+			}
+			switch resolverName {
+
+			case "findStockMovementByID":
+				id0, err := ec.unmarshalNID2string(ctx, rep["id"])
+				if err != nil {
+					return fmt.Errorf(`unmarshalling param 0 for findStockMovementByID(): %w`, err)
+				}
+				entity, err := ec.resolvers.Entity().FindStockMovementByID(ctx, id0)
+				if err != nil {
+					return fmt.Errorf(`resolving Entity "StockMovement": %w`, err)
+				}
+
+				list[idx[i]] = entity
+				return nil
+			}
+
+		}
+		return fmt.Errorf("%w: %s", ErrUnknownType, typeName)
+	}
+
+	resolveManyEntities := func(ctx context.Context, typeName string, reps []map[string]interface{}, idx []int) (err error) {
+		// we need to do our own panic handling, because we may be called in a
+		// goroutine, where the usual panic handling can't catch us
+		defer func() {
+			if r := recover(); r != nil {
+				err = ec.Recover(ctx, r)
+			}
+		}()
+
+		switch typeName {
+
+		default:
+			return errors.New("unknown type: " + typeName)
+		}
+	}
+
+	resolveEntityGroup := func(typeName string, reps []map[string]interface{}, idx []int) {
+		if isMulti(typeName) {
+			err := resolveManyEntities(ctx, typeName, reps, idx)
+			if err != nil {
+				ec.Error(ctx, err)
+			}
+		} else {
+			// if there are multiple entities to resolve, parallelize (similar to
+			// graphql.FieldSet.Dispatch)
+			var e sync.WaitGroup
+			e.Add(len(reps))
+			for i, rep := range reps {
+				i, rep := i, rep
+				go func(i int, rep map[string]interface{}) {
+					err := resolveEntity(ctx, typeName, rep, idx, i)
+					if err != nil {
+						ec.Error(ctx, err)
+					}
+					e.Done()
+				}(i, rep)
+			}
+			e.Wait()
+		}
+	}
+	buildRepresentationGroups(representations)
 
 	switch len(repsMap) {
 	case 0:
 		return list
 	case 1:
 		for typeName, reps := range repsMap {
-			ec.resolveEntityGroup(ctx, typeName, reps, list)
+			resolveEntityGroup(typeName, reps.r, reps.i)
 		}
 		return list
 	default:
 		var g sync.WaitGroup
 		g.Add(len(repsMap))
 		for typeName, reps := range repsMap {
-			go func(typeName string, reps []EntityWithIndex) {
-				ec.resolveEntityGroup(ctx, typeName, reps, list)
+			go func(typeName string, reps []map[string]interface{}, idx []int) {
+				resolveEntityGroup(typeName, reps, idx)
 				g.Done()
-			}(typeName, reps)
+			}(typeName, reps.r, reps.i)
 		}
 		g.Wait()
 		return list
 	}
 }
 
-type EntityWithIndex struct {
-	// The index in the original representation array
-	index  int
-	entity EntityRepresentation
-}
-
-// EntityRepresentation is the JSON representation of an entity sent by the Router
-// used as the inputs for us to resolve.
-//
-// We make it a map because we know the top level JSON is always an object.
-type EntityRepresentation map[string]any
-
-// We group entities by typename so that we can parallelize their resolution.
-// This is particularly helpful when there are entity groups in multi mode.
-func (ec *executionContext) buildRepresentationGroups(
-	ctx context.Context,
-	representations []map[string]any,
-) map[string][]EntityWithIndex {
-	repsMap := make(map[string][]EntityWithIndex)
-	for i, rep := range representations {
-		typeName, ok := rep["__typename"].(string)
-		if !ok {
-			// If there is no __typename, we just skip the representation;
-			// we just won't be resolving these unknown types.
-			ec.Error(ctx, errors.New("__typename must be an existing string"))
-			continue
-		}
-
-		repsMap[typeName] = append(repsMap[typeName], EntityWithIndex{
-			index:  i,
-			entity: rep,
-		})
-	}
-
-	return repsMap
-}
-
-func (ec *executionContext) resolveEntityGroup(
-	ctx context.Context,
-	typeName string,
-	reps []EntityWithIndex,
-	list []fedruntime.Entity,
-) {
-	if isMulti(typeName) {
-		err := ec.resolveManyEntities(ctx, typeName, reps, list)
-		if err != nil {
-			ec.Error(ctx, err)
-		}
-	} else {
-		// if there are multiple entities to resolve, parallelize (similar to
-		// graphql.FieldSet.Dispatch)
-		var e sync.WaitGroup
-		e.Add(len(reps))
-		for i, rep := range reps {
-			i, rep := i, rep
-			go func(i int, rep EntityWithIndex) {
-				entity, err := ec.resolveEntity(ctx, typeName, rep.entity)
-				if err != nil {
-					ec.Error(ctx, err)
-				} else {
-					list[rep.index] = entity
-				}
-				e.Done()
-			}(i, rep)
-		}
-		e.Wait()
-	}
-}
-
-func isMulti(typeName string) bool {
-	switch typeName {
-	default:
-		return false
-	}
-}
-
-func (ec *executionContext) resolveEntity(
-	ctx context.Context,
-	typeName string,
-	rep EntityRepresentation,
-) (e fedruntime.Entity, err error) {
-	// we need to do our own panic handling, because we may be called in a
-	// goroutine, where the usual panic handling can't catch us
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-		}
-	}()
-
-	switch typeName {
-	case "Address":
-		resolverName, err := entityResolverNameForAddress(ctx, rep)
-		if err != nil {
-			return nil, fmt.Errorf(`finding resolver for Entity "Address": %w`, err)
-		}
-		switch resolverName {
-
-		case "findAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode":
-			id0, err := ec.unmarshalOString2string(ctx, rep["firstName"])
-			if err != nil {
-				return nil, fmt.Errorf(`unmarshalling param 0 for findAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode(): %w`, err)
-			}
-			id1, err := ec.unmarshalOString2string(ctx, rep["lastName"])
-			if err != nil {
-				return nil, fmt.Errorf(`unmarshalling param 1 for findAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode(): %w`, err)
-			}
-			id2, err := ec.unmarshalOString2string(ctx, rep["street1"])
-			if err != nil {
-				return nil, fmt.Errorf(`unmarshalling param 2 for findAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode(): %w`, err)
-			}
-			id3, err := ec.unmarshalOString2string(ctx, rep["street2"])
-			if err != nil {
-				return nil, fmt.Errorf(`unmarshalling param 3 for findAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode(): %w`, err)
-			}
-			id4, err := ec.unmarshalOString2string(ctx, rep["city"])
-			if err != nil {
-				return nil, fmt.Errorf(`unmarshalling param 4 for findAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode(): %w`, err)
-			}
-			id5, err := ec.unmarshalOString2string(ctx, rep["state"])
-			if err != nil {
-				return nil, fmt.Errorf(`unmarshalling param 5 for findAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode(): %w`, err)
-			}
-			id6, err := ec.unmarshalOString2string(ctx, rep["country"])
-			if err != nil {
-				return nil, fmt.Errorf(`unmarshalling param 6 for findAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode(): %w`, err)
-			}
-			id7, err := ec.unmarshalOString2string(ctx, rep["postalCode"])
-			if err != nil {
-				return nil, fmt.Errorf(`unmarshalling param 7 for findAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode(): %w`, err)
-			}
-
-			// Convert string values to pointers
-			var ptr0, ptr1, ptr2, ptr3, ptr4, ptr5, ptr6, ptr7 *string
-			if id0 != "" {
-				ptr0 = &id0
-			}
-			if id1 != "" {
-				ptr1 = &id1
-			}
-			if id2 != "" {
-				ptr2 = &id2
-			}
-			if id3 != "" {
-				ptr3 = &id3
-			}
-			if id4 != "" {
-				ptr4 = &id4
-			}
-			if id5 != "" {
-				ptr5 = &id5
-			}
-			if id6 != "" {
-				ptr6 = &id6
-			}
-			if id7 != "" {
-				ptr7 = &id7
-			}
-
-			entity, err := ec.resolvers.Entity().FindAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode(ctx, ptr0, ptr1, ptr2, ptr3, ptr4, ptr5, ptr6, ptr7)
-			if err != nil {
-				return nil, fmt.Errorf(`resolving Entity "Address": %w`, err)
-			}
-
-			return entity, nil
-		}
-	case "InventoryItem":
-		resolverName, err := entityResolverNameForInventoryItem(ctx, rep)
-		if err != nil {
-			return nil, fmt.Errorf(`finding resolver for Entity "InventoryItem": %w`, err)
-		}
-		switch resolverName {
-
-		case "findInventoryItemByID":
-			id0, err := ec.unmarshalNID2string(ctx, rep["id"])
-			if err != nil {
-				return nil, fmt.Errorf(`unmarshalling param 0 for findInventoryItemByID(): %w`, err)
-			}
-			entity, err := ec.resolvers.Entity().FindInventoryItemByID(ctx, id0)
-			if err != nil {
-				return nil, fmt.Errorf(`resolving Entity "InventoryItem": %w`, err)
-			}
-
-			return entity, nil
-		}
-	case "Location":
-		resolverName, err := entityResolverNameForLocation(ctx, rep)
-		if err != nil {
-			return nil, fmt.Errorf(`finding resolver for Entity "Location": %w`, err)
-		}
-		switch resolverName {
-
-		case "findLocationByID":
-			id0, err := ec.unmarshalNID2string(ctx, rep["id"])
-			if err != nil {
-				return nil, fmt.Errorf(`unmarshalling param 0 for findLocationByID(): %w`, err)
-			}
-			entity, err := ec.resolvers.Entity().FindLocationByID(ctx, id0)
-			if err != nil {
-				return nil, fmt.Errorf(`resolving Entity "Location": %w`, err)
-			}
-
-			return entity, nil
-		}
-	case "StockMovement":
-		resolverName, err := entityResolverNameForStockMovement(ctx, rep)
-		if err != nil {
-			return nil, fmt.Errorf(`finding resolver for Entity "StockMovement": %w`, err)
-		}
-		switch resolverName {
-
-		case "findStockMovementByID":
-			id0, err := ec.unmarshalNID2string(ctx, rep["id"])
-			if err != nil {
-				return nil, fmt.Errorf(`unmarshalling param 0 for findStockMovementByID(): %w`, err)
-			}
-			entity, err := ec.resolvers.Entity().FindStockMovementByID(ctx, id0)
-			if err != nil {
-				return nil, fmt.Errorf(`resolving Entity "StockMovement": %w`, err)
-			}
-
-			return entity, nil
-		}
-
-	}
-	return nil, fmt.Errorf("%w: %s", ErrUnknownType, typeName)
-}
-
-func (ec *executionContext) resolveManyEntities(
-	ctx context.Context,
-	typeName string,
-	reps []EntityWithIndex,
-	list []fedruntime.Entity,
-) (err error) {
-	// we need to do our own panic handling, because we may be called in a
-	// goroutine, where the usual panic handling can't catch us
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-		}
-	}()
-
-	switch typeName {
-
-	default:
-		return errors.New("unknown type: " + typeName)
-	}
-}
-
-func entityResolverNameForAddress(ctx context.Context, rep EntityRepresentation) (string, error) {
-	// we collect errors because a later entity resolver may work fine
-	// when an entity has multiple keys
-	entityResolverErrs := []error{}
+func entityResolverNameForAddress(ctx context.Context, rep map[string]interface{}) (string, error) {
 	for {
 		var (
-			m   EntityRepresentation
-			val any
+			m   map[string]interface{}
+			val interface{}
 			ok  bool
 		)
 		_ = val
-		// if all of the KeyFields values for this resolver are null,
-		// we shouldn't use use it
-		allNull := true
 		m = rep
-		val, ok = m["firstName"]
-		if !ok {
-			entityResolverErrs = append(entityResolverErrs,
-				fmt.Errorf("%w due to missing Key Field \"firstName\" for Address", ErrTypeNotFound))
+		if _, ok = m["firstName"]; !ok {
 			break
 		}
-		if allNull {
-			allNull = val == nil
-		}
 		m = rep
-		val, ok = m["lastName"]
-		if !ok {
-			entityResolverErrs = append(entityResolverErrs,
-				fmt.Errorf("%w due to missing Key Field \"lastName\" for Address", ErrTypeNotFound))
+		if _, ok = m["lastName"]; !ok {
 			break
 		}
-		if allNull {
-			allNull = val == nil
-		}
 		m = rep
-		val, ok = m["street1"]
-		if !ok {
-			entityResolverErrs = append(entityResolverErrs,
-				fmt.Errorf("%w due to missing Key Field \"street1\" for Address", ErrTypeNotFound))
+		if _, ok = m["street1"]; !ok {
 			break
 		}
-		if allNull {
-			allNull = val == nil
-		}
 		m = rep
-		val, ok = m["street2"]
-		if !ok {
-			entityResolverErrs = append(entityResolverErrs,
-				fmt.Errorf("%w due to missing Key Field \"street2\" for Address", ErrTypeNotFound))
+		if _, ok = m["street2"]; !ok {
 			break
 		}
-		if allNull {
-			allNull = val == nil
-		}
 		m = rep
-		val, ok = m["city"]
-		if !ok {
-			entityResolverErrs = append(entityResolverErrs,
-				fmt.Errorf("%w due to missing Key Field \"city\" for Address", ErrTypeNotFound))
+		if _, ok = m["city"]; !ok {
 			break
 		}
-		if allNull {
-			allNull = val == nil
-		}
 		m = rep
-		val, ok = m["state"]
-		if !ok {
-			entityResolverErrs = append(entityResolverErrs,
-				fmt.Errorf("%w due to missing Key Field \"state\" for Address", ErrTypeNotFound))
+		if _, ok = m["state"]; !ok {
 			break
 		}
-		if allNull {
-			allNull = val == nil
-		}
 		m = rep
-		val, ok = m["country"]
-		if !ok {
-			entityResolverErrs = append(entityResolverErrs,
-				fmt.Errorf("%w due to missing Key Field \"country\" for Address", ErrTypeNotFound))
+		if _, ok = m["country"]; !ok {
 			break
 		}
-		if allNull {
-			allNull = val == nil
-		}
 		m = rep
-		val, ok = m["postalCode"]
-		if !ok {
-			entityResolverErrs = append(entityResolverErrs,
-				fmt.Errorf("%w due to missing Key Field \"postalCode\" for Address", ErrTypeNotFound))
-			break
-		}
-		if allNull {
-			allNull = val == nil
-		}
-		if allNull {
-			entityResolverErrs = append(entityResolverErrs,
-				fmt.Errorf("%w due to all null value KeyFields for Address", ErrTypeNotFound))
+		if _, ok = m["postalCode"]; !ok {
 			break
 		}
 		return "findAddressByFirstNameAndLastNameAndStreet1AndStreet2AndCityAndStateAndCountryAndPostalCode", nil
 	}
-	return "", fmt.Errorf("%w for Address due to %v", ErrTypeNotFound,
-		errors.Join(entityResolverErrs...).Error())
+	return "", fmt.Errorf("%w for Address", ErrTypeNotFound)
 }
 
-func entityResolverNameForInventoryItem(ctx context.Context, rep EntityRepresentation) (string, error) {
-	// we collect errors because a later entity resolver may work fine
-	// when an entity has multiple keys
-	entityResolverErrs := []error{}
+func entityResolverNameForInventoryItem(ctx context.Context, rep map[string]interface{}) (string, error) {
 	for {
 		var (
-			m   EntityRepresentation
-			val any
+			m   map[string]interface{}
+			val interface{}
 			ok  bool
 		)
 		_ = val
-		// if all of the KeyFields values for this resolver are null,
-		// we shouldn't use use it
-		allNull := true
 		m = rep
-		val, ok = m["id"]
-		if !ok {
-			entityResolverErrs = append(entityResolverErrs,
-				fmt.Errorf("%w due to missing Key Field \"id\" for InventoryItem", ErrTypeNotFound))
-			break
-		}
-		if allNull {
-			allNull = val == nil
-		}
-		if allNull {
-			entityResolverErrs = append(entityResolverErrs,
-				fmt.Errorf("%w due to all null value KeyFields for InventoryItem", ErrTypeNotFound))
+		if _, ok = m["id"]; !ok {
 			break
 		}
 		return "findInventoryItemByID", nil
 	}
-	return "", fmt.Errorf("%w for InventoryItem due to %v", ErrTypeNotFound,
-		errors.Join(entityResolverErrs...).Error())
+	return "", fmt.Errorf("%w for InventoryItem", ErrTypeNotFound)
 }
 
-func entityResolverNameForLocation(ctx context.Context, rep EntityRepresentation) (string, error) {
-	// we collect errors because a later entity resolver may work fine
-	// when an entity has multiple keys
-	entityResolverErrs := []error{}
+func entityResolverNameForLocation(ctx context.Context, rep map[string]interface{}) (string, error) {
 	for {
 		var (
-			m   EntityRepresentation
-			val any
+			m   map[string]interface{}
+			val interface{}
 			ok  bool
 		)
 		_ = val
-		// if all of the KeyFields values for this resolver are null,
-		// we shouldn't use use it
-		allNull := true
 		m = rep
-		val, ok = m["id"]
-		if !ok {
-			entityResolverErrs = append(entityResolverErrs,
-				fmt.Errorf("%w due to missing Key Field \"id\" for Location", ErrTypeNotFound))
-			break
-		}
-		if allNull {
-			allNull = val == nil
-		}
-		if allNull {
-			entityResolverErrs = append(entityResolverErrs,
-				fmt.Errorf("%w due to all null value KeyFields for Location", ErrTypeNotFound))
+		if _, ok = m["id"]; !ok {
 			break
 		}
 		return "findLocationByID", nil
 	}
-	return "", fmt.Errorf("%w for Location due to %v", ErrTypeNotFound,
-		errors.Join(entityResolverErrs...).Error())
+	return "", fmt.Errorf("%w for Location", ErrTypeNotFound)
 }
 
-func entityResolverNameForStockMovement(ctx context.Context, rep EntityRepresentation) (string, error) {
-	// we collect errors because a later entity resolver may work fine
-	// when an entity has multiple keys
-	entityResolverErrs := []error{}
+func entityResolverNameForStockMovement(ctx context.Context, rep map[string]interface{}) (string, error) {
 	for {
 		var (
-			m   EntityRepresentation
-			val any
+			m   map[string]interface{}
+			val interface{}
 			ok  bool
 		)
 		_ = val
-		// if all of the KeyFields values for this resolver are null,
-		// we shouldn't use use it
-		allNull := true
 		m = rep
-		val, ok = m["id"]
-		if !ok {
-			entityResolverErrs = append(entityResolverErrs,
-				fmt.Errorf("%w due to missing Key Field \"id\" for StockMovement", ErrTypeNotFound))
-			break
-		}
-		if allNull {
-			allNull = val == nil
-		}
-		if allNull {
-			entityResolverErrs = append(entityResolverErrs,
-				fmt.Errorf("%w due to all null value KeyFields for StockMovement", ErrTypeNotFound))
+		if _, ok = m["id"]; !ok {
 			break
 		}
 		return "findStockMovementByID", nil
 	}
-	return "", fmt.Errorf("%w for StockMovement due to %v", ErrTypeNotFound,
-		errors.Join(entityResolverErrs...).Error())
+	return "", fmt.Errorf("%w for StockMovement", ErrTypeNotFound)
 }

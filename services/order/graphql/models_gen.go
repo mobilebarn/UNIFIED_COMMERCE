@@ -3,7 +3,6 @@
 package graphql
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"strconv"
@@ -131,7 +130,7 @@ func (e LineItemFulfillmentStatus) String() string {
 	return string(e)
 }
 
-func (e *LineItemFulfillmentStatus) UnmarshalGQL(v any) error {
+func (e *LineItemFulfillmentStatus) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -146,20 +145,6 @@ func (e *LineItemFulfillmentStatus) UnmarshalGQL(v any) error {
 
 func (e LineItemFulfillmentStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-func (e *LineItemFulfillmentStatus) UnmarshalJSON(b []byte) error {
-	s, err := strconv.Unquote(string(b))
-	if err != nil {
-		return err
-	}
-	return e.UnmarshalGQL(s)
-}
-
-func (e LineItemFulfillmentStatus) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	e.MarshalGQL(&buf)
-	return buf.Bytes(), nil
 }
 
 type TransactionKind string
@@ -192,7 +177,7 @@ func (e TransactionKind) String() string {
 	return string(e)
 }
 
-func (e *TransactionKind) UnmarshalGQL(v any) error {
+func (e *TransactionKind) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -207,20 +192,6 @@ func (e *TransactionKind) UnmarshalGQL(v any) error {
 
 func (e TransactionKind) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-func (e *TransactionKind) UnmarshalJSON(b []byte) error {
-	s, err := strconv.Unquote(string(b))
-	if err != nil {
-		return err
-	}
-	return e.UnmarshalGQL(s)
-}
-
-func (e TransactionKind) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	e.MarshalGQL(&buf)
-	return buf.Bytes(), nil
 }
 
 type TransactionStatus string
@@ -251,7 +222,7 @@ func (e TransactionStatus) String() string {
 	return string(e)
 }
 
-func (e *TransactionStatus) UnmarshalGQL(v any) error {
+func (e *TransactionStatus) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -266,18 +237,4 @@ func (e *TransactionStatus) UnmarshalGQL(v any) error {
 
 func (e TransactionStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-func (e *TransactionStatus) UnmarshalJSON(b []byte) error {
-	s, err := strconv.Unquote(string(b))
-	if err != nil {
-		return err
-	}
-	return e.UnmarshalGQL(s)
-}
-
-func (e TransactionStatus) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	e.MarshalGQL(&buf)
-	return buf.Bytes(), nil
 }

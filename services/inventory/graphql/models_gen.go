@@ -3,25 +3,24 @@
 package graphql
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"strconv"
 )
 
 type AddressInput struct {
-	FirstName *string  `json:"firstName,omitempty"`
-	LastName  *string  `json:"lastName,omitempty"`
-	Company   *string  `json:"company,omitempty"`
-	Address1  *string  `json:"address1,omitempty"`
-	Address2  *string  `json:"address2,omitempty"`
-	City      *string  `json:"city,omitempty"`
-	Province  *string  `json:"province,omitempty"`
-	Country   *string  `json:"country,omitempty"`
-	Zip       *string  `json:"zip,omitempty"`
-	Phone     *string  `json:"phone,omitempty"`
-	Latitude  *float64 `json:"latitude,omitempty"`
-	Longitude *float64 `json:"longitude,omitempty"`
+	FirstName  *string  `json:"firstName,omitempty"`
+	LastName   *string  `json:"lastName,omitempty"`
+	Company    *string  `json:"company,omitempty"`
+	Street1    *string  `json:"street1,omitempty"`
+	Street2    *string  `json:"street2,omitempty"`
+	City       *string  `json:"city,omitempty"`
+	State      *string  `json:"state,omitempty"`
+	Country    *string  `json:"country,omitempty"`
+	PostalCode *string  `json:"postalCode,omitempty"`
+	Phone      *string  `json:"phone,omitempty"`
+	Latitude   *float64 `json:"latitude,omitempty"`
+	Longitude  *float64 `json:"longitude,omitempty"`
 }
 
 type AdjustStockInput struct {
@@ -179,7 +178,7 @@ func (e LocationType) String() string {
 	return string(e)
 }
 
-func (e *LocationType) UnmarshalGQL(v any) error {
+func (e *LocationType) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -194,20 +193,6 @@ func (e *LocationType) UnmarshalGQL(v any) error {
 
 func (e LocationType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-func (e *LocationType) UnmarshalJSON(b []byte) error {
-	s, err := strconv.Unquote(string(b))
-	if err != nil {
-		return err
-	}
-	return e.UnmarshalGQL(s)
-}
-
-func (e LocationType) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	e.MarshalGQL(&buf)
-	return buf.Bytes(), nil
 }
 
 type StockMovementType string
@@ -250,7 +235,7 @@ func (e StockMovementType) String() string {
 	return string(e)
 }
 
-func (e *StockMovementType) UnmarshalGQL(v any) error {
+func (e *StockMovementType) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -265,18 +250,4 @@ func (e *StockMovementType) UnmarshalGQL(v any) error {
 
 func (e StockMovementType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-func (e *StockMovementType) UnmarshalJSON(b []byte) error {
-	s, err := strconv.Unquote(string(b))
-	if err != nil {
-		return err
-	}
-	return e.UnmarshalGQL(s)
-}
-
-func (e StockMovementType) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	e.MarshalGQL(&buf)
-	return buf.Bytes(), nil
 }
