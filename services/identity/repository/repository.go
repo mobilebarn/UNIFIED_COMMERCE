@@ -28,7 +28,6 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*models.User, 
 	var user models.User
 	err := r.db.DB.WithContext(ctx).
 		Preload("Roles.Role.Permissions.Permission").
-		Preload("MerchantMembers").
 		First(&user, "id = ?", id).Error
 	if err != nil {
 		return nil, err
@@ -41,7 +40,6 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.
 	var user models.User
 	err := r.db.DB.WithContext(ctx).
 		Preload("Roles.Role.Permissions.Permission").
-		Preload("MerchantMembers").
 		First(&user, "email = ?", email).Error
 	if err != nil {
 		return nil, err
@@ -54,7 +52,6 @@ func (r *UserRepository) GetByUsername(ctx context.Context, username string) (*m
 	var user models.User
 	err := r.db.DB.WithContext(ctx).
 		Preload("Roles.Role.Permissions.Permission").
-		Preload("MerchantMembers").
 		First(&user, "username = ?", username).Error
 	if err != nil {
 		return nil, err
@@ -85,7 +82,6 @@ func (r *UserRepository) List(ctx context.Context, offset, limit int) ([]models.
 	// Get paginated results
 	err := r.db.DB.WithContext(ctx).
 		Preload("Roles.Role").
-		Preload("MerchantMembers").
 		Offset(offset).
 		Limit(limit).
 		Find(&users).Error
@@ -337,14 +333,19 @@ func (r *Repository) DB() *database.PostgresDB {
 
 // Migrate runs database migrations for all models
 func (r *Repository) Migrate() error {
-	return r.User.db.DB.AutoMigrate(
+	db := r.User.db.DB
+	
+	// Drop merchant_members table if it exists (moved to Merchant Account service)
+	db.Exec("DROP TABLE IF EXISTS merchant_members CASCADE")
+	
+	return db.AutoMigrate(
 		&models.User{},
 		&models.Role{},
 		&models.Permission{},
 		&models.UserRole{},
 		&models.RolePermission{},
 		&models.UserSession{},
-		&models.MerchantMember{},
+		// Note: MerchantMember is managed by the Merchant Account service
 		&models.PasswordReset{},
 		&models.EmailVerification{},
 		&models.AuditLog{},

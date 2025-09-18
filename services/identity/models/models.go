@@ -28,7 +28,7 @@ type User struct {
 	// Relationships
 	Roles           []UserRole       `json:"roles" gorm:"foreignKey:UserID"`
 	Sessions        []UserSession    `json:"-" gorm:"foreignKey:UserID"`
-	MerchantMembers []MerchantMember `json:"merchant_members" gorm:"foreignKey:UserID"`
+	// Note: MerchantMembers relationship is managed by the Merchant Account service
 }
 
 // IsEntity marks User as a federation entity
@@ -106,20 +106,6 @@ type UserSession struct {
 	UserAgent string `json:"user_agent"`
 	IPAddress string `json:"ip_address"`
 	Device    string `json:"device"`
-
-	// Relationships
-	User User `json:"user" gorm:"foreignKey:UserID"`
-}
-
-// MerchantMember represents a user's membership in a merchant organization
-type MerchantMember struct {
-	ID         string    `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	UserID     string    `json:"user_id" gorm:"not null;index"`
-	MerchantID string    `json:"merchant_id" gorm:"not null;index"` // References Merchant Account Service
-	Role       string    `json:"role" gorm:"not null"`              // "owner", "admin", "staff", "viewer"
-	IsActive   bool      `json:"is_active" gorm:"default:true"`
-	JoinedAt   time.Time `json:"joined_at"`
-	InvitedBy  string    `json:"invited_by"` // ID of user who invited this member
 
 	// Relationships
 	User User `json:"user" gorm:"foreignKey:UserID"`
