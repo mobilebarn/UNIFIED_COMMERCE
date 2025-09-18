@@ -165,11 +165,11 @@ type Store struct {
 type MerchantMember struct {
 	ID          string     `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	MerchantID  string     `json:"merchant_id" gorm:"not null;index"`
-	UserID      string     `json:"user_id" gorm:"not null;index"`  // References Identity Service (no FK constraint)
+	UserID      string     `json:"user_id" gorm:"not null;index;constraint:-"`  // References Identity Service (no FK constraint)
 	Role        string     `json:"role" gorm:"not null"`           // "owner", "admin", "manager", "staff", "viewer"
 	Status      string     `json:"status" gorm:"default:'active'"` // "active", "invited", "suspended"
 	Permissions []string   `json:"permissions" gorm:"type:jsonb"`
-	InvitedBy   string     `json:"invited_by"` // UserID who sent invitation (no FK constraint)
+	InvitedBy   string     `json:"invited_by" gorm:"constraint:-"` // UserID who sent invitation (no FK constraint)
 	InvitedAt   *time.Time `json:"invited_at"`
 	JoinedAt    *time.Time `json:"joined_at"`
 	CreatedAt   time.Time  `json:"created_at"`
