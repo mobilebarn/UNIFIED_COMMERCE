@@ -6,6 +6,7 @@ const { ApolloServer } = require('@apollo/server');
 const { expressMiddleware } = require('@apollo/server/express4');
 const { ApolloGateway, IntrospectAndCompose } = require('@apollo/gateway');
 const { json } = require('body-parser');
+const fetch = require('node-fetch');
 
 // Authentication middleware for GraphQL context
 function getGraphQLContext({ req }) {
@@ -142,32 +143,11 @@ async function startGateway() {
           { name: 'identity', url: getServiceUrl('IDENTITY_SERVICE_URL', 8001) }
           // Other services will be added dynamically as they become available
         ],
-        pollIntervalInMs: 30000, // Poll every 30 seconds for service updates (more frequent)
+        pollIntervalInMs: 60000, // Poll every 60 seconds - more conservative
         introspectionHeaders: {
           'User-Agent': 'GraphQL-Federation-Gateway/1.0.0'
-        },
-        // Add more lenient error handling
-        subgraphHealthCheck: false, // Disable health checks that might cause startup failures
-      }),
-      
-      // Service health check and retry logic
-      serviceHealthCheck: false, // Disable to prevent startup failures
-      
-      // Experimental: more lenient service loading
-      experimental_autoFragmentization: true,
-      
-      // Handle service failures gracefully
-      buildService({ name, url }) {
-        return {
-          name,
-          url,
-          // Add retry logic and timeouts
-          async willSendRequest({ request, context }) {
-            // Add timeout and retry headers
-            request.http.timeout = 10000; // 10 second timeout
-          }
-        };
-      }
+        }
+      })
     });
 
     // Create Apollo Server with the gateway
