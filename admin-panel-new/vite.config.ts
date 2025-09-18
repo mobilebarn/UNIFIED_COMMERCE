@@ -7,6 +7,11 @@ export default defineConfig({
   server: {
     port: 3002
   },
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    minify: 'esbuild'
+  },
   resolve: {
     alias: {
       '@': '/src'
