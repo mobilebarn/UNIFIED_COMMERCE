@@ -11,8 +11,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Retail OS - Your Premium Shopping Destination",
-  description: "Discover amazing products with our modern e-commerce platform",
+  title: "Unified Commerce OS - Your Complete Commerce Platform",
+  description: "Your unified commerce solution for modern businesses and customers",
 };
 
 export default function RootLayout({
@@ -36,7 +36,7 @@ export default function RootLayout({
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     {/* Company Info */}
                     <div>
-                      <h3 className="text-white text-lg font-bold mb-4">Retail OS</h3>
+                      <h3 className="text-white text-lg font-bold mb-4">Unified Commerce OS</h3>
                       <p className="mb-4 text-sm">Your premium shopping destination for the latest products and innovations.</p>
                       <div className="flex space-x-4">
                         {/* Social Media Icons */}
@@ -110,7 +110,7 @@ export default function RootLayout({
                   </div>
                   
                   <div className="mt-12 border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
-                    <p className="text-sm">© 2025 Retail OS. All rights reserved.</p>
+                    <p className="text-sm">© 2025 Unified Commerce OS. All rights reserved.</p>
                     <div className="mt-4 md:mt-0 flex space-x-6">
                       <a href="#" className="text-gray-400 hover:text-white transition text-sm">Privacy Policy</a>
                       <a href="#" className="text-gray-400 hover:text-white transition text-sm">Terms of Service</a>

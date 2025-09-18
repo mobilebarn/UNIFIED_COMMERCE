@@ -1,5 +1,5 @@
 {
-  "name": "mobile-pos",
+  "name": "unified-commerce-os-pos",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {

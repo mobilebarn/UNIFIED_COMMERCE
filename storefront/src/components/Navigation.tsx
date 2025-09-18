@@ -102,7 +102,7 @@ export function Navigation() {
                   <path d="M4 16L12 20L20 16" />
                 </svg>
                 <span className="ml-2 text-2xl font-bold text-blue-600">
-                  Retail OS
+                  Unified Commerce OS
                 </span>
               </Link>
             </div>

@@ -1,21 +1,20 @@
-# Render Blueprint for Retail OS
+# Render Blueprint for Unified Commerce OS
 # This file automatically deploys all services when you connect it to Render
 
 services:
   # Databases
   - type: pserv
-    name: retail-os-postgres
-    env: docker
+    name: unified-commerce-postgres
     plan: free
-    dockerfilePath: ./infrastructure/postgres/Dockerfile
+    databaseName: unified_commerce
     
   - type: redis
-    name: retail-os-redis
+    name: unified-commerce-redis
     plan: free
     
   # Microservices
   - type: web
-    name: retail-os-identity
+    name: unified-commerce-identity
     env: go
     plan: free
     buildCommand: go build -o app ./cmd/server
@@ -26,19 +25,13 @@ services:
         value: 8001
       - key: ENVIRONMENT
         value: production
-      - key: DATABASE_URL
-        fromService:
-          type: pserv
-          name: retail-os-postgres
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: retail-os-redis
-          property: connectionString
+      - key: LOG_LEVEL
+        value: info
+      - key: SERVICE_NAME
+        value: Identity Service
           
   - type: web
-    name: retail-os-product-catalog
+    name: unified-commerce-product-catalog
     env: go
     plan: free
     buildCommand: go build -o app ./cmd/server
@@ -49,19 +42,13 @@ services:
         value: 8006
       - key: ENVIRONMENT
         value: production
-      - key: MONGO_URL
-        fromService:
-          type: pserv
-          name: retail-os-postgres
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: retail-os-redis
-          property: connectionString
+      - key: LOG_LEVEL
+        value: info
+      - key: SERVICE_NAME
+        value: Product Catalog
           
   - type: web
-    name: retail-os-inventory
+    name: unified-commerce-inventory
     env: go
     plan: free
     buildCommand: go build -o app ./cmd/server
@@ -72,19 +59,13 @@ services:
         value: 8005
       - key: ENVIRONMENT
         value: production
-      - key: DATABASE_URL
-        fromService:
-          type: pserv
-          name: retail-os-postgres
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: retail-os-redis
-          property: connectionString
+      - key: LOG_LEVEL
+        value: info
+      - key: SERVICE_NAME
+        value: Inventory Service
           
   - type: web
-    name: retail-os-cart
+    name: unified-commerce-cart
     env: go
     plan: free
     buildCommand: go build -o app ./cmd/server
@@ -95,19 +76,13 @@ services:
         value: 8002
       - key: ENVIRONMENT
         value: production
-      - key: DATABASE_URL
-        fromService:
-          type: pserv
-          name: retail-os-postgres
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: retail-os-redis
-          property: connectionString
+      - key: LOG_LEVEL
+        value: info
+      - key: SERVICE_NAME
+        value: Cart Service
           
   - type: web
-    name: retail-os-order
+    name: unified-commerce-order
     env: go
     plan: free
     buildCommand: go build -o app ./cmd/server
@@ -118,19 +93,13 @@ services:
         value: 8003
       - key: ENVIRONMENT
         value: production
-      - key: DATABASE_URL
-        fromService:
-          type: pserv
-          name: retail-os-postgres
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: retail-os-redis
-          property: connectionString
+      - key: LOG_LEVEL
+        value: info
+      - key: SERVICE_NAME
+        value: Order Service
           
   - type: web
-    name: retail-os-payment
+    name: unified-commerce-payment
     env: go
     plan: free
     buildCommand: go build -o app ./cmd/server
@@ -141,19 +110,13 @@ services:
         value: 8004
       - key: ENVIRONMENT
         value: production
-      - key: DATABASE_URL
-        fromService:
-          type: pserv
-          name: retail-os-postgres
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: retail-os-redis
-          property: connectionString
+      - key: LOG_LEVEL
+        value: info
+      - key: SERVICE_NAME
+        value: Payment Service
           
   - type: web
-    name: retail-os-promotions
+    name: unified-commerce-promotions
     env: go
     plan: free
     buildCommand: go build -o app ./cmd/server
@@ -164,19 +127,13 @@ services:
         value: 8007
       - key: ENVIRONMENT
         value: production
-      - key: DATABASE_URL
-        fromService:
-          type: pserv
-          name: retail-os-postgres
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: retail-os-redis
-          property: connectionString
+      - key: LOG_LEVEL
+        value: info
+      - key: SERVICE_NAME
+        value: Promotions Service
           
   - type: web
-    name: retail-os-merchant-account
+    name: unified-commerce-merchant-account
     env: go
     plan: free
     buildCommand: go build -o app ./cmd/server
@@ -187,19 +144,13 @@ services:
         value: 8008
       - key: ENVIRONMENT
         value: production
-      - key: DATABASE_URL
-        fromService:
-          type: pserv
-          name: retail-os-postgres
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: retail-os-redis
-          property: connectionString
+      - key: LOG_LEVEL
+        value: info
+      - key: SERVICE_NAME
+        value: Merchant Account
           
   - type: web
-    name: retail-os-analytics
+    name: unified-commerce-analytics
     env: go
     plan: free
     buildCommand: go build -o app ./cmd/server
@@ -210,19 +161,13 @@ services:
         value: 8009
       - key: ENVIRONMENT
         value: production
-      - key: DATABASE_URL
-        fromService:
-          type: pserv
-          name: retail-os-postgres
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: retail-os-redis
-          property: connectionString
+      - key: LOG_LEVEL
+        value: info
+      - key: SERVICE_NAME
+        value: Analytics Service
           
   - type: web
-    name: retail-os-gateway
+    name: unified-commerce-gateway
     env: node
     plan: free
     buildCommand: npm install
@@ -233,3 +178,5 @@ services:
         value: 4000
       - key: NODE_ENV
         value: production
+      - key: SERVICE_NAME
+        value: GraphQL Gateway

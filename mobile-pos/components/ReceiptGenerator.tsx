@@ -89,7 +89,7 @@ Payment Method: ${receiptData.paymentMethod}`;
 ========================================
         Thank you for your business!
         
-        Powered by Retail OS
+        Powered by Unified Commerce OS
 ========================================
 `;
 
@@ -134,7 +134,7 @@ Payment Method: ${receiptData.paymentMethod}`;
       </View>
 
       <View style={styles.receipt}>
-        <Text style={styles.receiptHeader}>RETAIL OS POS</Text>
+        <Text style={styles.receiptHeader}>UNIFIED COMMERCE OS POS</Text>
         <Text style={styles.receiptSubheader}>Point of Sale System</Text>
         
         <View style={styles.divider} />
@@ -200,7 +200,7 @@ Payment Method: ${receiptData.paymentMethod}`;
         <View style={styles.divider} />
         
         <Text style={styles.footer}>Thank you for your business!</Text>
-        <Text style={styles.poweredBy}>Powered by Retail OS</Text>
+        <Text style={styles.poweredBy}>Powered by Unified Commerce OS</Text>
       </View>
 
       <View style={styles.actions}>

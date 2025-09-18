@@ -1,7 +1,7 @@
 {
-  "name": "retail-os-gateway",
+  "name": "unified-commerce-os-gateway",
   "version": "1.0.0",
-  "description": "GraphQL Federation Gateway for Retail OS",
+  "description": "GraphQL Federation Gateway for Unified Commerce OS",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -31,8 +31,8 @@
     "graphql",
     "federation",
     "gateway",
-    "retail-os"
+    "unified-commerce-os"
   ],
-  "author": "Retail OS Team",
+  "author": "Unified Commerce OS Team",
   "license": "MIT"
 }

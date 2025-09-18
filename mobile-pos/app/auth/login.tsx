@@ -69,7 +69,7 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Retail OS POS</Text>
+      <Text style={styles.title}>Unified Commerce OS POS</Text>
       <Text style={styles.subtitle}>Point of Sale System</Text>
       
       <View style={styles.form}>
@@ -111,7 +111,7 @@ export default function LoginScreen() {
       </View>
       
       <View style={styles.footer}>
-        <Text style={styles.footerText}>© 2025 Retail OS. All rights reserved.</Text>
+        <Text style={styles.footerText}>© 2025 Unified Commerce OS. All rights reserved.</Text>
       </View>
     </View>
   );

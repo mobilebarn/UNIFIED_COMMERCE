@@ -25,7 +25,7 @@ type Product = {
 type CartItem = {
   id: string;
   productId: string;
-  productVariantId: string;
+  productVariantId: string | null;
   name: string;
   sku: string;
   price: number;
@@ -120,7 +120,9 @@ export default function POSScreen() {
         });
         
         cartId = cartData.createCart.id;
-        localStorage.setItem(`cartId_${sessionId}`, cartId);
+        if (cartId) {
+          localStorage.setItem(`cartId_${sessionId}`, cartId);
+        }
       }
 
       // Add item to cart
@@ -223,7 +225,7 @@ export default function POSScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Retail OS Point of Sale</Text>
+      <Text style={styles.header}>Unified Commerce OS Point of Sale</Text>
       
       {/* Search Bar */}
       <View style={styles.searchContainer}>

@@ -154,10 +154,10 @@ export default function HomePage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 lg:py-40 flex flex-col md:flex-row items-center">
           <div className="text-center md:text-left md:w-1/2 mb-8 md:mb-0">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-              Discover Premium Products For Your Lifestyle
+              Welcome to Unified Commerce OS
             </h1>
             <p className="text-lg md:text-xl text-white/90 mb-8 max-w-xl">
-              Shop the latest trends in electronics, fashion, home goods and more. Free shipping on orders over $50.
+              Your complete unified commerce platform. Shop the latest trends in electronics, fashion, home goods and more. Free shipping on orders over $50.
             </p>
             <div className="flex flex-col sm:flex-row justify-center md:justify-start gap-4">
               <Link 
