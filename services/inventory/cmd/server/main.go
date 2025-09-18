@@ -44,6 +44,8 @@ func main() {
 		cfg.DatabasePassword,
 		cfg.DatabaseName,
 	)
+	// Set the full DATABASE_URL if available (for cloud providers like Render)
+	postgresConfig.DatabaseURL = cfg.DatabaseURL
 	postgresDB, err := database.NewPostgresConnection(postgresConfig)
 	if err != nil {
 		log.WithError(err).Fatal("Failed to connect to PostgreSQL")
@@ -121,7 +123,7 @@ func main() {
 
 	// Start server
 	srv := &http.Server{
-		Addr:         ":8003", // Temporarily hardcode inventory service port
+		Addr:         ":" + cfg.ServicePort,
 		Handler:      router,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
@@ -133,7 +135,7 @@ func main() {
 
 	// Start server in a goroutine
 	go func() {
-		log.WithFields(map[string]interface{}{"port": "8003"}).Info("Starting Inventory Service")
+		log.WithFields(map[string]interface{}{"port": cfg.ServicePort}).Info("Starting Inventory Service")
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.WithError(err).Fatal("Failed to start server")
 		}
