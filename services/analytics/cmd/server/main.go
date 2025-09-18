@@ -72,12 +72,15 @@ func main() {
 			return
 		}
 
+		// Debug: log the incoming query
+		log.WithFields(map[string]interface{}{"query": query}).Info("Received GraphQL query")
+
 		// Respond to federation service discovery
-		if query == "query{_service{sdl}}" {
+		if query == "query{_service{sdl}}" || query == "query { _service { sdl } }" {
 			c.JSON(http.StatusOK, map[string]interface{}{
 				"data": map[string]interface{}{
 					"_service": map[string]interface{}{
-						"sdl": "# Analytics Service GraphQL Schema\ntype Query { _service: _Service }\ntype _Service { sdl: String }",
+						"sdl": "extend type Query { _empty: String }",
 					},
 				},
 			})

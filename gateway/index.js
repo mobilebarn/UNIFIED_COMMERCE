@@ -122,8 +122,9 @@ async function startGateway() {
           { name: 'inventory', url: getServiceUrl('INVENTORY_SERVICE_URL', 8005) },
           { name: 'merchant-account', url: getServiceUrl('MERCHANT_ACCOUNT_SERVICE_URL', 8006) },
           { name: 'cart', url: getServiceUrl('CART_SERVICE_URL', 8007) },
-          { name: 'promotions', url: getServiceUrl('PROMOTIONS_SERVICE_URL', 8008) },
-          { name: 'analytics', url: getServiceUrl('ANALYTICS_SERVICE_URL', 8009) }
+          { name: 'promotions', url: getServiceUrl('PROMOTIONS_SERVICE_URL', 8008) }
+          // Temporarily removed analytics service until proper federation support is implemented
+          // { name: 'analytics', url: getServiceUrl('ANALYTICS_SERVICE_URL', 8009) }
         ],
         pollIntervalInMs: 10000, // Poll every 10 seconds for service updates
         introspectionHeaders: {
@@ -171,7 +172,7 @@ async function startGateway() {
         status: 'healthy',
         time: new Date().toISOString(),
         federation: {
-          subgraphs: 9, // All 9 services including analytics
+          subgraphs: 8, // 8 active services (analytics temporarily excluded)
           active: true
         },
         services: {
@@ -216,12 +217,13 @@ async function startGateway() {
       console.log(`  ✅ Merchant Account Service: ${getServiceUrl('MERCHANT_ACCOUNT_SERVICE_URL', 8006)}`);
       console.log(`  ✅ Cart Service: ${getServiceUrl('CART_SERVICE_URL', 8007)}`);
       console.log(`  ✅ Promotions Service: ${getServiceUrl('PROMOTIONS_SERVICE_URL', 8008)}`);
-      console.log(`  ✅ Analytics Service: ${getServiceUrl('ANALYTICS_SERVICE_URL', 8009)}`);
-      console.log('\n🎉 All 9 services are now connected to the GraphQL Federation Gateway!');
+      console.log(`  ⏳ Analytics Service: Temporarily excluded (federation integration in progress)`);
+      console.log('\n🎉 8 core services are now connected to the GraphQL Federation Gateway!');
       console.log('\n🔧 Next Steps:');
       console.log('  1. Test unified GraphQL queries across all connected services');
       console.log('  2. Verify cross-service relationships and federated queries');
-      console.log('  3. Monitor performance and optimize as needed');
+      console.log('  3. Complete analytics service federation integration');
+      console.log('  4. Monitor performance and optimize as needed');
     });
 
   } catch (error) {
