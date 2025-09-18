@@ -1339,7 +1339,7 @@ func sourceData(filename string) string {
 
 var sources = []*ast.Source{
 	{Name: "schema.graphql", Input: sourceData("schema.graphql"), BuiltIn: false},
-	{Name: "federation/directives.graphql", Input: `
+	{Name: "../federation/directives.graphql", Input: `
 	directive @authenticated on FIELD_DEFINITION | OBJECT | INTERFACE | SCALAR | ENUM
 	directive @composeDirective(name: String!) repeatable on SCHEMA
 	directive @extends on OBJECT | INTERFACE
@@ -1390,7 +1390,7 @@ var sources = []*ast.Source{
 	scalar federation__Policy
 	scalar federation__Scope
 `, BuiltIn: true},
-	{Name: "federation/entity.graphql", Input: `
+	{Name: "../federation/entity.graphql", Input: `
 # a union of all types that use the @key directive
 union _Entity = Address | Order | Payment | PaymentMethod | Refund | Transaction | User
 
@@ -13549,23 +13549,35 @@ func (ec *executionContext) marshalNPaymentMethod2ᚖunifiedᚑcommerceᚋservic
 }
 
 func (ec *executionContext) unmarshalNPaymentMethodType2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐPaymentMethodType(ctx context.Context, v interface{}) (models.PaymentMethodType, error) {
-	var res models.PaymentMethodType
-	err := res.UnmarshalGQL(v)
+	tmp, err := graphql.UnmarshalString(v)
+	res := models.PaymentMethodType(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNPaymentMethodType2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐPaymentMethodType(ctx context.Context, sel ast.SelectionSet, v models.PaymentMethodType) graphql.Marshaler {
-	return v
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) unmarshalNPaymentStatus2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐPaymentStatus(ctx context.Context, v interface{}) (models.PaymentStatus, error) {
-	var res models.PaymentStatus
-	err := res.UnmarshalGQL(v)
+	tmp, err := graphql.UnmarshalString(v)
+	res := models.PaymentStatus(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNPaymentStatus2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐPaymentStatus(ctx context.Context, sel ast.SelectionSet, v models.PaymentStatus) graphql.Marshaler {
-	return v
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalNRefund2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐRefund(ctx context.Context, sel ast.SelectionSet, v models.Refund) graphql.Marshaler {
@@ -13632,13 +13644,19 @@ func (ec *executionContext) unmarshalNRefundPaymentInput2unifiedᚑcommerceᚋse
 }
 
 func (ec *executionContext) unmarshalNRefundStatus2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐRefundStatus(ctx context.Context, v interface{}) (models.RefundStatus, error) {
-	var res models.RefundStatus
-	err := res.UnmarshalGQL(v)
+	tmp, err := graphql.UnmarshalString(v)
+	res := models.RefundStatus(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNRefundStatus2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐRefundStatus(ctx context.Context, sel ast.SelectionSet, v models.RefundStatus) graphql.Marshaler {
-	return v
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -13671,33 +13689,51 @@ func (ec *executionContext) marshalNTransaction2ᚖunifiedᚑcommerceᚋservices
 }
 
 func (ec *executionContext) unmarshalNTransactionKind2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐTransactionKind(ctx context.Context, v interface{}) (models.TransactionKind, error) {
-	var res models.TransactionKind
-	err := res.UnmarshalGQL(v)
+	tmp, err := graphql.UnmarshalString(v)
+	res := models.TransactionKind(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNTransactionKind2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐTransactionKind(ctx context.Context, sel ast.SelectionSet, v models.TransactionKind) graphql.Marshaler {
-	return v
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) unmarshalNTransactionStatus2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐTransactionStatus(ctx context.Context, v interface{}) (models.TransactionStatus, error) {
-	var res models.TransactionStatus
-	err := res.UnmarshalGQL(v)
+	tmp, err := graphql.UnmarshalString(v)
+	res := models.TransactionStatus(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNTransactionStatus2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐTransactionStatus(ctx context.Context, sel ast.SelectionSet, v models.TransactionStatus) graphql.Marshaler {
-	return v
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) unmarshalNTransactionType2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐTransactionType(ctx context.Context, v interface{}) (models.TransactionType, error) {
-	var res models.TransactionType
-	err := res.UnmarshalGQL(v)
+	tmp, err := graphql.UnmarshalString(v)
+	res := models.TransactionType(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNTransactionType2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐTransactionType(ctx context.Context, sel ast.SelectionSet, v models.TransactionType) graphql.Marshaler {
-	return v
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) unmarshalNUpdatePaymentMethodInput2unifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐUpdatePaymentMethodInput(ctx context.Context, v interface{}) (models.UpdatePaymentMethodInput, error) {
@@ -14359,16 +14395,17 @@ func (ec *executionContext) unmarshalOPaymentStatus2ᚖunifiedᚑcommerceᚋserv
 	if v == nil {
 		return nil, nil
 	}
-	var res = new(models.PaymentStatus)
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
+	tmp, err := graphql.UnmarshalString(v)
+	res := models.PaymentStatus(tmp)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOPaymentStatus2ᚖunifiedᚑcommerceᚋservicesᚋpaymentᚋmodelsᚐPaymentStatus(ctx context.Context, sel ast.SelectionSet, v *models.PaymentStatus) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return v
+	res := graphql.MarshalString(string(*v))
+	return res
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

@@ -55,3 +55,13 @@ models:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
+  # Use existing types from models.go to avoid conflicts
+  Address:
+    model:
+      - unified-commerce/services/payment/models.Address
+  PaymentStatus:
+    model:
+      - unified-commerce/services/payment/models.PaymentStatus
+  PaymentMethodType:
+    model:
+      - unified-commerce/services/payment/models.PaymentMethodType
