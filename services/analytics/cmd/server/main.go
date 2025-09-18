@@ -10,10 +10,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"retail-os/services/shared/config"
-	"retail-os/services/shared/database"
-	"retail-os/services/shared/logger"
-	"retail-os/services/shared/middleware"
+	"unified-commerce/services/shared/config"
+	"unified-commerce/services/shared/logger"
+	"unified-commerce/services/shared/middleware"
 )
 
 func main() {

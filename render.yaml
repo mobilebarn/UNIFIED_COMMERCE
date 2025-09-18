@@ -138,6 +138,19 @@ services:
           property: connectionString
 
   - type: web
+    name: unified-commerce-analytics
+    runtime: go
+    plan: free
+    buildCommand: go build -o app ./cmd/server
+    startCommand: ./app
+    rootDir: services/analytics
+    envVars:
+      - key: PORT
+        value: "8009"
+      - key: SERVICE_PORT
+        value: "8009"
+
+  - type: web
     name: unified-commerce-gateway
     runtime: node
     plan: free
@@ -186,6 +199,11 @@ services:
         fromService:
           type: web
           name: unified-commerce-promotions
+          property: host
+      - key: ANALYTICS_SERVICE_URL
+        fromService:
+          type: web
+          name: unified-commerce-analytics
           property: host
 
 databases:
