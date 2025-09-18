@@ -1,15 +1,8 @@
 {
   "name": "unified-commerce-admin-panel",
   "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    }
-  ],
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "env": {
     "REACT_APP_GRAPHQL_ENDPOINT": "https://unified-commerce-gateway.onrender.com/graphql",
     "REACT_APP_APP_NAME": "Unified Commerce Admin"
