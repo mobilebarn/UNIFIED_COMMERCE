@@ -19,7 +19,7 @@ func main() {
 	baseService, err := service.NewBaseService(service.ServiceOptions{
 		Name:        "merchant-account",
 		UsePostgres: true,
-		UseRedis:    true,
+		UseRedis:    false,
 		UseMongoDB:  false,
 	})
 	if err != nil {
