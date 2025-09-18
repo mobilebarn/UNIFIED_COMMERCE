@@ -38,7 +38,7 @@ type PostgresConfig struct {
 // NewPostgresConnection creates a new PostgreSQL connection using GORM
 func NewPostgresConnection(config *PostgresConfig) (*PostgresDB, error) {
 	var dsn string
-	
+
 	// Check if we have a full database URL (for cloud providers like Render)
 	if config.DatabaseURL != "" {
 		dsn = config.DatabaseURL
