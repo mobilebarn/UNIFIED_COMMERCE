@@ -9,6 +9,10 @@ services:
     envVars:
       - key: PORT
         value: "8001"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: unified-commerce-postgres
+          property: connectionString
         
   - type: web
     name: unified-commerce-product-catalog
@@ -20,6 +24,10 @@ services:
     envVars:
       - key: PORT
         value: "8006"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: unified-commerce-postgres
+          property: connectionString
         
   - type: web
     name: unified-commerce-inventory
@@ -31,6 +39,10 @@ services:
     envVars:
       - key: PORT
         value: "8005"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: unified-commerce-postgres
+          property: connectionString
         
   - type: web
     name: unified-commerce-cart
@@ -42,6 +54,10 @@ services:
     envVars:
       - key: PORT
         value: "8002"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: unified-commerce-postgres
+          property: connectionString
         
   - type: web
     name: unified-commerce-order
@@ -53,6 +69,10 @@ services:
     envVars:
       - key: PORT
         value: "8003"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: unified-commerce-postgres
+          property: connectionString
         
   - type: web
     name: unified-commerce-payment
@@ -64,6 +84,10 @@ services:
     envVars:
       - key: PORT
         value: "8004"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: unified-commerce-postgres
+          property: connectionString
         
   - type: web
     name: unified-commerce-promotions
@@ -75,6 +99,10 @@ services:
     envVars:
       - key: PORT
         value: "8007"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: unified-commerce-postgres
+          property: connectionString
         
   - type: web
     name: unified-commerce-merchant-account
@@ -86,6 +114,10 @@ services:
     envVars:
       - key: PORT
         value: "8008"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: unified-commerce-postgres
+          property: connectionString
         
   - type: web
     name: unified-commerce-analytics
@@ -97,6 +129,10 @@ services:
     envVars:
       - key: PORT
         value: "8009"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: unified-commerce-postgres
+          property: connectionString
         
   - type: web
     name: unified-commerce-gateway
@@ -108,6 +144,62 @@ services:
     envVars:
       - key: PORT
         value: "4000"
+      - key: IDENTITY_SERVICE_URL
+        fromService:
+          type: web
+          name: unified-commerce-identity
+          envVarKey: RENDER_EXTERNAL_URL
+          property: url
+          suffix: /graphql
+      - key: CART_SERVICE_URL
+        fromService:
+          type: web
+          name: unified-commerce-cart
+          envVarKey: RENDER_EXTERNAL_URL
+          property: url
+          suffix: /graphql
+      - key: ORDER_SERVICE_URL
+        fromService:
+          type: web
+          name: unified-commerce-order
+          envVarKey: RENDER_EXTERNAL_URL
+          property: url
+          suffix: /graphql
+      - key: PAYMENT_SERVICE_URL
+        fromService:
+          type: web
+          name: unified-commerce-payment
+          envVarKey: RENDER_EXTERNAL_URL
+          property: url
+          suffix: /graphql
+      - key: INVENTORY_SERVICE_URL
+        fromService:
+          type: web
+          name: unified-commerce-inventory
+          envVarKey: RENDER_EXTERNAL_URL
+          property: url
+          suffix: /graphql
+      - key: PRODUCT_SERVICE_URL
+        fromService:
+          type: web
+          name: unified-commerce-product-catalog
+          envVarKey: RENDER_EXTERNAL_URL
+          property: url
+          suffix: /graphql
+      - key: PROMOTIONS_SERVICE_URL
+        fromService:
+          type: web
+          name: unified-commerce-promotions
+          envVarKey: RENDER_EXTERNAL_URL
+          property: url
+          suffix: /graphql
+      - key: MERCHANT_SERVICE_URL
+        fromService:
+          type: web
+          name: unified-commerce-merchant-account
+          envVarKey: RENDER_EXTERNAL_URL
+          property: url
+          suffix: /graphql
         
   - type: redis
     name: unified-commerce-redis
