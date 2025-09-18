@@ -1,0 +1,235 @@
+# Render Blueprint for Retail OS
+# This file automatically deploys all services when you connect it to Render
+
+services:
+  # Databases
+  - type: pserv
+    name: retail-os-postgres
+    env: docker
+    plan: free
+    dockerfilePath: ./infrastructure/postgres/Dockerfile
+    
+  - type: redis
+    name: retail-os-redis
+    plan: free
+    
+  # Microservices
+  - type: web
+    name: retail-os-identity
+    env: go
+    plan: free
+    buildCommand: go build -o app ./cmd/server
+    startCommand: ./app
+    rootDir: services/identity
+    envVars:
+      - key: PORT
+        value: 8001
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        fromService:
+          type: pserv
+          name: retail-os-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: retail-os-redis
+          property: connectionString
+          
+  - type: web
+    name: retail-os-product-catalog
+    env: go
+    plan: free
+    buildCommand: go build -o app ./cmd/server
+    startCommand: ./app
+    rootDir: services/product-catalog
+    envVars:
+      - key: PORT
+        value: 8006
+      - key: ENVIRONMENT
+        value: production
+      - key: MONGO_URL
+        fromService:
+          type: pserv
+          name: retail-os-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: retail-os-redis
+          property: connectionString
+          
+  - type: web
+    name: retail-os-inventory
+    env: go
+    plan: free
+    buildCommand: go build -o app ./cmd/server
+    startCommand: ./app
+    rootDir: services/inventory
+    envVars:
+      - key: PORT
+        value: 8005
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        fromService:
+          type: pserv
+          name: retail-os-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: retail-os-redis
+          property: connectionString
+          
+  - type: web
+    name: retail-os-cart
+    env: go
+    plan: free
+    buildCommand: go build -o app ./cmd/server
+    startCommand: ./app
+    rootDir: services/cart
+    envVars:
+      - key: PORT
+        value: 8002
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        fromService:
+          type: pserv
+          name: retail-os-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: retail-os-redis
+          property: connectionString
+          
+  - type: web
+    name: retail-os-order
+    env: go
+    plan: free
+    buildCommand: go build -o app ./cmd/server
+    startCommand: ./app
+    rootDir: services/order
+    envVars:
+      - key: PORT
+        value: 8003
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        fromService:
+          type: pserv
+          name: retail-os-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: retail-os-redis
+          property: connectionString
+          
+  - type: web
+    name: retail-os-payment
+    env: go
+    plan: free
+    buildCommand: go build -o app ./cmd/server
+    startCommand: ./app
+    rootDir: services/payment
+    envVars:
+      - key: PORT
+        value: 8004
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        fromService:
+          type: pserv
+          name: retail-os-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: retail-os-redis
+          property: connectionString
+          
+  - type: web
+    name: retail-os-promotions
+    env: go
+    plan: free
+    buildCommand: go build -o app ./cmd/server
+    startCommand: ./app
+    rootDir: services/promotions
+    envVars:
+      - key: PORT
+        value: 8007
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        fromService:
+          type: pserv
+          name: retail-os-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: retail-os-redis
+          property: connectionString
+          
+  - type: web
+    name: retail-os-merchant-account
+    env: go
+    plan: free
+    buildCommand: go build -o app ./cmd/server
+    startCommand: ./app
+    rootDir: services/merchant-account
+    envVars:
+      - key: PORT
+        value: 8008
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        fromService:
+          type: pserv
+          name: retail-os-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: retail-os-redis
+          property: connectionString
+          
+  - type: web
+    name: retail-os-analytics
+    env: go
+    plan: free
+    buildCommand: go build -o app ./cmd/server
+    startCommand: ./app
+    rootDir: services/analytics
+    envVars:
+      - key: PORT
+        value: 8009
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        fromService:
+          type: pserv
+          name: retail-os-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: retail-os-redis
+          property: connectionString
+          
+  - type: web
+    name: retail-os-gateway
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    rootDir: gateway
+    envVars:
+      - key: PORT
+        value: 4000
+      - key: NODE_ENV
+        value: production
