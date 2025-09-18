@@ -122,8 +122,9 @@ async function startGateway() {
           { name: 'inventory', url: getServiceUrl('INVENTORY_SERVICE_URL', 8005) },
           { name: 'merchant-account', url: getServiceUrl('MERCHANT_ACCOUNT_SERVICE_URL', 8006) },
           { name: 'cart', url: getServiceUrl('CART_SERVICE_URL', 8007) },
-          { name: 'promotions', url: getServiceUrl('PROMOTIONS_SERVICE_URL', 8008) },
-          { name: 'analytics', url: getServiceUrl('ANALYTICS_SERVICE_URL', 8009) }
+          { name: 'promotions', url: getServiceUrl('PROMOTIONS_SERVICE_URL', 8008) }
+          // Analytics temporarily excluded - will implement proper federation schema later
+          // { name: 'analytics', url: getServiceUrl('ANALYTICS_SERVICE_URL', 8009) }
         ],
         pollIntervalInMs: 10000, // Poll every 10 seconds for service updates
         introspectionHeaders: {
@@ -173,7 +174,7 @@ async function startGateway() {
         status: 'healthy',
         time: new Date().toISOString(),
         federation: {
-          subgraphs: 9, // All 9 services active
+          subgraphs: 8, // Core 8 services (analytics excluded temporarily)
           active: true
         },
         services: {
@@ -218,12 +219,13 @@ async function startGateway() {
       console.log(`  ✅ Merchant Account Service: ${getServiceUrl('MERCHANT_ACCOUNT_SERVICE_URL', 8006)}`);
       console.log(`  ✅ Cart Service: ${getServiceUrl('CART_SERVICE_URL', 8007)}`);
       console.log(`  ✅ Promotions Service: ${getServiceUrl('PROMOTIONS_SERVICE_URL', 8008)}`);
-      console.log(`  ✅ Analytics Service: ${getServiceUrl('ANALYTICS_SERVICE_URL', 8009)}`);
-      console.log('\n🎉 All 9 services are now connected to the GraphQL Federation Gateway!');
+      console.log(`  ⏳ Analytics Service: Temporarily excluded (implementing proper federation schema)`);
+      console.log('\n🎉 Core 8 services are now connected to the GraphQL Federation Gateway!');
       console.log('\n🔧 Next Steps:');
-      console.log('  1. Test unified GraphQL queries across all connected services');
-      console.log('  2. Verify cross-service relationships and federated queries');
-      console.log('  3. Monitor performance and optimize as needed');
+      console.log('  1. Test unified GraphQL queries across core services');
+      console.log('  2. Verify cross-service relationships work properly');
+      console.log('  3. Implement proper GraphQL federation for analytics');
+      console.log('  4. Add remaining services (Notification, Customer)');
     });
 
   } catch (error) {
