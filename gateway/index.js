@@ -109,27 +109,14 @@ async function startGateway() {
       try {
         console.log(`🔍 Testing ${serviceName} at ${url}...`);
         
-        // First test the health endpoint
-        const healthUrl = url.replace('/graphql', '/health');
-        const healthResponse = await fetch(healthUrl, { 
-          method: 'GET', 
-          timeout: 10000,
-          headers: { 'User-Agent': 'GraphQL-Federation-Gateway/1.0.0' }
-        });
-        
-        if (!healthResponse.ok) {
-          console.log(`⚠️  ${serviceName} health check failed (${healthResponse.status})`);
-          return false;
-        }
-        
-        // Then test the GraphQL federation endpoint
+        // Try the GraphQL federation endpoint directly (more important than health)
         const federationTestQuery = JSON.stringify({
           query: '{ _service { sdl } }'
         });
         
         const gqlResponse = await fetch(url, {
           method: 'POST',
-          timeout: 10000,
+          timeout: 15000, // Increased timeout
           headers: {
             'Content-Type': 'application/json',
             'User-Agent': 'GraphQL-Federation-Gateway/1.0.0'
@@ -143,11 +130,35 @@ async function startGateway() {
             console.log(`✅ ${serviceName} federation endpoint is working at ${url}`);
             return true;
           } else {
-            console.log(`❌ ${serviceName} federation endpoint returned invalid response:`, gqlResult);
+            console.log(`⚠️ ${serviceName} GraphQL responded but without federation schema:`, gqlResult);
+            // Still return false but it's closer to working
             return false;
           }
         } else {
-          console.log(`❌ ${serviceName} GraphQL endpoint failed (${gqlResponse.status})`);
+          console.log(`❌ ${serviceName} GraphQL endpoint failed (${gqlResponse.status}) - Status: ${gqlResponse.statusText}`);
+          
+          // Try health endpoint as backup check
+          try {
+            const healthUrl = url.replace('/graphql', '/health');
+            console.log(`🔍 Trying health endpoint for ${serviceName} at ${healthUrl}...`);
+            
+            const healthResponse = await fetch(healthUrl, { 
+              method: 'GET', 
+              timeout: 10000,
+              headers: { 'User-Agent': 'GraphQL-Federation-Gateway/1.0.0' }
+            });
+            
+            if (healthResponse.ok) {
+              const healthData = await healthResponse.json();
+              console.log(`✅ ${serviceName} health endpoint is working:`, healthData);
+              console.log(`⚠️  But GraphQL endpoint at ${url} is not ready yet`);
+            } else {
+              console.log(`❌ ${serviceName} health endpoint also failed (${healthResponse.status})`);
+            }
+          } catch (healthError) {
+            console.log(`❌ ${serviceName} health endpoint error:`, healthError.message);
+          }
+          
           return false;
         }
       } catch (error) {
@@ -174,14 +185,38 @@ async function startGateway() {
       console.log(`${key}: '${process.env[key]}'`);
     });
 
+    // Wait for services to become available with retry logic
+    const waitForServices = async (maxRetries = 5, retryDelay = 10000) => {
+      console.log(`🔄 Waiting for services to become available (max ${maxRetries} retries, ${retryDelay/1000}s delay)...`);
+      
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        console.log(`🔍 Attempt ${attempt}/${maxRetries} - Testing service availability...`);
+        
+        const identityUrl = getServiceUrl('IDENTITY_SERVICE_URL', 8001);
+        const productCatalogUrl = getServiceUrl('PRODUCT_CATALOG_SERVICE_URL', 8002);
+        
+        const identityAvailable = await testServiceAvailability(identityUrl, 'Identity Service');
+        const productCatalogAvailable = await testServiceAvailability(productCatalogUrl, 'Product Catalog Service');
+        
+        if (identityAvailable || productCatalogAvailable) {
+          console.log(`✅ Found available services on attempt ${attempt}`);
+          return { identityAvailable, productCatalogAvailable, identityUrl, productCatalogUrl };
+        }
+        
+        if (attempt < maxRetries) {
+          console.log(`⚠️  No services available yet. Retrying in ${retryDelay/1000} seconds...`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+        }
+      }
+      
+      console.log(`❌ No services became available after ${maxRetries} attempts`);
+      return { identityAvailable: false, productCatalogAvailable: false, identityUrl: null, productCatalogUrl: null };
+    };
+
     // Test both services before creating federation
     console.log('\n🔎 Testing service availability for federation...');
     
-    const identityUrl = getServiceUrl('IDENTITY_SERVICE_URL', 8001);
-    const productCatalogUrl = getServiceUrl('PRODUCT_CATALOG_SERVICE_URL', 8002);
-    
-    const identityAvailable = await testServiceAvailability(identityUrl, 'Identity Service');
-    const productCatalogAvailable = await testServiceAvailability(productCatalogUrl, 'Product Catalog Service');
+    const { identityAvailable, productCatalogAvailable, identityUrl, productCatalogUrl } = await waitForServices();
     
     // Build subgraphs array based on service availability
     const subgraphs = [];
