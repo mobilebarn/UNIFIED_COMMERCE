@@ -4,7 +4,7 @@ services:
   - type: pserv
     name: unified-commerce-mongodb
     image:
-      image: mongo:latest
+      url: mongo:latest # <-- The corrected key is 'url'
     envVars:
       - key: MONGO_INITDB_ROOT_USERNAME
         generateValue: true
@@ -277,4 +277,4 @@ databases:
     databaseName: unified_commerce
     user: unified_commerce_user
   - name: unified-commerce-redis
-    type: redis
+    engine: redis
