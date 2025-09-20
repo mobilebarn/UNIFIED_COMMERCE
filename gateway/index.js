@@ -98,22 +98,51 @@ async function startGateway() {
     // Test service availability before adding to gateway
     const testServiceAvailability = async (url, serviceName) => {
       try {
+        console.log(`🔍 Testing ${serviceName} at ${url}...`);
+        
+        // First test the health endpoint
         const healthUrl = url.replace('/graphql', '/health');
-        const response = await fetch(healthUrl, { 
+        const healthResponse = await fetch(healthUrl, { 
           method: 'GET', 
-          timeout: 5000,
+          timeout: 10000,
           headers: { 'User-Agent': 'GraphQL-Federation-Gateway/1.0.0' }
         });
         
-        if (response.ok) {
-          console.log(`✅ ${serviceName} is available at ${url}`);
-          return true;
+        if (!healthResponse.ok) {
+          console.log(`⚠️  ${serviceName} health check failed (${healthResponse.status})`);
+          return false;
+        }
+        
+        // Then test the GraphQL federation endpoint
+        const federationTestQuery = JSON.stringify({
+          query: '{ _service { sdl } }'
+        });
+        
+        const gqlResponse = await fetch(url, {
+          method: 'POST',
+          timeout: 10000,
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': 'GraphQL-Federation-Gateway/1.0.0'
+          },
+          body: federationTestQuery
+        });
+        
+        if (gqlResponse.ok) {
+          const gqlResult = await gqlResponse.json();
+          if (gqlResult.data && gqlResult.data._service) {
+            console.log(`✅ ${serviceName} federation endpoint is working at ${url}`);
+            return true;
+          } else {
+            console.log(`❌ ${serviceName} federation endpoint returned invalid response:`, gqlResult);
+            return false;
+          }
         } else {
-          console.log(`⚠️  ${serviceName} health check failed (${response.status}) - excluding from federation`);
+          console.log(`❌ ${serviceName} GraphQL endpoint failed (${gqlResponse.status})`);
           return false;
         }
       } catch (error) {
-        console.log(`❌ ${serviceName} is not available at ${url} - excluding from federation`);
+        console.log(`❌ ${serviceName} is not available at ${url} - Error: ${error.message}`);
         return false;
       }
     };
@@ -136,13 +165,41 @@ async function startGateway() {
       console.log(`${key}: '${process.env[key]}'`);
     });
 
+    // Test both services before creating federation
+    console.log('\n🔎 Testing service availability for federation...');
+    
+    const identityUrl = getServiceUrl('IDENTITY_SERVICE_URL', 8001);
+    const productCatalogUrl = getServiceUrl('PRODUCT_CATALOG_SERVICE_URL', 8002);
+    
+    const identityAvailable = await testServiceAvailability(identityUrl, 'Identity Service');
+    const productCatalogAvailable = await testServiceAvailability(productCatalogUrl, 'Product Catalog Service');
+    
+    // Build subgraphs array based on service availability
+    const subgraphs = [];
+    
+    if (identityAvailable) {
+      subgraphs.push({ name: 'identity', url: identityUrl });
+      console.log('✅ Added Identity service to federation');
+    } else {
+      console.log('❌ Identity service excluded from federation - not available');
+    }
+    
+    if (productCatalogAvailable) {
+      subgraphs.push({ name: 'product-catalog', url: productCatalogUrl });
+      console.log('✅ Added Product Catalog service to federation');
+    } else {
+      console.log('❌ Product Catalog service excluded from federation - not available');
+    }
+    
+    if (subgraphs.length === 0) {
+      throw new Error('No services available for federation!');
+    }
+    
+    console.log(`\n🔗 Creating federation with ${subgraphs.length} services:`, subgraphs.map(s => s.name).join(', '));
+
     const gateway = new ApolloGateway({
       supergraphSdl: new IntrospectAndCompose({
-        subgraphs: [
-          // Both core services are now stable
-          { name: 'identity', url: getServiceUrl('IDENTITY_SERVICE_URL', 8001) },
-          { name: 'product-catalog', url: getServiceUrl('PRODUCT_CATALOG_SERVICE_URL', 8002) }
-        ],
+        subgraphs,
         pollIntervalInMs: 60000, // Poll every 60 seconds - more conservative
         introspectionHeaders: {
           'User-Agent': 'GraphQL-Federation-Gateway/1.0.0'
@@ -221,12 +278,21 @@ async function startGateway() {
       console.log(`✅ GraphQL Federation Gateway running at http://localhost:${PORT}/graphql`);
       console.log(`🎮 GraphQL Playground available at http://localhost:${PORT}/graphql`);
       console.log(`🔍 Health check available at http://localhost:${PORT}/health`);
-      console.log('\n📊 Gateway started with core services federation:');
-      console.log(`  ✅ Identity Service: ${getServiceUrl('IDENTITY_SERVICE_URL', 8001)}`);
-      console.log(`  ✅ Product Catalog Service: ${getServiceUrl('PRODUCT_CATALOG_SERVICE_URL', 8002)}`);
-      console.log('\n⚡ Both core services are now federated and ready for product queries.');
-      console.log('\n🔄 Products should now load successfully in the storefront.');
-      console.log('\n🛡️  Federation mode: Full GraphQL schema with products and authentication.');
+      console.log('\n📊 Gateway started with dynamic federation:');
+      if (identityAvailable) {
+        console.log(`  ✅ Identity Service: ${identityUrl}`);
+      }
+      if (productCatalogAvailable) {
+        console.log(`  ✅ Product Catalog Service: ${productCatalogUrl}`);
+      }
+      console.log(`\n⚡ Federation active with ${subgraphs.length} service(s).`);
+      if (productCatalogAvailable) {
+        console.log('\n🔄 Products should now load successfully in the storefront.');
+        console.log('\n🛡️  Federation mode: Full GraphQL schema with products and authentication.');
+      } else {
+        console.log('\n⚠️  Product Catalog not available - products will not load until service is ready.');
+        console.log('\n🛡️  Partial federation mode: Authentication only.');
+      }
     });
 
   } catch (error) {
