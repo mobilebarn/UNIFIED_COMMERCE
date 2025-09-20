@@ -2,6 +2,7 @@ services:
   # MongoDB as a Private Service using official MongoDB Docker image
   - type: pserv
     name: unified-commerce-mongodb
+    runtime: image
     image:
       url: mongo:7.0
     startCommand: mongod
@@ -18,7 +19,7 @@ services:
       sizeGB: 1
 
   # Redis as a managed service
-  - type: redis
+  - type: keyvalue
     name: unified-commerce-redis
     plan: free
     region: oregon
@@ -41,7 +42,7 @@ services:
           property: connectionString
       - key: REDIS_URL
         fromService:
-          type: redis
+          type: keyvalue
           name: unified-commerce-redis
           property: connectionString
 
@@ -77,7 +78,7 @@ services:
         value: "product_catalog"
       - key: REDIS_URL
         fromService:
-          type: redis
+          type: keyvalue
           name: unified-commerce-redis
           property: connectionString
 
@@ -162,7 +163,7 @@ services:
           property: connectionString
       - key: REDIS_URL
         fromService:
-          type: redis
+          type: keyvalue
           name: unified-commerce-redis
           property: connectionString
 
@@ -183,7 +184,7 @@ services:
           property: connectionString
       - key: REDIS_URL
         fromService:
-          type: redis
+          type: keyvalue
           name: unified-commerce-redis
           property: connectionString
 
@@ -223,7 +224,7 @@ services:
         value: "analytics"
       - key: REDIS_URL
         fromService:
-          type: redis
+          type: keyvalue
           name: unified-commerce-redis
           property: connectionString
 
