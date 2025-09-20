@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/gin-gonic/gin"
 
 	"unified-commerce/services/product-catalog/graphql"
@@ -37,7 +39,8 @@ func main() {
 func setupRoutes(router *gin.Engine, baseService *sharedService.BaseService) {
 	// Check if MongoDB is available
 	if baseService.MongoDB == nil {
-		baseService.Logger.Warn("MongoDB not available, setting up service in limited mode")
+		baseService.Logger.Warn("MongoDB not available, setting up service with mock data for debugging")
+		
 		// Add a simple health endpoint for when MongoDB is unavailable
 		router.GET("/status", func(c *gin.Context) {
 			c.JSON(200, map[string]interface{}{
@@ -46,15 +49,95 @@ func setupRoutes(router *gin.Engine, baseService *sharedService.BaseService) {
 				"message": "Service is running but database is not available",
 			})
 		})
-		// Still setup GraphQL endpoint for federation discovery
+		
+		// Setup GraphQL endpoint with mock data for debugging
 		router.POST("/graphql", func(c *gin.Context) {
-			c.JSON(200, map[string]interface{}{
-				"data": map[string]interface{}{
-					"_service": map[string]interface{}{
-						"sdl": `type Product { id: ID! }`,
+			var request struct {
+				Query string `json:"query"`
+			}
+			
+			if err := c.ShouldBindJSON(&request); err != nil {
+				c.JSON(400, map[string]interface{}{"error": "Invalid request"})
+				return
+			}
+			
+			// Handle federation discovery query
+			if strings.Contains(request.Query, "_service") {
+				c.JSON(200, map[string]interface{}{
+					"data": map[string]interface{}{
+						"_service": map[string]interface{}{
+							"sdl": `
+								type Product @key(fields: "id") {
+									id: ID!
+									title: String!
+									description: String!
+									priceRange: PriceRange!
+									variants: [ProductVariant!]!
+									category: Category
+									images: [String!]!
+								}
+								
+								type PriceRange {
+									minVariantPrice: Float!
+									maxVariantPrice: Float!
+								}
+								
+								type ProductVariant {
+									id: ID!
+									price: Float!
+									inventoryQuantity: Int!
+								}
+								
+								type Category {
+									id: ID!
+									name: String!
+								}
+								
+								type Query {
+									products: [Product!]!
+									product(id: ID!): Product
+								}
+							`,
+						},
 					},
-				},
-			})
+				})
+				return
+			}
+			
+			// Handle products query with mock data
+			if strings.Contains(request.Query, "products") {
+				c.JSON(200, map[string]interface{}{
+					"data": map[string]interface{}{
+						"products": []map[string]interface{}{
+							{
+								"id":          "1",
+								"title":       "Sample Product",
+								"description": "This is a sample product while MongoDB is unavailable",
+								"priceRange": map[string]interface{}{
+									"minVariantPrice": 29.99,
+									"maxVariantPrice": 29.99,
+								},
+								"variants": []map[string]interface{}{
+									{
+										"id":                "1",
+										"price":             29.99,
+										"inventoryQuantity": 10,
+									},
+								},
+								"category": map[string]interface{}{
+									"id":   "1",
+									"name": "Sample Category",
+								},
+								"images": []string{"https://via.placeholder.com/300"},
+							},
+						},
+					},
+				})
+				return
+			}
+			
+			// Default empty response
+			c.JSON(200, map[string]interface{}{"data": nil})
 		})
 		return
 	}
