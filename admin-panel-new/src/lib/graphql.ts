@@ -15,6 +15,7 @@ export const GET_PRODUCTS = gql`
       }
       variants {
         id
+        title
         sku
         price
         compareAtPrice
@@ -42,6 +43,7 @@ export const GET_PRODUCT_BY_ID = gql`
       }
       variants {
         id
+        title
         sku
         price
         compareAtPrice
@@ -92,49 +94,12 @@ export const DELETE_PRODUCT = gql`
 `;
 
 // Order Queries and Mutations
+// Note: Orders service not yet deployed, showing placeholder
 export const GET_ORDERS = gql`
-  query GetOrders($filter: OrderFilter) {
-    orders(filter: $filter) {
-      id
-      orderNumber
-      status
-      total
-      currency
-      createdAt
-      updatedAt
-      customer {
-        id
-        firstName
-        lastName
-        email
-      }
-      items {
-        id
-        quantity
-        price
-        product {
-          id
-          title
-        }
-        variant {
-          id
-          sku
-        }
-      }
-      payments {
-        id
-        status
-        amount
-        method
-        transactionId
-      }
-      fulfillments {
-        id
-        status
-        trackingNumber
-        carrier
-      }
-    }
+  query GetOrders {
+    # This will be implemented when Order Management service is deployed
+    # Currently returns empty array to prevent errors
+    __typename
   }
 `;
 
@@ -218,17 +183,16 @@ export const UPDATE_ORDER_STATUS = gql`
 
 // Customer Queries
 export const GET_CUSTOMERS = gql`
-  query GetCustomers($filter: UserFilter) {
-    users(filter: $filter) {
+  query GetCustomers($limit: Int, $offset: Int) {
+    users(limit: $limit, offset: $offset) {
       id
       firstName
       lastName
       email
-      phone
-      status
+      username
+      isActive
       createdAt
-      totalOrders
-      totalSpent
+      updatedAt
     }
   }
 `;
@@ -240,15 +204,14 @@ export const GET_CUSTOMER_BY_ID = gql`
       firstName
       lastName
       email
-      phone
-      status
+      username
+      isActive
       createdAt
-      orders {
+      updatedAt
+      roles {
         id
-        orderNumber
-        status
-        total
-        createdAt
+        name
+        description
       }
     }
   }
@@ -397,34 +360,12 @@ export const GET_MERCHANT_PROFILE = gql`
 `;
 
 // Dashboard Analytics
+// Note: Analytics service not yet deployed, showing placeholder
 export const GET_DASHBOARD_STATS = gql`
-  query GetDashboardStats($period: String!) {
-    dashboardStats(period: $period) {
-      totalRevenue
-      totalOrders
-      totalCustomers
-      averageOrderValue
-      revenueGrowth
-      orderGrowth
-      customerGrowth
-      topProducts {
-        id
-        title
-        revenue
-        orderCount
-      }
-      recentOrders {
-        id
-        orderNumber
-        customer {
-          firstName
-          lastName
-        }
-        total
-        status
-        createdAt
-      }
-    }
+  query GetDashboardStats {
+    # This will be implemented when Analytics service is deployed
+    # Currently returns empty to prevent errors
+    __typename
   }
 `;
 
@@ -502,10 +443,11 @@ export interface Product {
 
 export interface ProductVariant {
   id: string;
+  title: string;
   sku: string;
   price: number;
   compareAtPrice?: number;
-  inventory?: InventoryItem[];
+  inventoryQuantity: number;
 }
 
 export interface Category {
@@ -532,11 +474,17 @@ export interface Customer {
   firstName: string;
   lastName: string;
   email: string;
-  phone?: string;
-  status: 'active' | 'inactive';
+  username: string;
+  isActive: boolean;
   createdAt: string;
-  totalOrders?: number;
-  totalSpent?: number;
+  updatedAt: string;
+  roles?: Role[];
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  description?: string;
 }
 
 export interface OrderItem {
