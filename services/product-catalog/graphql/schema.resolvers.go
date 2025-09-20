@@ -746,6 +746,16 @@ func (r *queryResolver) Products(ctx context.Context, filter *ProductFilter) ([]
 			Type:        "simple",
 			Slug:        "sample-product-1",
 			CreatedAt:   createdAt1,
+			Variants: []models.ProductVariant{
+				{
+					ID:               "variant-1-1",
+					SKU:              "PROD1-VAR1",
+					Price:            29.99,
+					CompareAtPrice:   35.99,
+					CreatedAt:        createdAt1,
+					UpdatedAt:        createdAt1,
+				},
+			},
 		},
 		{
 			ID:          objectID2,
@@ -757,6 +767,24 @@ func (r *queryResolver) Products(ctx context.Context, filter *ProductFilter) ([]
 			Type:        "simple",
 			Slug:        "sample-product-2",
 			CreatedAt:   createdAt2,
+			Variants: []models.ProductVariant{
+				{
+					ID:               "variant-2-1",
+					SKU:              "PROD2-VAR1",
+					Price:            39.99,
+					CompareAtPrice:   45.99,
+					CreatedAt:        createdAt2,
+					UpdatedAt:        createdAt2,
+				},
+				{
+					ID:               "variant-2-2",
+					SKU:              "PROD2-VAR2",
+					Price:            42.99,
+					CompareAtPrice:   48.99,
+					CreatedAt:        createdAt2,
+					UpdatedAt:        createdAt2,
+				},
+			},
 		},
 		{
 			ID:          objectID3,
@@ -768,6 +796,16 @@ func (r *queryResolver) Products(ctx context.Context, filter *ProductFilter) ([]
 			Type:        "simple",
 			Slug:        "sample-product-3",
 			CreatedAt:   createdAt3,
+			Variants: []models.ProductVariant{
+				{
+					ID:               "variant-3-1",
+					SKU:              "PROD3-VAR1",
+					Price:            49.99,
+					CompareAtPrice:   55.99,
+					CreatedAt:        createdAt3,
+					UpdatedAt:        createdAt3,
+				},
+			},
 		},
 	}
 	return products, nil
