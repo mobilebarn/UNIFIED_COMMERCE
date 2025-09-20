@@ -2,7 +2,7 @@ services:
   - type: web
     name: unified-commerce-identity
     runtime: go
-    plan: free
+    plan: starter
     buildCommand: go build -o app ./cmd/server
     startCommand: ./app
     rootDir: services/identity
@@ -50,7 +50,7 @@ services:
   - type: web
     name: unified-commerce-order
     runtime: go
-    plan: free
+    plan: starter
     buildCommand: go build -o app ./cmd/server
     startCommand: ./app
     rootDir: services/order
@@ -69,7 +69,7 @@ services:
   - type: web
     name: unified-commerce-payment
     runtime: go
-    plan: free
+    plan: starter
     buildCommand: go build -o app ./cmd/server
     startCommand: ./app
     rootDir: services/payment
@@ -88,7 +88,7 @@ services:
   - type: web
     name: unified-commerce-inventory
     runtime: go
-    plan: free
+    plan: starter
     buildCommand: go build -o app ./cmd/server
     startCommand: ./app
     rootDir: services/inventory
@@ -107,7 +107,7 @@ services:
   - type: web
     name: unified-commerce-merchant-account
     runtime: go
-    plan: free
+    plan: starter
     buildCommand: go build -o app ./cmd/server
     startCommand: ./app
     rootDir: services/merchant-account
@@ -126,7 +126,7 @@ services:
   - type: web
     name: unified-commerce-cart
     runtime: go
-    plan: free
+    plan: starter
     buildCommand: go build -o app ./cmd/server
     startCommand: ./app
     rootDir: services/cart
@@ -149,7 +149,7 @@ services:
   - type: web
     name: unified-commerce-promotions
     runtime: go
-    plan: free
+    plan: starter
     buildCommand: go build -o app ./cmd/server
     startCommand: ./app
     rootDir: services/promotions
@@ -201,7 +201,7 @@ services:
   - type: web
     name: unified-commerce-gateway
     runtime: node
-    plan: free
+    plan: starter
     buildCommand: npm install
     startCommand: npm start
     rootDir: gateway
@@ -256,7 +256,7 @@ services:
 
 databases:
   - name: unified-commerce-postgres
-    plan: free
+    plan: starter
   - name: unified-commerce-mongodb
     databaseEngine: mongodb
     plan: starter
