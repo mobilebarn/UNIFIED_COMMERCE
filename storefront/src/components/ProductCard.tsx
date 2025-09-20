@@ -8,7 +8,11 @@ interface BaseProduct {
   id: string;
   title?: string;
   name?: string;
-  price: number;
+  price?: number; // For backward compatibility with mock data
+  priceRange?: {
+    minVariantPrice: number;
+    maxVariantPrice: number;
+  };
   description?: string;
   imageUrl?: string;
 }
@@ -28,6 +32,9 @@ export function ProductCard({ product }: ProductCardProps) {
   const productTitle = product.title || product.name || 'Untitled Product';
   const productDescription = product.description || '';
   const productImageUrl = product.imageUrl || `https://via.placeholder.com/600x600/3B82F6/FFFFFF?text=${productTitle.charAt(0)}`;
+  
+  // Handle both mock data (price) and GraphQL data (priceRange)
+  const productPrice = product.price || product.priceRange?.minVariantPrice || 0;
 
   const renderRating = (rate: number) => {
     return (
@@ -53,7 +60,7 @@ export function ProductCard({ product }: ProductCardProps) {
     addToCart({
       id: product.id,
       name: productTitle,
-      price: product.price,
+      price: productPrice,
       image: productImageUrl
     });
   };
@@ -92,7 +99,7 @@ export function ProductCard({ product }: ProductCardProps) {
         </p>
         <div className="flex items-center justify-between">
           <span className="text-xl font-bold text-gray-900">
-            ${product.price.toFixed(2)}
+            ${productPrice.toFixed(2)}
           </span>
           <button 
             onClick={handleAddToCart}

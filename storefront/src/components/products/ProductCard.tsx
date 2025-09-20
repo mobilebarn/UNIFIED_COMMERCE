@@ -13,7 +13,11 @@ interface Product {
   id: string;
   name: string;
   description: string;
-  price: number;
+  price?: number; // For backward compatibility
+  priceRange?: {
+    minVariantPrice: number;
+    maxVariantPrice: number;
+  };
   image: string;
   category: string;
   inventory: {
@@ -29,6 +33,9 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { addItem, openCart } = useCartStore();
+  
+  // Handle both mock data (price) and GraphQL data (priceRange)
+  const productPrice = product.price || product.priceRange?.minVariantPrice || 0;
   
   // Check if product is in wishlist
   const { data: wishlistData } = useQuery(GET_WISHLIST);
@@ -51,7 +58,7 @@ export function ProductCard({ product }: ProductCardProps) {
     addItem({
       id: product.id,
       name: product.name,
-      price: product.price,
+      price: productPrice,
       image: product.image,
     });
     
@@ -122,7 +129,7 @@ export function ProductCard({ product }: ProductCardProps) {
         
         <div className="mt-3 flex items-center justify-between">
           <span className="text-lg font-medium text-gray-900">
-            ${product.price.toFixed(2)}
+            ${productPrice.toFixed(2)}
           </span>
           
           <button

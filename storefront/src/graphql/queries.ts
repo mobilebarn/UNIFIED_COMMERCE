@@ -11,11 +11,14 @@ export interface Product {
   id: string;
   title: string;
   description?: string;
-  price: number;
   status: 'ACTIVE' | 'DRAFT' | 'ARCHIVED';
   imageUrl?: string; // Assuming the schema might provide a primary image URL
+  priceRange?: {
+    minVariantPrice: number;
+    maxVariantPrice: number;
+  };
   variants?: ProductVariant[];
-  categories?: Category[];
+  category?: Category;
   createdAt: string;
 }
 
@@ -23,9 +26,7 @@ export interface ProductVariant {
   id: string;
   sku: string;
   price: number;
-  inventory?: {
-    quantity: number;
-  };
+  inventoryQuantity: number;
 }
 
 export interface Category {
@@ -192,20 +193,18 @@ export const GET_PRODUCTS = gql`
       id
       title
       description
-      price
       status
       createdAt
-      # Assuming a primary image URL might be available on the product itself
-      # If not, we might need to get it from variants or another source
-      # imageUrl 
+      priceRange {
+        minVariantPrice
+        maxVariantPrice
+      }
       variants {
         id
         price
-        inventory {
-          quantity
-        }
+        inventoryQuantity
       }
-      categories {
+      category {
         id
         name
       }
@@ -219,18 +218,19 @@ export const GET_PRODUCT_BY_ID = gql`
       id
       title
       description
-      price
       status
       createdAt
+      priceRange {
+        minVariantPrice
+        maxVariantPrice
+      }
       variants {
         id
         sku
         price
-        inventory {
-          quantity
-        }
+        inventoryQuantity
       }
-      categories {
+      category {
         id
         name
       }
