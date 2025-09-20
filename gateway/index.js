@@ -139,10 +139,9 @@ async function startGateway() {
     const gateway = new ApolloGateway({
       supergraphSdl: new IntrospectAndCompose({
         subgraphs: [
-          // Start with just Identity service for now
-          { name: 'identity', url: getServiceUrl('IDENTITY_SERVICE_URL', 8001) }
-          // Product Catalog will be added later when it's stable
-          // { name: 'product-catalog', url: getServiceUrl('PRODUCT_CATALOG_SERVICE_URL', 8002) }
+          // Both core services are now stable
+          { name: 'identity', url: getServiceUrl('IDENTITY_SERVICE_URL', 8001) },
+          { name: 'product-catalog', url: getServiceUrl('PRODUCT_CATALOG_SERVICE_URL', 8002) }
         ],
         pollIntervalInMs: 60000, // Poll every 60 seconds - more conservative
         introspectionHeaders: {
@@ -222,12 +221,12 @@ async function startGateway() {
       console.log(`✅ GraphQL Federation Gateway running at http://localhost:${PORT}/graphql`);
       console.log(`🎮 GraphQL Playground available at http://localhost:${PORT}/graphql`);
       console.log(`🔍 Health check available at http://localhost:${PORT}/health`);
-      console.log('\n📊 Gateway started in resilient mode with minimal service set:');
+      console.log('\n📊 Gateway started with core services federation:');
       console.log(`  ✅ Identity Service: ${getServiceUrl('IDENTITY_SERVICE_URL', 8001)}`);
-      console.log('  ⏳ Product Catalog Service: Temporarily disabled due to startup issues');
-      console.log('\n⚡ Other services will be added incrementally as they become stable.');
-      console.log('\n🔄 This ensures the gateway remains available while services are being debugged.');
-      console.log('\n🛡️  Resilient mode: Gateway provides authentication and basic functionality.');
+      console.log(`  ✅ Product Catalog Service: ${getServiceUrl('PRODUCT_CATALOG_SERVICE_URL', 8002)}`);
+      console.log('\n⚡ Both core services are now federated and ready for product queries.');
+      console.log('\n🔄 Products should now load successfully in the storefront.');
+      console.log('\n🛡️  Federation mode: Full GraphQL schema with products and authentication.');
     });
 
   } catch (error) {
