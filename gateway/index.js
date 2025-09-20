@@ -85,13 +85,10 @@ async function startGateway() {
         if (serviceHost.startsWith('http://') || serviceHost.startsWith('https://')) {
           // Full URL provided
           fullUrl = `${serviceHost}/graphql`;
-        } else if (serviceHost.includes('.onrender.com')) {
-          // Render domain without protocol
-          fullUrl = `https://${serviceHost}/graphql`;
         } else {
-          // Service name only - construct full Render URL
-          // Render's fromService property might give us just the service name
-          fullUrl = `https://${serviceHost}.onrender.com/graphql`;
+          // For Render private services, use internal HTTP with default port
+          // Private services are accessible via internal hostname on port 10000 (Render's default)
+          fullUrl = `http://${serviceHost}:10000/graphql`;
         }
         
         console.log(`🔗 ${envVarName}: '${serviceHost}' -> '${fullUrl}'`);
