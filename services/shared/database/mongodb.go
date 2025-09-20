@@ -42,6 +42,13 @@ func NewMongoConnection(config *MongoConfig) (*MongoDB, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), config.ConnectTimeout)
 	defer cancel()
 
+	// Debug logging
+	fmt.Printf("MongoDB Connection Debug:\n")
+	fmt.Printf("  URI: %s\n", config.URI[:min(60, len(config.URI))])
+	fmt.Printf("  Database: %s\n", config.DatabaseName)
+	fmt.Printf("  Username: %s\n", config.Username)
+	fmt.Printf("  Has credentials in URI: %v\n", containsCredentials(config.URI))
+
 	// Configure client options - use URI directly if it contains credentials
 	clientOptions := options.Client().
 		ApplyURI(config.URI).
@@ -51,24 +58,33 @@ func NewMongoConnection(config *MongoConfig) (*MongoDB, error) {
 
 	// Only add separate auth if URI doesn't contain credentials and we have username/password
 	if config.Username != "" && config.Password != "" && !containsCredentials(config.URI) {
+		fmt.Printf("  Adding separate authentication credentials\n")
 		credential := options.Credential{
 			Username:   config.Username,
 			Password:   config.Password,
-			AuthSource: config.DatabaseName, // Use the database name as auth source
+			AuthSource: "admin", // MongoDB cloud services typically require auth against admin db
 		}
 		clientOptions.SetAuth(credential)
+	} else {
+		fmt.Printf("  Using URI-embedded credentials or no auth\n")
 	}
 
 	// Connect to MongoDB
+	fmt.Printf("  Attempting connection...\n")
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
+		fmt.Printf("  Connection failed: %v\n", err)
 		return nil, fmt.Errorf("failed to connect to MongoDB: %w", err)
 	}
 
 	// Test the connection
+	fmt.Printf("  Testing connection with ping...\n")
 	if err := client.Ping(ctx, readpref.Primary()); err != nil {
+		fmt.Printf("  Ping failed: %v\n", err)
 		return nil, fmt.Errorf("failed to ping MongoDB: %w", err)
 	}
+
+	fmt.Printf("  MongoDB connection successful!\n")
 
 	database := client.Database(config.DatabaseName)
 
@@ -148,4 +164,12 @@ func NewMongoConfigFromEnv(uri, database, username, password string) *MongoConfi
 	config.Password = password
 
 	return config
+}
+
+// min returns the minimum of two integers
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
