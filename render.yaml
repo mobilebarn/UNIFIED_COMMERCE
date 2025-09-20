@@ -1,26 +1,4 @@
 services:
-  # MongoDB as a Private Service using official MongoDB Docker image
-  - type: pserv
-    name: unified-commerce-mongodb
-    image:
-      url: mongo:latest
-    startCommand: mongod
-    envVars:
-      - key: MONGO_INITDB_ROOT_USERNAME
-        generateValue: true
-      - key: MONGO_INITDB_ROOT_PASSWORD
-        generateValue: true
-    disk:
-      name: mongo-data
-      mountPath: /data/db
-      sizeGB: 1
-
-  # Redis as a managed service
-  - type: redis
-    name: unified-commerce-redis
-    plan: free
-    ipAllowList: []
-
   - type: web
     name: unified-commerce-identity
     runtime: go
@@ -31,15 +9,6 @@ services:
     envVars:
       - key: PORT
         value: "8001"
-      - key: DATABASE_URL
-        fromDatabase:
-          name: unified-commerce-postgres
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: unified-commerce-redis
-          property: connectionString
 
   - type: web
     name: unified-commerce-product-catalog
@@ -51,28 +20,6 @@ services:
     envVars:
       - key: PORT
         value: "8002"
-      - key: MONGO_HOST
-        fromService:
-          type: pserv
-          name: unified-commerce-mongodb
-          property: host
-      - key: MONGO_USERNAME
-        fromService:
-          type: pserv
-          name: unified-commerce-mongodb
-          envVarKey: MONGO_INITDB_ROOT_USERNAME
-      - key: MONGO_PASSWORD
-        fromService:
-          type: pserv
-          name: unified-commerce-mongodb
-          envVarKey: MONGO_INITDB_ROOT_PASSWORD
-      - key: MONGO_DATABASE
-        value: "product_catalog"
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: unified-commerce-redis
-          property: connectionString
 
   - type: web
     name: unified-commerce-order
@@ -84,10 +31,6 @@ services:
     envVars:
       - key: PORT
         value: "8003"
-      - key: DATABASE_URL
-        fromDatabase:
-          name: unified-commerce-postgres
-          property: connectionString
 
   - type: web
     name: unified-commerce-payment
@@ -99,10 +42,6 @@ services:
     envVars:
       - key: PORT
         value: "8004"
-      - key: DATABASE_URL
-        fromDatabase:
-          name: unified-commerce-postgres
-          property: connectionString
 
   - type: web
     name: unified-commerce-inventory
@@ -114,10 +53,6 @@ services:
     envVars:
       - key: PORT
         value: "8005"
-      - key: DATABASE_URL
-        fromDatabase:
-          name: unified-commerce-postgres
-          property: connectionString
 
   - type: web
     name: unified-commerce-merchant-account
@@ -129,10 +64,6 @@ services:
     envVars:
       - key: PORT
         value: "8006"
-      - key: DATABASE_URL
-        fromDatabase:
-          name: unified-commerce-postgres
-          property: connectionString
 
   - type: web
     name: unified-commerce-cart
@@ -144,15 +75,6 @@ services:
     envVars:
       - key: PORT
         value: "8007"
-      - key: DATABASE_URL
-        fromDatabase:
-          name: unified-commerce-postgres
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: unified-commerce-redis
-          property: connectionString
 
   - type: web
     name: unified-commerce-promotions
@@ -164,15 +86,6 @@ services:
     envVars:
       - key: PORT
         value: "8008"
-      - key: DATABASE_URL
-        fromDatabase:
-          name: unified-commerce-postgres
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: unified-commerce-redis
-          property: connectionString
 
   - type: web
     name: unified-commerce-analytics
@@ -184,32 +97,6 @@ services:
     envVars:
       - key: PORT
         value: "8009"
-      - key: DATABASE_URL
-        fromDatabase:
-          name: unified-commerce-postgres
-          property: connectionString
-      - key: MONGO_HOST
-        fromService:
-          type: pserv
-          name: unified-commerce-mongodb
-          property: host
-      - key: MONGO_USERNAME
-        fromService:
-          type: pserv
-          name: unified-commerce-mongodb
-          envVarKey: MONGO_INITDB_ROOT_USERNAME
-      - key: MONGO_PASSWORD
-        fromService:
-          type: pserv
-          name: unified-commerce-mongodb
-          envVarKey: MONGO_INITDB_ROOT_PASSWORD
-      - key: MONGO_DATABASE
-        value: "analytics"
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: unified-commerce-redis
-          property: connectionString
 
   - type: web
     name: unified-commerce-gateway
@@ -266,8 +153,3 @@ services:
           type: web
           name: unified-commerce-analytics
           property: host
-
-databases:
-  - name: unified-commerce-postgres
-    databaseName: unified_commerce
-    user: unified_commerce_user
