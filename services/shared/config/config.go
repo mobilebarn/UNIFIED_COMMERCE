@@ -92,9 +92,9 @@ func LoadConfig(serviceName string) (*Config, error) {
 		DatabaseName:     getEnvAny([]string{"DB_NAME", "DATABASE_NAME"}, sanitizeServiceDBName(serviceName)+"_service"),
 
 		// MongoDB
-		MongoURL:      getEnv("MONGO_URL", "mongodb://mongodb:mongodb@localhost:27017"),
+		MongoURL:      getEnv("MONGO_URL", ""), // Will be built from components if not provided
 		MongoDatabase: getEnv("MONGO_DATABASE", "product_catalog"),
-		MongoUser:     getEnv("MONGO_USER", "catalog_user"),
+		MongoUser:     getEnvAny([]string{"MONGO_USER", "MONGO_USERNAME"}, "catalog_user"),
 		MongoPassword: getEnv("MONGO_PASSWORD", "catalog_pass"),
 
 		// Redis
@@ -136,6 +136,35 @@ func LoadConfig(serviceName string) (*Config, error) {
 		)
 		fmt.Printf("Built DATABASE_URL from components: host=%s port=%s user=%s dbname=%s\n",
 			config.DatabaseHost, config.DatabasePort, config.DatabaseUser, config.DatabaseName)
+	}
+
+	// Build MongoDB URL if not provided directly
+	if config.MongoURL == "" {
+		// Check if individual MongoDB components are provided
+		mongoHost := getEnvAny([]string{"MONGO_HOST"}, "localhost")
+		mongoPort := getEnvAny([]string{"MONGO_PORT"}, "27017")
+		
+		// If we have MongoDB credentials, build authenticated URL
+		if config.MongoUser != "" && config.MongoPassword != "" {
+			config.MongoURL = fmt.Sprintf("mongodb://%s:%s@%s:%s",
+				config.MongoUser,
+				config.MongoPassword,
+				mongoHost,
+				mongoPort,
+			)
+			fmt.Printf("Built MongoDB URL with authentication: mongodb://%s:***@%s:%s\n",
+				config.MongoUser, mongoHost, mongoPort)
+		} else {
+			// Build URL without authentication
+			config.MongoURL = fmt.Sprintf("mongodb://%s:%s",
+				mongoHost,
+				mongoPort,
+			)
+			fmt.Printf("Built MongoDB URL without authentication: mongodb://%s:%s\n",
+				mongoHost, mongoPort)
+		}
+	} else {
+		fmt.Printf("Using MongoDB URL from environment: %s\n", config.MongoURL[:min(50, len(config.MongoURL))])
 	}
 
 	// Debug Redis configuration
