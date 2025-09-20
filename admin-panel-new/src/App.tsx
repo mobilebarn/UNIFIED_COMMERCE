@@ -235,31 +235,10 @@ function App() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const { isAuthenticated, setUser } = useDashboardStore()
 
-  // Add error boundary and debug logging
-  useEffect(() => {
-    console.log('App component mounted')
-    console.log('Current URL:', window.location.href)
-    console.log('Authentication status:', isAuthenticated)
-    
-    // Add error handler for uncaught errors
-    const handleError = (event: ErrorEvent) => {
-      console.error('Uncaught error:', event.error)
-    }
-    window.addEventListener('error', handleError)
-    
-    return () => {
-      window.removeEventListener('error', handleError)
-    }
-  }, [])
-
   // Check for existing auth token on app load
   useEffect(() => {
-    console.log('Checking for existing auth token...')
     const token = localStorage.getItem('accessToken')
-    console.log('Found token:', token ? 'yes' : 'no')
-    
     if (token && !isAuthenticated) {
-      console.log('Setting user from existing token')
       // For now, we'll just set a basic user object
       // In a real app, you'd validate the token with the server
       setUser({
@@ -275,31 +254,24 @@ function App() {
 
   return (
     <ApolloProvider client={apolloClient}>
-      <div>
-        {/* Debug info - remove in production */}
-        <div style={{position: 'fixed', top: 0, right: 0, background: 'red', color: 'white', padding: '5px', fontSize: '12px', zIndex: 9999}}>
-          App Loaded: {isAuthenticated ? 'Auth' : 'No Auth'}
-        </div>
-        
-        <Router>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/*" element={
-              <ProtectedRoute>
-                <AppLayout activeTab={activeTab} setActiveTab={setActiveTab}>
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/products" element={<Products />} />
-                    <Route path="/orders" element={<Orders />} />
-                    <Route path="/customers" element={<Customers />} />
-                    <Route path="/analytics" element={<Analytics />} />
-                  </Routes>
-                </AppLayout>
-              </ProtectedRoute>
-            } />
-          </Routes>
-        </Router>
-      </div>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/*" element={
+            <ProtectedRoute>
+              <AppLayout activeTab={activeTab} setActiveTab={setActiveTab}>
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/products" element={<Products />} />
+                  <Route path="/orders" element={<Orders />} />
+                  <Route path="/customers" element={<Customers />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                </Routes>
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </Router>
     </ApolloProvider>
   )
 }
