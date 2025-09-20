@@ -259,6 +259,7 @@ databases:
     plan: free
   - name: unified-commerce-mongodb
     databaseEngine: mongodb
+    plan: starter
     databaseName: unified_commerce_db
     user: unified_commerce_user
   - name: unified-commerce-redis
