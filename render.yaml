@@ -4,6 +4,7 @@ services:
     name: unified-commerce-mongodb
     image:
       url: mongo:latest
+    startCommand: mongod
     envVars:
       - key: MONGO_INITDB_ROOT_USERNAME
         generateValue: true
@@ -18,6 +19,7 @@ services:
   - type: redis
     name: unified-commerce-redis
     plan: free
+    ipAllowList: []
 
   - type: web
     name: unified-commerce-identity
@@ -86,8 +88,6 @@ services:
         fromDatabase:
           name: unified-commerce-postgres
           property: connectionString
-
-  # ... (The rest of your web services remain the same, just ensure REDIS_URL `fromService` has `type: redis`) ...
 
   - type: web
     name: unified-commerce-payment
