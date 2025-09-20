@@ -34,6 +34,10 @@ export const Login: React.FC = () => {
   
   const { setUser } = useDashboardStore();
 
+  // Add debug logging
+  console.log('Login component rendered');
+  console.log('Current URL:', window.location.href);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
