@@ -74,7 +74,7 @@ export default function SavedItems() {
                     <p className="text-sm text-gray-500 mt-1 line-clamp-2">{item.product.description}</p>
                     <div className="mt-2 flex items-center justify-between">
                       <span className="text-lg font-medium text-gray-900">
-                        ${item.product.price.toFixed(2)}
+                        ${item.product.priceRange?.minVariantPrice?.toFixed(2) || '0.00'}
                       </span>
                       <button 
                         onClick={() => handleRemoveItem(item.productId)}
