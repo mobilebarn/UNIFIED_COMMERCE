@@ -22,6 +22,17 @@ type Tracer struct {
 
 // NewTracer creates a new OpenTelemetry tracer
 func NewTracer(serviceName string) (*Tracer, error) {
+	// Check if telemetry should be disabled (e.g., in cloud environments without collector)
+	disableTelemetry := os.Getenv("DISABLE_TELEMETRY") == "true"
+	if disableTelemetry {
+		// Return a no-op tracer when telemetry is disabled
+		tp := sdktrace.NewTracerProvider()
+		return &Tracer{
+			Provider: tp,
+			Tracer:   tp.Tracer(serviceName),
+		}, nil
+	}
+
 	// Get OTLP collector endpoint from environment variable
 	otlpEndpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
 	if otlpEndpoint == "" {
@@ -35,7 +46,13 @@ func NewTracer(serviceName string) (*Tracer, error) {
 		otlptracegrpc.WithInsecure(), // For development only
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create OTLP exporter: %w", err)
+		// If OTLP exporter fails, fall back to no-op tracer instead of erroring
+		// This allows services to start even when telemetry collector is unavailable
+		tp := sdktrace.NewTracerProvider()
+		return &Tracer{
+			Provider: tp,
+			Tracer:   tp.Tracer(serviceName),
+		}, nil
 	}
 
 	// Create resource with service attributes

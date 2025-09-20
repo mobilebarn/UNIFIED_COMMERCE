@@ -11,6 +11,8 @@ services:
         value: "8001"
       - key: SERVICE_PORT
         value: "8001"
+      - key: DISABLE_TELEMETRY
+        value: "true"
       - key: DATABASE_URL
         fromDatabase:
           name: unified-commerce-postgres
@@ -32,6 +34,8 @@ services:
         value: "8002"
       - key: SERVICE_PORT
         value: "8002"
+      - key: DISABLE_TELEMETRY
+        value: "true"
       - key: MONGO_URL
         fromDatabase:
           name: unified-commerce-mongodb
@@ -51,6 +55,8 @@ services:
         value: "8003"
       - key: SERVICE_PORT
         value: "8003"
+      - key: DISABLE_TELEMETRY
+        value: "true"
       - key: DATABASE_URL
         fromDatabase:
           name: unified-commerce-postgres
@@ -68,6 +74,8 @@ services:
         value: "8004"
       - key: SERVICE_PORT
         value: "8004"
+      - key: DISABLE_TELEMETRY
+        value: "true"
       - key: DATABASE_URL
         fromDatabase:
           name: unified-commerce-postgres
@@ -85,6 +93,8 @@ services:
         value: "8005"
       - key: SERVICE_PORT
         value: "8005"
+      - key: DISABLE_TELEMETRY
+        value: "true"
       - key: DATABASE_URL
         fromDatabase:
           name: unified-commerce-postgres
@@ -102,6 +112,8 @@ services:
         value: "8006"
       - key: SERVICE_PORT
         value: "8006"
+      - key: DISABLE_TELEMETRY
+        value: "true"
       - key: DATABASE_URL
         fromDatabase:
           name: unified-commerce-postgres
@@ -119,6 +131,8 @@ services:
         value: "8007"
       - key: SERVICE_PORT
         value: "8007"
+      - key: DISABLE_TELEMETRY
+        value: "true"
       - key: DATABASE_URL
         fromDatabase:
           name: unified-commerce-postgres
@@ -136,6 +150,8 @@ services:
         value: "8008"
       - key: SERVICE_PORT
         value: "8008"
+      - key: DISABLE_TELEMETRY
+        value: "true"
       - key: DATABASE_URL
         fromDatabase:
           name: unified-commerce-postgres
@@ -153,6 +169,8 @@ services:
         value: "8009"
       - key: SERVICE_PORT
         value: "8009"
+      - key: DISABLE_TELEMETRY
+        value: "true"
 
   - type: web
     name: unified-commerce-gateway
