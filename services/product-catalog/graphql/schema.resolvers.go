@@ -592,6 +592,19 @@ func (r *productVariantResolver) Title(ctx context.Context, obj *models.ProductV
 	return obj.SKU, nil
 }
 
+// Sku is the resolver for the sku field.
+func (r *productVariantResolver) Sku(ctx context.Context, obj *models.ProductVariant) (string, error) {
+	return obj.SKU, nil
+}
+
+// CompareAtPrice is the resolver for the compareAtPrice field.
+func (r *productVariantResolver) CompareAtPrice(ctx context.Context, obj *models.ProductVariant) (*float64, error) {
+	if obj.CompareAtPrice > 0 {
+		return &obj.CompareAtPrice, nil
+	}
+	return nil, nil
+}
+
 // InventoryQuantity is the resolver for the inventoryQuantity field.
 func (r *productVariantResolver) InventoryQuantity(ctx context.Context, obj *models.ProductVariant) (int, error) {
 	// Return a default value for now
