@@ -95,6 +95,13 @@ func NewBaseService(opts ServiceOptions) (*BaseService, error) {
 	}
 
 	if opts.UseMongoDB {
+		// Debug MongoDB configuration
+		serviceLogger.WithFields(map[string]interface{}{
+			"mongo_url":      cfg.MongoURL[:min(50, len(cfg.MongoURL))],
+			"mongo_database": cfg.MongoDatabase,
+			"mongo_user":     cfg.MongoUser,
+		}).Info("Attempting MongoDB connection")
+
 		mongoConfig := database.NewMongoConfigFromEnv(
 			cfg.MongoURL,
 			cfg.MongoDatabase,
@@ -107,7 +114,15 @@ func NewBaseService(opts ServiceOptions) (*BaseService, error) {
 			serviceLogger.WithError(err).Warn("Failed to connect to MongoDB, continuing without MongoDB support")
 			// Don't fail the service, continue without MongoDB
 			service.MongoDB = nil
+			// Add a health check that always reports MongoDB as unavailable
+			service.HealthChecks = append(service.HealthChecks, HealthCheck{
+				Name: "mongodb",
+				Check: func(ctx context.Context) error {
+					return fmt.Errorf("mongodb connection failed during startup")
+				},
+			})
 		} else {
+			serviceLogger.Info("Successfully connected to MongoDB")
 			service.HealthChecks = append(service.HealthChecks, HealthCheck{
 				Name: "mongodb",
 				Check: func(ctx context.Context) error {
@@ -330,4 +345,12 @@ func (s *BaseService) Stop() error {
 	}
 
 	return nil
+}
+
+// min returns the minimum of two integers
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

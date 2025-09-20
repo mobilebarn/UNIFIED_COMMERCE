@@ -141,6 +141,9 @@ func LoadConfig(serviceName string) (*Config, error) {
 	// Debug Redis configuration
 	fmt.Printf("Redis configuration: URL='%s', Password='%s', DB=%d\n", config.RedisURL, config.RedisPassword, config.RedisDB)
 
+	// Debug MongoDB configuration
+	fmt.Printf("MongoDB configuration: URL='%s', Database='%s'\n", config.MongoURL[:min(50, len(config.MongoURL))], config.MongoDatabase)
+
 	return config, nil
 }
 
