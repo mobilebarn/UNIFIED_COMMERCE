@@ -257,9 +257,11 @@ services:
 databases:
   - name: unified-commerce-postgres
     plan: starter
+
+addons:
   - name: unified-commerce-mongodb
-    plan: mongodb-starter
+    plan: starter
     databaseName: unified_commerce_db
     user: unified_commerce_user
   - name: unified-commerce-redis
-    plan: redis-starter
+    plan: starter
