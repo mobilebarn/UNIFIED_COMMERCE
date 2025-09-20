@@ -1,4 +1,20 @@
 services:
+services:
+  # MongoDB as a Private Service using official MongoDB Docker image
+  - type: pserv
+    name: unified-commerce-mongodb
+    image:
+      image: mongo:latest
+    envVars:
+      - key: MONGO_INITDB_ROOT_USERNAME
+        generateValue: true
+      - key: MONGO_INITDB_ROOT_PASSWORD
+        generateValue: true
+    disks:
+      - name: mongo-data
+        mountPath: /data/db
+        sizeGB: 1
+
   - type: web
     name: unified-commerce-identity
     runtime: go
@@ -37,9 +53,10 @@ services:
       - key: DISABLE_TELEMETRY
         value: "true"
       - key: MONGO_URL
-        fromDatabase:
+        fromService:
+          type: pserv
           name: unified-commerce-mongodb
-          property: connectionString
+          property: internalConnectionString
       - key: MONGO_DATABASE
         value: "product_catalog"
       - key: REDIS_URL
@@ -188,9 +205,10 @@ services:
           name: unified-commerce-postgres
           property: connectionString
       - key: MONGO_URL
-        fromDatabase:
+        fromService:
+          type: pserv
           name: unified-commerce-mongodb
-          property: connectionString
+          property: internalConnectionString
       - key: MONGO_DATABASE
         value: "analytics"
       - key: REDIS_URL
@@ -256,5 +274,7 @@ services:
 
 databases:
   - name: unified-commerce-postgres
-  - name: unified-commerce-mongodb
+    databaseName: unified_commerce
+    user: unified_commerce_user
   - name: unified-commerce-redis
+    type: redis
