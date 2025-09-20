@@ -272,97 +272,116 @@ func (r *collectionRuleResolver) Condition(ctx context.Context, obj *models.Coll
 
 // CreateProduct is the resolver for the createProduct field.
 func (r *mutationResolver) CreateProduct(ctx context.Context, input CreateProductInput) (*models.Product, error) {
-	panic(fmt.Errorf("not implemented: CreateProduct - createProduct"))
+	// For now, return error - would need service method implementation
+	return nil, fmt.Errorf("create product not implemented yet")
 }
 
 // UpdateProduct is the resolver for the updateProduct field.
 func (r *mutationResolver) UpdateProduct(ctx context.Context, id string, input UpdateProductInput) (*models.Product, error) {
-	panic(fmt.Errorf("not implemented: UpdateProduct - updateProduct"))
+	// For now, return error - would need service method implementation
+	return nil, fmt.Errorf("update product not implemented yet")
 }
 
 // DeleteProduct is the resolver for the deleteProduct field.
 func (r *mutationResolver) DeleteProduct(ctx context.Context, id string) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteProduct - deleteProduct"))
+	// For now, return error - would need service method implementation
+	return false, fmt.Errorf("delete product not implemented yet")
 }
 
 // PublishProduct is the resolver for the publishProduct field.
 func (r *mutationResolver) PublishProduct(ctx context.Context, id string) (*models.Product, error) {
-	panic(fmt.Errorf("not implemented: PublishProduct - publishProduct"))
+	// For now, return error - would need service method implementation
+	return nil, fmt.Errorf("publish product not implemented yet")
 }
 
 // UnpublishProduct is the resolver for the unpublishProduct field.
 func (r *mutationResolver) UnpublishProduct(ctx context.Context, id string) (*models.Product, error) {
-	panic(fmt.Errorf("not implemented: UnpublishProduct - unpublishProduct"))
+	// For now, return error - would need service method implementation
+	return nil, fmt.Errorf("unpublish product not implemented yet")
 }
 
 // CreateProductVariant is the resolver for the createProductVariant field.
 func (r *mutationResolver) CreateProductVariant(ctx context.Context, input CreateProductVariantInput) (*models.ProductVariant, error) {
-	panic(fmt.Errorf("not implemented: CreateProductVariant - createProductVariant"))
+	// For now, return error - would need service method implementation
+	return nil, fmt.Errorf("create product variant not implemented yet")
 }
 
 // UpdateProductVariant is the resolver for the updateProductVariant field.
 func (r *mutationResolver) UpdateProductVariant(ctx context.Context, id string, input UpdateProductVariantInput) (*models.ProductVariant, error) {
-	panic(fmt.Errorf("not implemented: UpdateProductVariant - updateProductVariant"))
+	// For now, return error - would need service method implementation
+	return nil, fmt.Errorf("update product variant not implemented yet")
 }
 
 // DeleteProductVariant is the resolver for the deleteProductVariant field.
 func (r *mutationResolver) DeleteProductVariant(ctx context.Context, id string) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteProductVariant - deleteProductVariant"))
+	// For now, return error - would need service method implementation
+	return false, fmt.Errorf("delete product variant not implemented yet")
 }
 
 // CreateCategory is the resolver for the createCategory field.
 func (r *mutationResolver) CreateCategory(ctx context.Context, input CreateCategoryInput) (*models.Category, error) {
-	panic(fmt.Errorf("not implemented: CreateCategory - createCategory"))
+	// For now, return error - would need service method implementation
+	return nil, fmt.Errorf("create category not implemented yet")
 }
 
 // UpdateCategory is the resolver for the updateCategory field.
 func (r *mutationResolver) UpdateCategory(ctx context.Context, id string, input UpdateCategoryInput) (*models.Category, error) {
-	panic(fmt.Errorf("not implemented: UpdateCategory - updateCategory"))
+	// For now, return error - would need service method implementation
+	return nil, fmt.Errorf("update category not implemented yet")
 }
 
 // DeleteCategory is the resolver for the deleteCategory field.
 func (r *mutationResolver) DeleteCategory(ctx context.Context, id string) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteCategory - deleteCategory"))
+	// For now, return error - would need service method implementation
+	return false, fmt.Errorf("delete category not implemented yet")
 }
 
 // CreateCollection is the resolver for the createCollection field.
 func (r *mutationResolver) CreateCollection(ctx context.Context, input CreateCollectionInput) (*models.Collection, error) {
-	panic(fmt.Errorf("not implemented: CreateCollection - createCollection"))
+	// For now, return error - would need service method implementation
+	return nil, fmt.Errorf("create collection not implemented yet")
 }
 
 // UpdateCollection is the resolver for the updateCollection field.
 func (r *mutationResolver) UpdateCollection(ctx context.Context, id string, input UpdateCollectionInput) (*models.Collection, error) {
-	panic(fmt.Errorf("not implemented: UpdateCollection - updateCollection"))
+	// For now, return error - would need service method implementation
+	return nil, fmt.Errorf("update collection not implemented yet")
 }
 
 // DeleteCollection is the resolver for the deleteCollection field.
 func (r *mutationResolver) DeleteCollection(ctx context.Context, id string) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteCollection - deleteCollection"))
+	// For now, return error - would need service method implementation
+	return false, fmt.Errorf("delete collection not implemented yet")
 }
 
 // AddProductToCollection is the resolver for the addProductToCollection field.
 func (r *mutationResolver) AddProductToCollection(ctx context.Context, collectionID string, productID string) (*models.Collection, error) {
-	panic(fmt.Errorf("not implemented: AddProductToCollection - addProductToCollection"))
+	// For now, return error - would need service method implementation
+	return nil, fmt.Errorf("add product to collection not implemented yet")
 }
 
 // RemoveProductFromCollection is the resolver for the removeProductFromCollection field.
 func (r *mutationResolver) RemoveProductFromCollection(ctx context.Context, collectionID string, productID string) (*models.Collection, error) {
-	panic(fmt.Errorf("not implemented: RemoveProductFromCollection - removeProductFromCollection"))
+	// For now, return error - would need service method implementation
+	return nil, fmt.Errorf("remove product from collection not implemented yet")
 }
 
 // CreateBrand is the resolver for the createBrand field.
 func (r *mutationResolver) CreateBrand(ctx context.Context, input CreateBrandInput) (*models.Brand, error) {
-	panic(fmt.Errorf("not implemented: CreateBrand - createBrand"))
+	// For now, return error - would need service method implementation
+	return nil, fmt.Errorf("create brand not implemented yet")
 }
 
 // UpdateBrand is the resolver for the updateBrand field.
 func (r *mutationResolver) UpdateBrand(ctx context.Context, id string, input UpdateBrandInput) (*models.Brand, error) {
-	panic(fmt.Errorf("not implemented: UpdateBrand - updateBrand"))
+	// For now, return error - would need service method implementation
+	return nil, fmt.Errorf("update brand not implemented yet")
 }
 
 // DeleteBrand is the resolver for the deleteBrand field.
 func (r *mutationResolver) DeleteBrand(ctx context.Context, id string) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteBrand - deleteBrand"))
+	// For now, return error - would need service method implementation
+	return false, fmt.Errorf("delete brand not implemented yet")
 }
 
 // ID is the resolver for the id field.
@@ -1037,7 +1056,17 @@ func (r *queryResolver) Brands(ctx context.Context, merchantID *string) ([]*mode
 
 // Type is the resolver for the type field.
 func (r *searchSuggestionResolver) Type(ctx context.Context, obj *models.SearchSuggestion) (SearchSuggestionType, error) {
-	panic(fmt.Errorf("not implemented: Type - type"))
+	// Convert the string type to the enum
+	switch obj.Type {
+	case "PRODUCT":
+		return SearchSuggestionTypeProduct, nil
+	case "CATEGORY":
+		return SearchSuggestionTypeCategory, nil
+	case "BRAND":
+		return SearchSuggestionTypeBrand, nil
+	default:
+		return SearchSuggestionTypeProduct, nil
+	}
 }
 
 // Brand returns BrandResolver implementation.
