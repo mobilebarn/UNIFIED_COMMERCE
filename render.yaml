@@ -42,6 +42,10 @@ services:
           property: connectionString
       - key: MONGO_DATABASE
         value: "product_catalog"
+      - key: REDIS_URL
+        fromDatabase:
+          name: unified-commerce-redis
+          property: connectionString
 
   - type: web
     name: unified-commerce-order
@@ -137,6 +141,10 @@ services:
         fromDatabase:
           name: unified-commerce-postgres
           property: connectionString
+      - key: REDIS_URL
+        fromDatabase:
+          name: unified-commerce-redis
+          property: connectionString
 
   - type: web
     name: unified-commerce-promotions
@@ -156,6 +164,10 @@ services:
         fromDatabase:
           name: unified-commerce-postgres
           property: connectionString
+      - key: REDIS_URL
+        fromDatabase:
+          name: unified-commerce-redis
+          property: connectionString
 
   - type: web
     name: unified-commerce-analytics
@@ -171,6 +183,10 @@ services:
         value: "8009"
       - key: DISABLE_TELEMETRY
         value: "true"
+      - key: REDIS_URL
+        fromDatabase:
+          name: unified-commerce-redis
+          property: connectionString
 
   - type: web
     name: unified-commerce-gateway

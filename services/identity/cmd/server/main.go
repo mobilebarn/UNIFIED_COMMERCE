@@ -21,11 +21,11 @@ func main() {
 	var baseService *service.BaseService
 	var err error
 
-	// Fixed GraphQL resolvers to prevent panics during schema introspection
+	// Create base service with PostgreSQL and Redis
 	baseService, err = service.NewBaseService(service.ServiceOptions{
 		Name:        "identity",
 		UsePostgres: true,
-		UseRedis:    false,  // Temporarily disable Redis until deployment is stable
+		UseRedis:    true,  // Enable Redis for session management and caching
 		UseMongoDB:  false,
 	})
 	if err != nil {

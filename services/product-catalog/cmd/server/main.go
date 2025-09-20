@@ -1,136 +1,60 @@
 package main
 
 import (
-	"context"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
-
 	"github.com/gin-gonic/gin"
 
 	"unified-commerce/services/product-catalog/graphql"
 	"unified-commerce/services/product-catalog/handlers"
 	"unified-commerce/services/product-catalog/repository"
 	"unified-commerce/services/product-catalog/service"
-	"unified-commerce/services/shared/config"
-	"unified-commerce/services/shared/database"
-	"unified-commerce/services/shared/logger"
-	"unified-commerce/services/shared/middleware"
+	"unified-commerce/services/shared/service"
 )
 
 func main() {
-	// Load configuration
-	cfg, err := config.LoadConfig("product-catalog")
+	// Create base service with MongoDB and Redis
+	baseService, err := service.NewBaseService(service.ServiceOptions{
+		Name:        "product-catalog",
+		UsePostgres: false,
+		UseMongoDB:  true,
+		UseRedis:    true, // Enable Redis for product caching
+	})
 	if err != nil {
-		panic("Failed to load configuration: " + err.Error())
+		panic("Failed to create base service: " + err.Error())
 	}
 
-	// Initialize logger
-	loggerConfig := logger.DefaultConfig("product-catalog")
-	loggerConfig.Level = cfg.LogLevel
-	log := logger.NewLogger(loggerConfig)
+	// Setup routes
+	setupRoutes(baseService.Router, baseService)
 
-	// Connect to MongoDB
-	mongoConfig := database.NewMongoConfigFromEnv(
-		cfg.MongoURL,
-		cfg.MongoDatabase,
-		cfg.MongoUser,
-		cfg.MongoPassword,
-	)
-	mongoDB, err := database.NewMongoConnection(mongoConfig)
-	if err != nil {
-		log.WithError(err).Warn("Failed to connect to MongoDB, running in degraded mode")
-		// Continue without MongoDB - service will run in read-only mode
-	} else {
-		defer mongoDB.Close(context.Background())
+	baseService.Logger.Info("Product Catalog Service started successfully")
+
+	// Start the service
+	if err := baseService.Start(); err != nil {
+		baseService.Logger.WithError(err).Fatal("Failed to start service")
 	}
+}
 
+// setupRoutes configures the HTTP routes for the product catalog service
+func setupRoutes(router *gin.Engine, baseService *service.BaseService) {
 	// Initialize repositories
-	repo := repository.NewRepository(mongoDB)
+	repo := repository.NewRepository(baseService.MongoDB)
 
 	// Initialize services
-	productService := service.NewProductService(repo, log)
+	productService := service.NewProductService(repo, baseService.Logger)
 
 	// Initialize handlers
-	productHandler := handlers.NewProductHandler(productService, log)
-
-	// Initialize Gin router
-	if cfg.Environment == "production" {
-		gin.SetMode(gin.ReleaseMode)
-	}
-	router := gin.New()
-
-	// Add middleware
-	router.Use(gin.Logger())
-	router.Use(gin.Recovery())
-	router.Use(middleware.CORS())
-	router.Use(middleware.RequestID())
-
-	// Health check endpoint
-	router.GET("/health", func(c *gin.Context) {
-		mongoStatus := "unavailable"
-		if mongoDB != nil {
-			if err := mongoDB.Health(context.Background()); err != nil {
-				mongoStatus = "unhealthy"
-			} else {
-				mongoStatus = "healthy"
-			}
-		}
-
-		health := map[string]interface{}{
-			"service": "product-catalog",
-			"status":  "healthy",
-			"time":    time.Now(),
-			"checks": map[string]string{
-				"mongodb": mongoStatus,
-			},
-		}
-		c.JSON(http.StatusOK, health)
-	})
+	productHandler := handlers.NewProductHandler(productService, baseService.Logger)
 
 	// Register routes
 	productHandler.RegisterRoutes(router)
 
 	// Add GraphQL endpoints
-	graphqlHandler := graphql.NewGraphQLHandler(productService, log)
+	graphqlHandler := graphql.NewGraphQLHandler(productService, baseService.Logger)
 	playgroundHandler := graphql.NewPlaygroundHandler()
 
 	router.Any("/graphql", gin.WrapH(graphqlHandler))
-	router.GET("/graphql/playground", gin.WrapH(playgroundHandler))
-
-	// Start server
-	srv := &http.Server{
-		Addr:         ":" + cfg.ServicePort,
-		Handler:      router,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  60 * time.Second,
+	
+	// Only expose playground in non-production environments
+	if baseService.Config.Environment != "production" {
+		router.GET("/graphql/playground", gin.WrapH(playgroundHandler))
 	}
-
-	// Start server in a goroutine
-	go func() {
-		log.WithFields(map[string]interface{}{"port": cfg.ServicePort}).Info("Starting Product Catalog Service")
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.WithError(err).Fatal("Failed to start server")
-		}
-	}()
-
-	// Wait for interrupt signal to gracefully shutdown the server
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-
-	log.Info("Shutting down Product Catalog Service...")
-
-	// Graceful shutdown with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	if err := srv.Shutdown(ctx); err != nil {
-		log.WithError(err).Fatal("Server forced to shutdown")
-	}
-
-	log.Info("Product Catalog Service stopped")
 }
