@@ -86,9 +86,9 @@ async function startGateway() {
           // Full URL provided
           fullUrl = `${serviceHost}/graphql`;
         } else {
-          // For Render private services, use internal HTTP with default port
-          // Private services are accessible via internal hostname on port 10000 (Render's default)
-          fullUrl = `http://${serviceHost}:10000/graphql`;
+          // For Render private services, use internal HTTP with default port 8080
+          // Private services are accessible via internal hostname on port 8080 (Go service default)
+          fullUrl = `http://${serviceHost}:8080/graphql`;
         }
         
         console.log(`🔗 ${envVarName}: '${serviceHost}' -> '${fullUrl}'`);
