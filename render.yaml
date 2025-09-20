@@ -25,7 +25,7 @@ services:
   - type: web
     name: unified-commerce-product-catalog
     runtime: go
-    plan: free
+    plan: starter
     buildCommand: go build -o app ./cmd/server
     startCommand: ./app
     rootDir: services/product-catalog
@@ -172,7 +172,7 @@ services:
   - type: web
     name: unified-commerce-analytics
     runtime: go
-    plan: free
+    plan: starter
     buildCommand: go build -o app ./cmd/server
     startCommand: ./app
     rootDir: services/analytics
