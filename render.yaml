@@ -258,7 +258,7 @@ databases:
   - name: unified-commerce-postgres
     plan: free
   - name: unified-commerce-mongodb
-    databaseName: unified-commerce-db
-    user: unified-commerce-user
+    databaseName: unified_commerce_db
+    user: unified_commerce_user
   - name: unified-commerce-redis
     plan: free
