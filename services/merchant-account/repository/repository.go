@@ -360,19 +360,20 @@ func (r *Repository) Migrate() error {
 	db = db.Set("gorm:association_autoupdate", false)
 	db = db.Set("gorm:association_autocreate", false)
 
-	// Drop ALL foreign key constraints on merchant_members table if they exist
-	db.Exec("ALTER TABLE merchant_members DROP CONSTRAINT IF EXISTS fk_users_merchant_members")
-	db.Exec("ALTER TABLE merchant_members DROP CONSTRAINT IF EXISTS fk_merchant_members_user_id")
-	db.Exec("ALTER TABLE merchant_members DROP CONSTRAINT IF EXISTS fk_merchant_members_invited_by")
-	db.Exec("ALTER TABLE merchant_members DROP CONSTRAINT IF EXISTS merchant_members_user_id_fkey")
-	db.Exec("ALTER TABLE merchant_members DROP CONSTRAINT IF EXISTS merchant_members_invited_by_fkey")
+	// Check if merchant_members table exists first
+	var merchantMembersExists bool
+	db.Raw("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'merchant_members')").Scan(&merchantMembersExists)
 	
-	// Check if table exists and handle it separately
-	var tableExists bool
-	db.Raw("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'merchant_members')").Scan(&tableExists)
-	
-	if tableExists {
-		// If table exists, drop and recreate it to avoid constraint issues
+	// Only drop constraints if the table actually exists
+	if merchantMembersExists {
+		// Drop ALL foreign key constraints on merchant_members table if they exist
+		db.Exec("ALTER TABLE merchant_members DROP CONSTRAINT IF EXISTS fk_users_merchant_members")
+		db.Exec("ALTER TABLE merchant_members DROP CONSTRAINT IF EXISTS fk_merchant_members_user_id")
+		db.Exec("ALTER TABLE merchant_members DROP CONSTRAINT IF EXISTS fk_merchant_members_invited_by")
+		db.Exec("ALTER TABLE merchant_members DROP CONSTRAINT IF EXISTS merchant_members_user_id_fkey")
+		db.Exec("ALTER TABLE merchant_members DROP CONSTRAINT IF EXISTS merchant_members_invited_by_fkey")
+		
+		// Drop and recreate table to avoid constraint issues
 		db.Exec("DROP TABLE IF EXISTS merchant_members CASCADE")
 	}
 	
