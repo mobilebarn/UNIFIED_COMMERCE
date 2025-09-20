@@ -86,9 +86,32 @@ async function startGateway() {
           // Full URL provided
           fullUrl = `${serviceHost}/graphql`;
         } else {
-          // For Render private services, use internal HTTP with default port 8080
-          // Private services are accessible via internal hostname on port 8080 (Go service default)
-          fullUrl = `http://${serviceHost}:8080/graphql`;
+          // For Render private services, use internal HTTP with service-specific ports
+          // Identity service runs on 8001, Product Catalog on 8002
+          let servicePort;
+          if (envVarName === 'IDENTITY_SERVICE_URL') {
+            servicePort = '8001';
+          } else if (envVarName === 'PRODUCT_CATALOG_SERVICE_URL') {
+            servicePort = '8002';
+          } else if (envVarName === 'ORDER_SERVICE_URL') {
+            servicePort = '8003';
+          } else if (envVarName === 'PAYMENT_SERVICE_URL') {
+            servicePort = '8004';
+          } else if (envVarName === 'INVENTORY_SERVICE_URL') {
+            servicePort = '8005';
+          } else if (envVarName === 'MERCHANT_ACCOUNT_SERVICE_URL') {
+            servicePort = '8006';
+          } else if (envVarName === 'CART_SERVICE_URL') {
+            servicePort = '8007';
+          } else if (envVarName === 'PROMOTIONS_SERVICE_URL') {
+            servicePort = '8008';
+          } else if (envVarName === 'ANALYTICS_SERVICE_URL') {
+            servicePort = '8009';
+          } else {
+            servicePort = '8080'; // Default fallback
+          }
+          
+          fullUrl = `http://${serviceHost}:${servicePort}/graphql`;
         }
         
         console.log(`🔗 ${envVarName}: '${serviceHost}' -> '${fullUrl}'`);
