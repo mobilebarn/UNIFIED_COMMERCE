@@ -21,6 +21,7 @@ func main() {
 	var baseService *service.BaseService
 	var err error
 
+	// Fixed GraphQL resolvers to prevent panics during schema introspection
 	baseService, err = service.NewBaseService(service.ServiceOptions{
 		Name:        "identity",
 		UsePostgres: true,

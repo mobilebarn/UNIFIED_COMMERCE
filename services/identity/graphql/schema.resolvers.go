@@ -13,7 +13,34 @@ import (
 
 // Register is the resolver for the register field.
 func (r *mutationResolver) Register(ctx context.Context, input RegisterInput) (*AuthPayload, error) {
-	panic(fmt.Errorf("not implemented: Register - register"))
+	r.Logger.Info("GraphQL: register attempt")
+
+	// Build service register request
+	req := &identservice.RegisterRequest{
+		Email:     input.Email,
+		Username:  input.Username,
+		Password:  input.Password,
+		FirstName: input.FirstName,
+		LastName:  input.LastName,
+	}
+	
+	// Handle optional phone field
+	if input.Phone != nil {
+		req.Phone = *input.Phone
+	}
+
+	resp, err := r.IdentityService.Register(ctx, req)
+	if err != nil {
+		r.Logger.WithError(err).Warn("Registration failed")
+		return nil, fmt.Errorf("registration failed: %v", err)
+	}
+
+	return &AuthPayload{
+		User:         resp.User,
+		AccessToken:  resp.AccessToken,
+		RefreshToken: resp.RefreshToken,
+		ExpiresIn:    resp.ExpiresIn,
+	}, nil
 }
 
 // Login is the resolver for the login field.
@@ -43,67 +70,82 @@ func (r *mutationResolver) Login(ctx context.Context, input LoginInput) (*AuthPa
 
 // Logout is the resolver for the logout field.
 func (r *mutationResolver) Logout(ctx context.Context) (bool, error) {
-	panic(fmt.Errorf("not implemented: Logout - logout"))
+	// For now, just return true as logout implementation would require session management
+	return true, nil
 }
 
 // ChangePassword is the resolver for the changePassword field.
 func (r *mutationResolver) ChangePassword(ctx context.Context, input ChangePasswordInput) (bool, error) {
-	panic(fmt.Errorf("not implemented: ChangePassword - changePassword"))
+	// For now, return error - would need service method implementation
+	return false, fmt.Errorf("change password not implemented yet")
 }
 
 // UpdateUser is the resolver for the updateUser field.
 func (r *mutationResolver) UpdateUser(ctx context.Context, id string, input UpdateUserInput) (*models.User, error) {
-	panic(fmt.Errorf("not implemented: UpdateUser - updateUser"))
+	// For now, return error - would need service method implementation
+	return nil, fmt.Errorf("update user not implemented yet")
 }
 
 // DeleteUser is the resolver for the deleteUser field.
 func (r *mutationResolver) DeleteUser(ctx context.Context, id string) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteUser - deleteUser"))
+	// For now, return error - would need service method implementation
+	return false, fmt.Errorf("delete user not implemented yet")
 }
 
 // CreateRole is the resolver for the createRole field.
 func (r *mutationResolver) CreateRole(ctx context.Context, input CreateRoleInput) (*models.Role, error) {
-	panic(fmt.Errorf("not implemented: CreateRole - createRole"))
+	// For now, return error - would need service method implementation
+	return nil, fmt.Errorf("create role not implemented yet")
 }
 
 // UpdateRole is the resolver for the updateRole field.
 func (r *mutationResolver) UpdateRole(ctx context.Context, id string, input UpdateRoleInput) (*models.Role, error) {
-	panic(fmt.Errorf("not implemented: UpdateRole - updateRole"))
+	// For now, return error - would need service method implementation
+	return nil, fmt.Errorf("update role not implemented yet")
 }
 
 // DeleteRole is the resolver for the deleteRole field.
 func (r *mutationResolver) DeleteRole(ctx context.Context, id string) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteRole - deleteRole"))
+	// For now, return error - would need service method implementation
+	return false, fmt.Errorf("delete role not implemented yet")
 }
 
 // CreatePermission is the resolver for the createPermission field.
 func (r *mutationResolver) CreatePermission(ctx context.Context, input CreatePermissionInput) (*models.Permission, error) {
-	panic(fmt.Errorf("not implemented: CreatePermission - createPermission"))
+	// For now, return error - would need service method implementation
+	return nil, fmt.Errorf("create permission not implemented yet")
 }
 
 // UpdatePermission is the resolver for the updatePermission field.
 func (r *mutationResolver) UpdatePermission(ctx context.Context, id string, input UpdatePermissionInput) (*models.Permission, error) {
-	panic(fmt.Errorf("not implemented: UpdatePermission - updatePermission"))
+	// For now, return error - would need service method implementation
+	return nil, fmt.Errorf("update permission not implemented yet")
 }
 
 // DeletePermission is the resolver for the deletePermission field.
 func (r *mutationResolver) DeletePermission(ctx context.Context, id string) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeletePermission - deletePermission"))
+	// For now, return error - would need service method implementation
+	return false, fmt.Errorf("delete permission not implemented yet")
 }
 
 // Roles is the resolver for the roles field.
 func (r *permissionResolver) Roles(ctx context.Context, obj *models.Permission) ([]*models.Role, error) {
-	panic(fmt.Errorf("not implemented: Roles - roles"))
+	// For now, return empty list - would need to load from permission relationships
+	return []*models.Role{}, nil
 }
 
 // CreatedAt is the resolver for the createdAt field.
 func (r *permissionResolver) CreatedAt(ctx context.Context, obj *models.Permission) (string, error) {
-	panic(fmt.Errorf("not implemented: CreatedAt - createdAt"))
+	return obj.CreatedAt.Format("2006-01-02T15:04:05Z07:00"), nil
 }
 
 // UpdatedAt is the resolver for the updatedAt field.
 func (r *permissionResolver) UpdatedAt(ctx context.Context, obj *models.Permission) (*string, error) {
-	panic(fmt.Errorf("not implemented: UpdatedAt - updatedAt"))
+	if obj.UpdatedAt.IsZero() {
+		return nil, nil
+	}
+	updated := obj.UpdatedAt.Format("2006-01-02T15:04:05Z07:00")
+	return &updated, nil
 }
 
 // User is the resolver for the user field.
@@ -122,67 +164,84 @@ func (r *queryResolver) User(ctx context.Context, id string) (*models.User, erro
 
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context, limit *int, offset *int) ([]*models.User, error) {
-	panic(fmt.Errorf("not implemented: Users - users"))
+	// For now, return empty list - would need service method implementation
+	return []*models.User{}, nil
 }
 
 // CurrentUser is the resolver for the currentUser field.
 func (r *queryResolver) CurrentUser(ctx context.Context) (*models.User, error) {
-	panic(fmt.Errorf("not implemented: CurrentUser - currentUser"))
+	// Would need to extract user from JWT token in context
+	return nil, fmt.Errorf("current user requires authentication")
 }
 
 // Role is the resolver for the role field.
 func (r *queryResolver) Role(ctx context.Context, id string) (*models.Role, error) {
-	panic(fmt.Errorf("not implemented: Role - role"))
+	// For now, return nil - would need service method implementation
+	return nil, fmt.Errorf("role not found")
 }
 
 // Roles is the resolver for the roles field.
 func (r *queryResolver) Roles(ctx context.Context) ([]*models.Role, error) {
-	panic(fmt.Errorf("not implemented: Roles - roles"))
+	// For now, return empty list - would need service method implementation
+	return []*models.Role{}, nil
 }
 
 // Permission is the resolver for the permission field.
 func (r *queryResolver) Permission(ctx context.Context, id string) (*models.Permission, error) {
-	panic(fmt.Errorf("not implemented: Permission - permission"))
+	// For now, return nil - would need service method implementation
+	return nil, fmt.Errorf("permission not found")
 }
 
 // Permissions is the resolver for the permissions field.
 func (r *queryResolver) Permissions(ctx context.Context) ([]*models.Permission, error) {
-	panic(fmt.Errorf("not implemented: Permissions - permissions"))
+	// For now, return empty list - would need service method implementation
+	return []*models.Permission{}, nil
 }
 
 // Permissions is the resolver for the permissions field.
 func (r *roleResolver) Permissions(ctx context.Context, obj *models.Role) ([]*models.Permission, error) {
-	panic(fmt.Errorf("not implemented: Permissions - permissions"))
+	// For now, return empty list - would need to load from role relationships
+	return []*models.Permission{}, nil
 }
 
 // Users is the resolver for the users field.
 func (r *roleResolver) Users(ctx context.Context, obj *models.Role) ([]*models.User, error) {
-	panic(fmt.Errorf("not implemented: Users - users"))
+	// For now, return empty list - would need to load from role relationships
+	return []*models.User{}, nil
 }
 
 // CreatedAt is the resolver for the createdAt field.
 func (r *roleResolver) CreatedAt(ctx context.Context, obj *models.Role) (string, error) {
-	panic(fmt.Errorf("not implemented: CreatedAt - createdAt"))
+	return obj.CreatedAt.Format("2006-01-02T15:04:05Z07:00"), nil
 }
 
 // UpdatedAt is the resolver for the updatedAt field.
 func (r *roleResolver) UpdatedAt(ctx context.Context, obj *models.Role) (*string, error) {
-	panic(fmt.Errorf("not implemented: UpdatedAt - updatedAt"))
+	if obj.UpdatedAt.IsZero() {
+		return nil, nil
+	}
+	updated := obj.UpdatedAt.Format("2006-01-02T15:04:05Z07:00")
+	return &updated, nil
 }
 
 // Roles is the resolver for the roles field.
 func (r *userResolver) Roles(ctx context.Context, obj *models.User) ([]*models.Role, error) {
-	panic(fmt.Errorf("not implemented: Roles - roles"))
+	// Return empty roles for now - would need to load from user relationships
+	return []*models.Role{}, nil
 }
 
 // CreatedAt is the resolver for the createdAt field.
 func (r *userResolver) CreatedAt(ctx context.Context, obj *models.User) (string, error) {
-	panic(fmt.Errorf("not implemented: CreatedAt - createdAt"))
+	return obj.CreatedAt.Format("2006-01-02T15:04:05Z07:00"), nil
 }
 
 // UpdatedAt is the resolver for the updatedAt field.
 func (r *userResolver) UpdatedAt(ctx context.Context, obj *models.User) (*string, error) {
-	panic(fmt.Errorf("not implemented: UpdatedAt - updatedAt"))
+	if obj.UpdatedAt.IsZero() {
+		return nil, nil
+	}
+	updated := obj.UpdatedAt.Format("2006-01-02T15:04:05Z07:00")
+	return &updated, nil
 }
 
 // Mutation returns MutationResolver implementation.
