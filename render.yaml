@@ -34,8 +34,6 @@ services:
     startCommand: ./app
     rootDir: services/identity
     envVars:
-      - key: PORT
-        value: "8001"
       - key: DATABASE_URL
         fromDatabase:
           name: unified-commerce-postgres
@@ -55,8 +53,6 @@ services:
     startCommand: ./app
     rootDir: services/product-catalog
     envVars:
-      - key: PORT
-        value: "8002"
       - key: MONGO_HOST
         fromService:
           type: pserv
@@ -91,8 +87,6 @@ services:
     startCommand: ./app
     rootDir: services/order
     envVars:
-      - key: PORT
-        value: "8003"
       - key: DATABASE_URL
         fromDatabase:
           name: unified-commerce-postgres
@@ -107,8 +101,6 @@ services:
     startCommand: ./app
     rootDir: services/payment
     envVars:
-      - key: PORT
-        value: "8004"
       - key: DATABASE_URL
         fromDatabase:
           name: unified-commerce-postgres
@@ -123,8 +115,6 @@ services:
     startCommand: ./app
     rootDir: services/inventory
     envVars:
-      - key: PORT
-        value: "8005"
       - key: DATABASE_URL
         fromDatabase:
           name: unified-commerce-postgres
@@ -139,8 +129,6 @@ services:
     startCommand: ./app
     rootDir: services/merchant-account
     envVars:
-      - key: PORT
-        value: "8006"
       - key: DATABASE_URL
         fromDatabase:
           name: unified-commerce-postgres
@@ -155,8 +143,6 @@ services:
     startCommand: ./app
     rootDir: services/cart
     envVars:
-      - key: PORT
-        value: "8007"
       - key: DATABASE_URL
         fromDatabase:
           name: unified-commerce-postgres
@@ -176,8 +162,6 @@ services:
     startCommand: ./app
     rootDir: services/promotions
     envVars:
-      - key: PORT
-        value: "8008"
       - key: DATABASE_URL
         fromDatabase:
           name: unified-commerce-postgres
@@ -197,8 +181,6 @@ services:
     startCommand: ./app
     rootDir: services/analytics
     envVars:
-      - key: PORT
-        value: "8009"
       - key: DATABASE_URL
         fromDatabase:
           name: unified-commerce-postgres
