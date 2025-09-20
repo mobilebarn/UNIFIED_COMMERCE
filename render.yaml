@@ -258,9 +258,8 @@ databases:
   - name: unified-commerce-postgres
     plan: starter
   - name: unified-commerce-mongodb
-    databaseEngine: mongodb
-    plan: starter
+    plan: mongodb_starter
     databaseName: unified_commerce_db
     user: unified_commerce_user
   - name: unified-commerce-redis
-    plan: starter
+    plan: redis_starter
