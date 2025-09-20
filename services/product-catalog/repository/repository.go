@@ -481,7 +481,7 @@ func NewRepository(db *database.MongoDB) *Repository {
 			Collection: nil,
 		}
 	}
-	
+
 	return &Repository{
 		Product:    NewProductRepository(db),
 		Category:   NewCategoryRepository(db),

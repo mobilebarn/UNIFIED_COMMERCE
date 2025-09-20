@@ -40,7 +40,7 @@ func setupRoutes(router *gin.Engine, baseService *sharedService.BaseService) {
 	// Check if MongoDB is available
 	if baseService.MongoDB == nil {
 		baseService.Logger.Warn("MongoDB not available, setting up service with mock data for debugging")
-		
+
 		// Add a simple health endpoint for when MongoDB is unavailable
 		router.GET("/status", func(c *gin.Context) {
 			c.JSON(200, map[string]interface{}{
@@ -49,18 +49,18 @@ func setupRoutes(router *gin.Engine, baseService *sharedService.BaseService) {
 				"message": "Service is running but database is not available",
 			})
 		})
-		
+
 		// Setup GraphQL endpoint with mock data for debugging
 		router.POST("/graphql", func(c *gin.Context) {
 			var request struct {
 				Query string `json:"query"`
 			}
-			
+
 			if err := c.ShouldBindJSON(&request); err != nil {
 				c.JSON(400, map[string]interface{}{"error": "Invalid request"})
 				return
 			}
-			
+
 			// Handle federation discovery query
 			if strings.Contains(request.Query, "_service") {
 				c.JSON(200, map[string]interface{}{
@@ -119,7 +119,7 @@ func setupRoutes(router *gin.Engine, baseService *sharedService.BaseService) {
 				})
 				return
 			}
-			
+
 			// Handle products query with mock data
 			if strings.Contains(request.Query, "products") {
 				c.JSON(200, map[string]interface{}{
@@ -176,7 +176,7 @@ func setupRoutes(router *gin.Engine, baseService *sharedService.BaseService) {
 				})
 				return
 			}
-			
+
 			// Default empty response
 			c.JSON(200, map[string]interface{}{"data": nil})
 		})
@@ -200,7 +200,7 @@ func setupRoutes(router *gin.Engine, baseService *sharedService.BaseService) {
 	playgroundHandler := graphql.NewPlaygroundHandler()
 
 	router.Any("/graphql", gin.WrapH(graphqlHandler))
-	
+
 	// Only expose playground in non-production environments
 	if baseService.Config.Environment != "production" {
 		router.GET("/graphql/playground", gin.WrapH(playgroundHandler))

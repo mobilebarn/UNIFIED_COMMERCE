@@ -16,7 +16,7 @@ func NewNoOpProducer() EventProducer {
 
 // Publish logs the message instead of sending to Kafka
 func (p *NoOpProducer) Publish(topic, key string, payload []byte) error {
-	log.Printf("No-op producer: would publish to topic=%s, key=%s, payload_size=%d bytes", 
+	log.Printf("No-op producer: would publish to topic=%s, key=%s, payload_size=%d bytes",
 		topic, key, len(payload))
 	return nil
 }

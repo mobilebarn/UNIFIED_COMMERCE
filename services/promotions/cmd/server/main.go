@@ -6,9 +6,9 @@ import (
 
 	"unified-commerce/services/promotions/graphql"
 	"unified-commerce/services/promotions/handlers"
+	"unified-commerce/services/promotions/models"
 	"unified-commerce/services/promotions/repository"
 	promotionsService "unified-commerce/services/promotions/service"
-	"unified-commerce/services/promotions/models"
 	sharedService "unified-commerce/services/shared/service"
 )
 
@@ -59,7 +59,7 @@ func setupRoutes(router *gin.Engine, baseService *sharedService.BaseService) {
 	playgroundHandler := graphql.NewPlaygroundHandler()
 
 	router.Any("/graphql", gin.WrapH(graphqlHandler))
-	
+
 	// Only expose playground in non-production environments
 	if baseService.Config.Environment != "production" {
 		router.GET("/graphql/playground", gin.WrapH(playgroundHandler))

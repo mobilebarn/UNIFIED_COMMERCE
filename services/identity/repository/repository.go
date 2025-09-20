@@ -334,10 +334,10 @@ func (r *Repository) DB() *database.PostgresDB {
 // Migrate runs database migrations for all models
 func (r *Repository) Migrate() error {
 	db := r.User.db.DB
-	
+
 	// Drop merchant_members table if it exists (moved to Merchant Account service)
 	db.Exec("DROP TABLE IF EXISTS merchant_members CASCADE")
-	
+
 	return db.AutoMigrate(
 		&models.User{},
 		&models.Role{},

@@ -26,8 +26,8 @@ type User struct {
 	DeletedAt         gorm.DeletedAt `json:"-" gorm:"index"`
 
 	// Relationships
-	Roles           []UserRole       `json:"roles" gorm:"foreignKey:UserID"`
-	Sessions        []UserSession    `json:"-" gorm:"foreignKey:UserID"`
+	Roles    []UserRole    `json:"roles" gorm:"foreignKey:UserID"`
+	Sessions []UserSession `json:"-" gorm:"foreignKey:UserID"`
 	// Note: MerchantMembers relationship is managed by the Merchant Account service
 }
 

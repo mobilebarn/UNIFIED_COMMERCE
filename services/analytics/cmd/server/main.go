@@ -61,7 +61,7 @@ func setupRoutes(router *gin.Engine, baseService *service.BaseService) {
 		// Check for federation service discovery queries
 		if strings.Contains(query, "_service") && strings.Contains(query, "sdl") {
 			baseService.Logger.Info("Responding to federation service discovery query")
-			
+
 			// Analytics SDL for GraphQL Federation
 			analyticsSDL := `
 				directive @key(fields: String!) on OBJECT | INTERFACE
@@ -84,7 +84,7 @@ func setupRoutes(router *gin.Engine, baseService *service.BaseService) {
 					customerBehaviors(customerId: ID!): [CustomerBehavior!]!
 				}
 			`
-			
+
 			response := map[string]interface{}{
 				"data": map[string]interface{}{
 					"_service": map[string]interface{}{

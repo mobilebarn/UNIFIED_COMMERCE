@@ -170,7 +170,7 @@ func DefaultRedisConfig() *RedisConfig {
 // Otherwise, it will be treated as a simple address
 func NewRedisConfigFromEnv(redisURL, password string, db int) *RedisConfig {
 	config := DefaultRedisConfig()
-	
+
 	// Parse Redis URL if it starts with redis://
 	if strings.HasPrefix(redisURL, "redis://") {
 		// Parse the URL to extract components

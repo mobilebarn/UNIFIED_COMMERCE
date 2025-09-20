@@ -23,7 +23,7 @@ func (r *mutationResolver) Register(ctx context.Context, input RegisterInput) (*
 		FirstName: input.FirstName,
 		LastName:  input.LastName,
 	}
-	
+
 	// Handle optional phone field
 	if input.Phone != nil {
 		req.Phone = *input.Phone

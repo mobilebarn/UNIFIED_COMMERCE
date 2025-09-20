@@ -1,4 +1,4 @@
-services:
+
 services:
   # MongoDB as a Private Service using official MongoDB Docker image
   - type: pserv

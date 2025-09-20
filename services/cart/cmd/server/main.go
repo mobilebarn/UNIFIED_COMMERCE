@@ -65,7 +65,7 @@ func setupRoutes(router *gin.Engine, baseService *sharedService.BaseService) {
 	playgroundHandler := graphql.NewPlaygroundHandler()
 
 	router.Any("/graphql", gin.WrapH(graphqlHandler))
-	
+
 	// Only expose playground in non-production environments
 	if baseService.Config.Environment != "production" {
 		router.GET("/graphql/playground", gin.WrapH(playgroundHandler))
