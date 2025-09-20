@@ -75,6 +75,8 @@ func setupRoutes(router *gin.Engine, baseService *sharedService.BaseService) {
 									variants: [ProductVariant!]!
 									category: Category
 									images: [String!]!
+									status: String
+									createdAt: String
 								}
 								
 								type PriceRange {
@@ -93,8 +95,22 @@ func setupRoutes(router *gin.Engine, baseService *sharedService.BaseService) {
 									name: String!
 								}
 								
+								input ProductFilter {
+									merchantId: ID
+									status: String
+									productType: String
+									vendor: String
+									categoryId: ID
+									brandId: ID
+									collectionId: ID
+									tags: [String!]
+									search: String
+									limit: Int
+									offset: Int
+								}
+								
 								type Query {
-									products: [Product!]!
+									products(filter: ProductFilter): [Product!]!
 									product(id: ID!): Product
 								}
 							`,
@@ -113,6 +129,8 @@ func setupRoutes(router *gin.Engine, baseService *sharedService.BaseService) {
 								"id":          "1",
 								"title":       "Sample Product",
 								"description": "This is a sample product while MongoDB is unavailable",
+								"status":      "ACTIVE",
+								"createdAt":   "2025-09-20T08:00:00Z",
 								"priceRange": map[string]interface{}{
 									"minVariantPrice": 29.99,
 									"maxVariantPrice": 29.99,
@@ -129,6 +147,29 @@ func setupRoutes(router *gin.Engine, baseService *sharedService.BaseService) {
 									"name": "Sample Category",
 								},
 								"images": []string{"https://via.placeholder.com/300"},
+							},
+							{
+								"id":          "2",
+								"title":       "Another Sample Product",
+								"description": "This is another sample product for demonstration",
+								"status":      "ACTIVE",
+								"createdAt":   "2025-09-20T08:00:00Z",
+								"priceRange": map[string]interface{}{
+									"minVariantPrice": 49.99,
+									"maxVariantPrice": 49.99,
+								},
+								"variants": []map[string]interface{}{
+									{
+										"id":                "2",
+										"price":             49.99,
+										"inventoryQuantity": 5,
+									},
+								},
+								"category": map[string]interface{}{
+									"id":   "1",
+									"name": "Sample Category",
+								},
+								"images": []string{"https://via.placeholder.com/400"},
 							},
 						},
 					},
