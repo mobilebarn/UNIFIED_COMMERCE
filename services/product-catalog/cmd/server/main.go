@@ -6,13 +6,13 @@ import (
 	"unified-commerce/services/product-catalog/graphql"
 	"unified-commerce/services/product-catalog/handlers"
 	"unified-commerce/services/product-catalog/repository"
-	"unified-commerce/services/product-catalog/service"
-	"unified-commerce/services/shared/service"
+	productService "unified-commerce/services/product-catalog/service"
+	sharedService "unified-commerce/services/shared/service"
 )
 
 func main() {
 	// Create base service with MongoDB and Redis
-	baseService, err := service.NewBaseService(service.ServiceOptions{
+	baseService, err := sharedService.NewBaseService(sharedService.ServiceOptions{
 		Name:        "product-catalog",
 		UsePostgres: false,
 		UseMongoDB:  true,
@@ -34,21 +34,21 @@ func main() {
 }
 
 // setupRoutes configures the HTTP routes for the product catalog service
-func setupRoutes(router *gin.Engine, baseService *service.BaseService) {
+func setupRoutes(router *gin.Engine, baseService *sharedService.BaseService) {
 	// Initialize repositories
 	repo := repository.NewRepository(baseService.MongoDB)
 
 	// Initialize services
-	productService := service.NewProductService(repo, baseService.Logger)
+	productServiceInstance := productService.NewProductService(repo, baseService.Logger)
 
 	// Initialize handlers
-	productHandler := handlers.NewProductHandler(productService, baseService.Logger)
+	productHandler := handlers.NewProductHandler(productServiceInstance, baseService.Logger)
 
 	// Register routes
 	productHandler.RegisterRoutes(router)
 
 	// Add GraphQL endpoints
-	graphqlHandler := graphql.NewGraphQLHandler(productService, baseService.Logger)
+	graphqlHandler := graphql.NewGraphQLHandler(productServiceInstance, baseService.Logger)
 	playgroundHandler := graphql.NewPlaygroundHandler()
 
 	router.Any("/graphql", gin.WrapH(graphqlHandler))
