@@ -60,7 +60,16 @@ async function startGateway() {
     // CORS configuration - be more permissive for development and deployment
     app.use(cors({
       origin: process.env.NODE_ENV === 'production'
-        ? ['https://unified-commerce.vercel.app', 'https://admin.unified-commerce.vercel.app', 'https://unified-commerce-storefront.vercel.app']
+        ? [
+            // Official domains
+            'https://unified-commerce.vercel.app', 
+            'https://admin.unified-commerce.vercel.app', 
+            'https://unified-commerce-storefront.vercel.app',
+            // Vercel preview deployments (git branches)
+            /https:\/\/.*\.vercel\.app$/,
+            // Allow all subdomains for Vercel deployments
+            /https:\/\/.*-.*\.vercel\.app$/
+          ]
         : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3003', 'http://localhost:4000'],
       credentials: true,
     }));
