@@ -35,7 +35,31 @@ func main() {
 
 // setupRoutes configures the HTTP routes for the product catalog service
 func setupRoutes(router *gin.Engine, baseService *sharedService.BaseService) {
-	// Initialize repositories
+	// Check if MongoDB is available
+	if baseService.MongoDB == nil {
+		baseService.Logger.Warn("MongoDB not available, setting up service in limited mode")
+		// Add a simple health endpoint for when MongoDB is unavailable
+		router.GET("/status", func(c *gin.Context) {
+			c.JSON(200, map[string]interface{}{
+				"service": "product-catalog",
+				"status":  "limited - MongoDB unavailable",
+				"message": "Service is running but database is not available",
+			})
+		})
+		// Still setup GraphQL endpoint for federation discovery
+		router.POST("/graphql", func(c *gin.Context) {
+			c.JSON(200, map[string]interface{}{
+				"data": map[string]interface{}{
+					"_service": map[string]interface{}{
+						"sdl": `type Product { id: ID! }`,
+					},
+				},
+			})
+		})
+		return
+	}
+
+	// Initialize repositories with MongoDB
 	repo := repository.NewRepository(baseService.MongoDB)
 
 	// Initialize services

@@ -104,15 +104,17 @@ func NewBaseService(opts ServiceOptions) (*BaseService, error) {
 
 		service.MongoDB, err = database.NewMongoConnection(mongoConfig)
 		if err != nil {
-			return nil, fmt.Errorf("failed to connect to MongoDB: %w", err)
+			serviceLogger.WithError(err).Warn("Failed to connect to MongoDB, continuing without MongoDB support")
+			// Don't fail the service, continue without MongoDB
+			service.MongoDB = nil
+		} else {
+			service.HealthChecks = append(service.HealthChecks, HealthCheck{
+				Name: "mongodb",
+				Check: func(ctx context.Context) error {
+					return service.MongoDB.Health(ctx)
+				},
+			})
 		}
-
-		service.HealthChecks = append(service.HealthChecks, HealthCheck{
-			Name: "mongodb",
-			Check: func(ctx context.Context) error {
-				return service.MongoDB.Health(ctx)
-			},
-		})
 	}
 
 	if opts.UseRedis {
