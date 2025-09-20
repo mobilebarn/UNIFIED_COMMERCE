@@ -588,8 +588,11 @@ func (r *productVariantResolver) ProductID(ctx context.Context, obj *models.Prod
 
 // Title is the resolver for the title field.
 func (r *productVariantResolver) Title(ctx context.Context, obj *models.ProductVariant) (string, error) {
-	// For now, return SKU as title
-	return obj.SKU, nil
+	// Return SKU as title if available, otherwise use a default
+	if obj.SKU != "" {
+		return obj.SKU, nil
+	}
+	return "Default Variant", nil
 }
 
 // Sku is the resolver for the sku field.
