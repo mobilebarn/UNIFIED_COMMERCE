@@ -263,4 +263,4 @@ databases:
     databaseName: unified_commerce_db
     user: unified_commerce_user
   - name: unified-commerce-redis
-    plan: free
+    plan: starter
