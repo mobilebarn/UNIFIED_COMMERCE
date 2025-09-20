@@ -7,21 +7,20 @@ export const GET_PRODUCTS = gql`
       id
       title
       description
-      price
       status
       createdAt
-      updatedAt
+      priceRange {
+        minVariantPrice
+        maxVariantPrice
+      }
       variants {
         id
         sku
         price
         compareAtPrice
-        inventory {
-          quantity
-          location
-        }
+        inventoryQuantity
       }
-      categories {
+      category {
         id
         name
       }
@@ -35,21 +34,20 @@ export const GET_PRODUCT_BY_ID = gql`
       id
       title
       description
-      price
       status
       createdAt
-      updatedAt
+      priceRange {
+        minVariantPrice
+        maxVariantPrice
+      }
       variants {
         id
         sku
         price
         compareAtPrice
-        inventory {
-          quantity
-          location
-        }
+        inventoryQuantity
       }
-      categories {
+      category {
         id
         name
       }
@@ -63,8 +61,11 @@ export const CREATE_PRODUCT = gql`
       id
       title
       description
-      price
       status
+      priceRange {
+        minVariantPrice
+        maxVariantPrice
+      }
     }
   }
 `;
@@ -75,8 +76,11 @@ export const UPDATE_PRODUCT = gql`
       id
       title
       description
-      price
       status
+      priceRange {
+        minVariantPrice
+        maxVariantPrice
+      }
     }
   }
 `;
